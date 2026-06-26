@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    ".opencode/instructions/architecture.md",
+    ".opencode/instructions/react.md",
+    ".opencode/instructions/router-data.md",
+    ".opencode/instructions/design-system.md",
+    ".opencode/instructions/i18n.md",
+    ".opencode/instructions/typescript.md",
+    ".opencode/instructions/backend.md",
+    ".opencode/instructions/devops.md"
+  ]
+}

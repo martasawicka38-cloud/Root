@@ -3,3 +3,7 @@
 .DS_Store
 Thumbs.db
 *.log
+.expo/
+dist/
+.expo-shared/
+server/.env
