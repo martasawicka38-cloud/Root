@@ -4,13 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Screen } from "../../features/common/Screen";
 import { fetchMarket } from "../../lib/api/endpoints";
-import {
-  colors,
-  radius,
-  shadows,
-  spacing,
-  typography,
-} from "../../styles/tokens";
+import { colors, radius, spacing, typography } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
 import { fetchWallet } from "../../lib/api/endpoints";
 
@@ -35,11 +29,13 @@ export default function MarketScreen() {
 
   return (
     <Screen>
-      <Text style={styles.title}>← Rynek nagrod</Text>
-      <View style={styles.balanceRow}>
-        <Text style={styles.balanceLabel}>Saldo: {balance} Eco-Coins</Text>
-        <Text style={styles.balanceIcon}>💰</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.back}>‹</Text>
+        <Text style={styles.title}>Rynek nagrod</Text>
+        <Text style={styles.back}> </Text>
       </View>
+
+      <Text style={styles.balanceLabel}>Saldo: {balance} EC</Text>
 
       <View style={styles.filters}>
         {filters.map((f) => (
@@ -54,57 +50,61 @@ export default function MarketScreen() {
                 filter === f && styles.filterTextActive,
               ]}
             >
-              {f}
+              {f === "all" ? "Wszystko" : f[0].toUpperCase() + f.slice(1)}
             </Text>
           </Pressable>
         ))}
       </View>
-      {visible.map((reward) => (
-        <Link
-          key={reward.id}
-          href={{
-            pathname: "/(mobile)/reward",
-            params: { rewardId: reward.id },
-          }}
-          style={styles.item}
-        >
-          <View style={styles.cardHead}>
-            <Text style={styles.cardTitle}>
-              {reward.icon} {reward.title}
-            </Text>
-            <Text style={styles.cardCost}>{reward.cost} Eco-Coins</Text>
-          </View>
-          <Text style={styles.cardMerchant}>{reward.merchant}</Text>
-          <Text style={styles.cta}>Wymien</Text>
-        </Link>
-      ))}
+
+      <View style={styles.grid}>
+        {visible.map((reward) => (
+          <Link
+            key={reward.id}
+            href={{
+              pathname: "/(mobile)/reward",
+              params: { rewardId: reward.id },
+            }}
+            style={styles.item}
+          >
+            <View style={styles.cardIconWrap}>
+              <Text style={styles.cardIcon}>{reward.icon}</Text>
+            </View>
+            <Text style={styles.cardTitle}>{reward.title}</Text>
+            <Text style={styles.cardMerchant}>{reward.merchant}</Text>
+            <Text style={styles.cardCost}>{reward.cost} EC</Text>
+          </Link>
+        ))}
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.x3s,
+  },
+  back: {
+    fontSize: 22,
+    color: colors.slate900,
+    width: 24,
+  },
   title: {
     ...typography.h2,
     color: colors.deepForest,
-    marginBottom: spacing.x3s,
-  },
-  balanceRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: spacing.x2s,
+    textAlign: "center",
+    flex: 1,
   },
   balanceLabel: {
-    ...typography.body,
-    color: colors.slate600,
-    fontWeight: "600",
-  },
-  balanceIcon: {
-    fontSize: 18,
+    ...typography.bodySmall,
+    color: colors.slate400,
+    marginBottom: spacing.x2s,
   },
   filters: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    flexWrap: "nowrap",
     gap: spacing.x3s,
     marginBottom: spacing.x3s,
   },
@@ -114,6 +114,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     paddingVertical: spacing.x3s,
     paddingHorizontal: spacing.xs,
+    backgroundColor: colors.white,
   },
   filterActive: {
     backgroundColor: colors.mossGreen,
@@ -125,40 +126,43 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   filterTextActive: { color: colors.white },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.x3s,
+  },
   item: {
+    width: "48%",
     borderWidth: 1,
     borderColor: colors.slate200,
     borderRadius: radius.md,
     padding: spacing.xs,
-    backgroundColor: colors.white,
-    ...shadows.sm,
-    marginBottom: spacing.x3s,
+    backgroundColor: "#EEF2F5",
   },
-  cardHead: {
-    gap: spacing.x4s,
+  cardIconWrap: {
+    borderRadius: radius.sm,
+    backgroundColor: "#DDE6F6",
+    height: 80,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.x2s,
+  },
+  cardIcon: {
+    fontSize: 32,
   },
   cardTitle: {
     ...typography.h3,
     color: colors.slate900,
   },
-  cardCost: {
-    ...typography.body,
-    color: colors.warmGold,
-    fontWeight: "700",
-  },
   cardMerchant: {
     ...typography.bodySmall,
     color: colors.slate600,
-    marginTop: spacing.x3s,
+    marginTop: 2,
   },
-  cta: {
-    marginTop: spacing.x2s,
-    alignSelf: "flex-start",
-    backgroundColor: colors.mossGreen,
-    color: colors.white,
+  cardCost: {
+    ...typography.h3,
+    marginTop: spacing.x3s,
+    color: colors.warmGold,
     fontWeight: "700",
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.xs,
-    paddingVertical: spacing.x3s,
   },
 });
