@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Root — Panel HR / Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --deep-forest: #1B4332; --moss-green: #2D6A4F; --sage: #95D5B2;
+  --mist: #D8F3DC; --warm-gold: #D4A373; --sunset: #E07A5F;
+  --slate-900: #1E293B; --slate-700: #334155; --slate-600: #64748B;
+  --slate-400: #94A3B8; --slate-300: #CBD5E1; --slate-200: #E2E8F0;
+  --slate-100: #F1F5F9; --slate-50: #F8FAFC; --white: #FFFFFF;
+  --success: #40916C; --warning: #E9C46A; --error: #D62828;
+  --font: 'Inter', sans-serif;
+  --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-full: 999px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06); --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.1);
+}
+body { font-family: var(--font); background: var(--slate-50); color: var(--slate-900); display: flex; min-height: 100vh; }
+
+/* ═══ SIDEBAR ═══ */
+.sidebar {
+  width: 240px; background: var(--deep-forest); color: var(--white);
+  padding: 0; display: flex; flex-direction: column; flex-shrink: 0;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+}
+.sidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.sidebar-logo svg { flex-shrink: 0; }
+.sidebar-logo .brand { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.sidebar-logo .brand-sub { font-size: 10px; color: var(--sage); opacity: .7; text-transform: uppercase; letter-spacing: 1px; }
+.sidebar-nav { padding: 12px 0; flex: 1; }
+.sidebar-nav a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px; color: rgba(255,255,255,.7); text-decoration: none;
+  font-size: 14px; font-weight: 500; transition: all .15s; border-left: 3px solid transparent;
+}
+.sidebar-nav a:hover { color: var(--white); background: rgba(255,255,255,.05); }
+.sidebar-nav a.active { color: var(--white); background: rgba(255,255,255,.1); border-left-color: var(--sage); font-weight: 600; }
+.sidebar-nav a .icon { font-size: 18px; width: 24px; text-align: center; }
+.sidebar-footer {
+  padding: 16px 20px; border-top: 1px solid rgba(255,255,255,.08);
+  font-size: 12px; color: rgba(255,255,255,.4);
+}
+
+/* ═══ MAIN ═══ */
+.main { flex: 1; padding: 32px 40px; max-width: 1200px; }
+.main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.main-header h1 { font-size: 24px; font-weight: 700; color: var(--slate-900); }
+.main-header .partner-badge {
+  font-size: 12px; color: var(--slate-600); padding: 6px 14px;
+  background: var(--white); border-radius: var(--radius-full);
+  border: 1px solid var(--slate-200);
+}
+
+/* ═══ STATS ═══ */
+.stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--white); border-radius: var(--radius-md); padding: 20px;
+  border: 1px solid var(--slate-200);
+}
+.stat-card .stat-icon { font-size: 24px; margin-bottom: 8px; }
+.stat-card .stat-value { font-size: 28px; font-weight: 800; color: var(--slate-900); }
+.stat-card .stat-label { font-size: 13px; color: var(--slate-600); margin-top: 2px; }
+.stat-card .stat-change { font-size: 12px; font-weight: 600; margin-top: 6px; }
+.stat-card .stat-change.up { color: var(--success); }
+.stat-card .stat-change.down { color: var(--error); }
+
+/* ═══ CARDS ═══ */
+.card {
+  background: var(--white); border-radius: var(--radius-md);
+  border: 1px solid var(--slate-200); margin-bottom: 24px;
+}
+.card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px; border-bottom: 1px solid var(--slate-100);
+}
+.card-header h3 { font-size: 15px; font-weight: 700; }
+.card-body { padding: 16px 20px; }
+
+/* ═══ TABLE ═══ */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 16px; font-weight: 600; color: var(--slate-600); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--slate-100); }
+td { padding: 12px 16px; border-bottom: 1px solid var(--slate-100); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--slate-50); }
+td .user-avatar {
+  width: 28px; height: 28px; border-radius: var(--radius-full);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: var(--white); margin-right: 8px;
+}
+td .user-info { display: flex; align-items: center; gap: 8px; }
+td .user-info .name { font-weight: 600; }
+td .user-info .email { font-size: 12px; color: var(--slate-600); }
+
+/* ═══ BADGES ═══ */
+.badge {
+  display: inline-block; padding: 2px 10px; border-radius: var(--radius-full);
+  font-size: 11px; font-weight: 600;
+}
+.badge.green { background: var(--mist); color: var(--deep-forest); }
+.badge.yellow { background: #FEF3C7; color: #B45309; }
+.badge.red { background: #FEE2E2; color: var(--error); }
+.badge.blue { background: #DBEAFE; color: #1D4ED8; }
+.badge.gray { background: var(--slate-100); color: var(--slate-600); }
+
+/* ═══ BUTTONS ═══ */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-family: var(--font); font-size: 13px; font-weight: 600;
+  border: none; cursor: pointer; transition: all .15s;
+}
+.btn-primary { background: var(--moss-green); color: var(--white); }
+.btn-primary:hover { background: var(--deep-forest); }
+.btn-secondary { background: var(--white); color: var(--slate-700); border: 1px solid var(--slate-300); }
+.btn-secondary:hover { background: var(--slate-50); border-color: var(--slate-400); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-icon { width: 32px; height: 32px; padding: 0; justify-content: center; border-radius: var(--radius-sm); }
+
+/* ═══ REWARDS ═══ */
+.rewards-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.reward-card {
+  background: var(--white); border: 1px solid var(--slate-200);
+  border-radius: var(--radius-md); padding: 16px; text-align: center; transition: all .15s;
+}
+.reward-card:hover { border-color: var(--sage); box-shadow: var(--shadow-md); }
+.reward-card .rw-icon {
+  width: 48px; height: 48px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 8px; font-size: 22px;
+}
+.reward-card .rw-name { font-size: 13px; font-weight: 600; }
+.reward-card .rw-cost { font-size: 12px; color: var(--warm-gold); font-weight: 700; margin-top: 2px; }
+.reward-card .rw-stock { font-size: 11px; color: var(--slate-600); margin-top: 2px; }
+.reward-card .rw-actions { display: flex; gap: 4px; justify-content: center; margin-top: 8px; }
+
+/* ═══ SETTINGS ═══ */
+.settings-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 0; border-bottom: 1px solid var(--slate-100);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-row .label { font-size: 14px; font-weight: 500; }
+.settings-row .desc { font-size: 12px; color: var(--slate-600); margin-top: 1px; }
+.settings-row input[type="number"], .settings-row select {
+  width: 100px; padding: 6px 10px; border: 1px solid var(--slate-300);
+  border-radius: var(--radius-sm); font-family: var(--font); font-size: 13px;
+  text-align: center;
+}
+.settings-row input[type="number"]:focus, .settings-row select:focus { outline: none; border-color: var(--moss-green); }
+
+/* ═══ CHARTS (placeholder) ═══ */
+.chart-placeholder {
+  height: 200px; background: var(--slate-50); border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--slate-400);
+  border: 1px dashed var(--slate-300); margin: 8px 0;
+}
+
+/* ═══ SECTION TOGGLE ═══ */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 900px) {
+  .sidebar { width: 64px; }
+  .sidebar-logo { padding: 16px 12px; }
+  .sidebar-logo .brand, .sidebar-logo .brand-sub { display: none; }
+  .sidebar-nav a span:not(.icon) { display: none; }
+  .sidebar-nav a { justify-content: center; padding: 12px; }
+  .sidebar-footer { display: none; }
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+  .rewards-grid { grid-template-columns: repeat(2,1fr); }
+  .main { padding: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
+      <rect width="40" height="40" rx="10" fill="url(#s-g)"/>
+      <path d="M20 6C20 6 10 13 10 22C10 28 13 32 17 34C18 34.5 19 34.5 20 34" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      <path d="M20 6C20 6 30 13 30 22C30 28 27 32 23 34C22 34.5 21 34.5 20 34" stroke="white" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      <line x1="20" y1="6" x2="20" y2="36" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+      <defs><linearGradient id="s-g" x1="0" y1="0" x2="40" y2="40"><stop stop-color="#95D5B2"/><stop offset="1" stop-color="#2D6A4F"/></linearGradient></defs>
+    </svg>
+    <div><div class="brand">Root</div><div class="brand-sub">Panel HR</div></div>
+  </div>
+  <div class="sidebar-nav">
+    <a href="#" class="active" data-page="dashboard" onclick="switchPage(this,'dashboard')"><span class="icon">📊</span><span>Dashboard</span></a>
+    <a href="#" data-page="users" onclick="switchPage(this,'users')"><span class="icon">👥</span><span>Pracownicy</span></a>
+    <a href="#" data-page="rewards" onclick="switchPage(this,'rewards')"><span class="icon">🎁</span><span>Nagrody</span></a>
+    <a href="#" data-page="settings" onclick="switchPage(this,'settings')"><span class="icon">⚙️</span><span>Ustawienia</span></a>
+  </div>
+  <div class="sidebar-footer">Root v1.0 · Partner: Intel Poland</div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="main">
+
+  <!-- Page: Dashboard -->
+  <div id="page-dashboard" class="page active">
+    <div class="main-header">
+      <h1>Dashboard</h1>
+      <div class="partner-badge">🏢 Intel Poland · 2 847 pracowników</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">👟</div>
+        <div class="stat-value">1 842</div>
+        <div class="stat-label">Aktywni użytkownicy (dziś)</div>
+        <div class="stat-change up">↑ 12% vs. ubiegły tydzień</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-value">6 340</div>
+        <div class="stat-label">Średnia kroków / użytkownika</div>
+        <div class="stat-change up">↑ 8% vs. ubiegły tydzień</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-value">284 500</div>
+        <div class="stat-label">Eco-Coins w obiegu</div>
+        <div class="stat-change up">↑ 15% vs. ubiegły miesiąc</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏅</div>
+        <div class="stat-value">47%</div>
+        <div class="stat-label">Uczestnictwo w wyzwaniach</div>
+        <div class="stat-change up">↑ 5% vs. ubiegły miesiąc</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Aktywność w tym tygodniu</h3><span style="font-size:12px;color:var(--slate-600)">pon. 16 — niedz. 22 cze 2026</span></div>
+      <div class="card-body">
+        <div class="chart-placeholder">📊 Wykres aktywności (integracja z Chart.js w docelowej wersji)</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px;text-align:center;">
+          <div><div style="font-size:11px;color:var(--slate-600)">Pon</div><div style="font-size:16px;font-weight:700;color:var(--moss-green)">5 240</div></div>
+          <div><div style="font-size:11px;color:var(--slate-600)">Wt</div><div style="font-size:16px;font-weight:700;color:var(--moss-green)">6 810</div></div>
+          <div><div style="font-size:11px;color:var(--slate-600)">Śr</div><div style="font-size:16px;font-weight:700;color:var(--moss-green)">7 120</div></div>
+          <div><div style="font-size:11px;color:var(--slate-600)">Cz</div><div style="font-size:16px;font-weight:700;color:var(--moss-green)">6 450</div></div>
+          <div><div style="font-size:11px;color:var(--slate-600)">Pt</div><div style="font-size:16px;font-weight:700;color:var(--moss-green)">7 800</div></div>
+          <div><div style="font-size:11px;color:var(--slate-600)">Sb</div><div style="font-size:16px;font-weight:700;color:var(--moss-green)">4 920</div></div>
+          <div><div style="font-size:11px;color:var(--slate-600)">Nd</div><div style="font-size:16px;font-weight:700;color:var(--moss-green)">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Ostatnie aktywności</h3><span style="font-size:12px;color:var(--slate-600)">10 najnowszych</span></div>
+      <div class="card-body" style="padding:0;">
+        <div class="table-wrap">
+          <table>
+            <tr><th>Użytkownik</th><th>Akcja</th><th>Punkty</th><th>Czas</th></tr>
+            <tr><td><div class="user-info"><div class="user-avatar" style="background:#2D6A4F">M</div><span class="name">Michał K.</span></div></td><td>Eko-deklaracja: Segregacja</td><td><span class="badge green">+30</span></td><td>14:30</td></tr>
+            <tr><td><div class="user-info"><div class="user-avatar" style="background:#D4A373">A</div><span class="name">Agnieszka R.</span></div></td><td>Cel kroków: 8 200</td><td><span class="badge green">+40</span></td><td>13:15</td></tr>
+            <tr><td><div class="user-info"><div class="user-avatar" style="background:#E07A5F">T</div><span class="name">Tomasz W.</span></div></td><td>Wypłata: Kawa ☕</td><td><span class="badge red">-200</span></td><td>12:00</td></tr>
+            <tr><td><div class="user-info"><div class="user-avatar" style="background:#95D5B2">K</div><span class="name">Katarzyna N.</span></div></td><td>Dołączyła do wyzwania</td><td><span class="badge blue">+0</span></td><td>11:45</td></tr>
+            <tr><td><div class="user-info"><div class="user-avatar" style="background:#1B4332">P</div><span class="name">Piotr L.</span></div></td><td>Eko-deklaracja: Rower</td><td><span class="badge green">+60</span></td><td>10:20</td></tr>
+            <tr><td><div class="user-info"><div class="user-avatar" style="background:#64748B">J</div><span class="name">Joanna M.</span></div></td><td>Streak 7 dni +20%</td><td><span class="badge green">+35</span></td><td>09:00</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Szybkie akcje</h3></div>
+      <div class="card-body" style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="alert('CSV wyeksportowany — dane symulowane')">📥 Eksportuj CSV</button>
+        <button class="btn btn-secondary" onclick="switchPage(document.querySelector('[data-page=rewards]'),'rewards')">🎁 Dodaj nagrodę</button>
+        <button class="btn btn-secondary" onclick="alert('Wysłano przypomnienie push do 1 842 aktywnych użytkowników')">🔔 Wyślij przypomnienie</button>
+        <button class="btn btn-secondary" onclick="alert('Wygenerowano raport ESG dla Intel Poland — dane symulowane')">📄 Raport ESG</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page: Users -->
+  <div id="page-users" class="page">
+    <div class="main-header">
+      <h1>Pracownicy</h1>
+      <div style="display:flex;gap:8px;">
+        <input id="user-search" type="text" placeholder="Szukaj po imieniu, nazwisku, emailu..." oninput="filterUsers()" style="padding:8px 14px;border:1px solid var(--slate-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;width:280px;">
+        <button class="btn btn-primary" onclick="alert('Eksport CSV — dane symulowane')">📥 Eksportuj</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body" style="padding:0;">
+        <div class="table-wrap">
+          <table id="users-table">
+            <tr><th>Pracownik</th><th>Dział</th><th>Kroki (śr.)</th><th>Eco-Coins</th><th>Passa</th><th>Status</th></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page: Rewards -->
+  <div id="page-rewards" class="page">
+    <div class="main-header">
+      <h1>Nagrody</h1>
+      <button class="btn btn-primary" onclick="showAddReward()">+ Dodaj nagrodę</button>
+    </div>
+
+    <div class="rewards-grid" id="rewards-grid">
+      <div class="reward-card">
+        <div class="rw-icon" style="background:#FEF3C7">☕</div>
+        <div class="rw-name">Kawa w sieciówce</div>
+        <div class="rw-cost">200 EC</div>
+        <div class="rw-stock">Dostępnych: 42</div>
+        <div class="rw-actions"><button class="btn btn-sm btn-secondary">✏️</button><button class="btn btn-sm btn-secondary" onclick="this.closest('.reward-card').remove()">🗑️</button></div>
+      </div>
+      <div class="reward-card">
+        <div class="rw-icon" style="background:#D8F3DC">🌱</div>
+        <div class="rw-name">Zniżka 15% w sklepie</div>
+        <div class="rw-cost">350 EC</div>
+        <div class="rw-stock">Dostępnych: 28</div>
+        <div class="rw-actions"><button class="btn btn-sm btn-secondary">✏️</button><button class="btn btn-sm btn-secondary" onclick="this.closest('.reward-card').remove()">🗑️</button></div>
+      </div>
+      <div class="reward-card">
+        <div class="rw-icon" style="background:#F1F5F9">🎧</div>
+        <div class="rw-name">Voucher Spotify 1 msc</div>
+        <div class="rw-cost">800 EC</div>
+        <div class="rw-stock">Dostępnych: 15</div>
+        <div class="rw-actions"><button class="btn btn-sm btn-secondary">✏️</button><button class="btn btn-sm btn-secondary" onclick="this.closest('.reward-card').remove()">🗑️</button></div>
+      </div>
+      <div class="reward-card">
+        <div class="rw-icon" style="background:#FEE2E2">🏪</div>
+        <div class="rw-name">Lunch ze znajomymi</div>
+        <div class="rw-cost">1 200 EC</div>
+        <div class="rw-stock">Dostępnych: 10</div>
+        <div class="rw-actions"><button class="btn btn-sm btn-secondary">✏️</button><button class="btn btn-sm btn-secondary" onclick="this.closest('.reward-card').remove()">🗑️</button></div>
+      </div>
+      <div class="reward-card">
+        <div class="rw-icon" style="background:#FEF3C7">📅</div>
+        <div class="rw-name">Dzień wolny</div>
+        <div class="rw-cost">5 000 EC</div>
+        <div class="rw-stock">Dostępnych: 3</div>
+        <div class="rw-actions"><button class="btn btn-sm btn-secondary">✏️</button><button class="btn btn-sm btn-secondary" onclick="this.closest('.reward-card').remove()">🗑️</button></div>
+      </div>
+      <div class="reward-card">
+        <div class="rw-icon" style="background:#FFE4D6">🚲</div>
+        <div class="rw-name">Serwis roweru</div>
+        <div class="rw-cost">600 EC</div>
+        <div class="rw-stock">Dostępnych: 8</div>
+        <div class="rw-actions"><button class="btn btn-sm btn-secondary">✏️</button><button class="btn btn-sm btn-secondary" onclick="this.closest('.reward-card').remove()">🗑️</button></div>
+      </div>
+    </div>
+
+    <!-- Add reward form -->
+    <div class="card" id="add-reward-form" style="display:none;">
+      <div class="card-header"><h3>Dodaj nagrodę</h3></div>
+      <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <input id="rw-name" placeholder="Nazwa nagrody" style="padding:8px 12px;border:1px solid var(--slate-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;">
+        <input id="rw-cost" type="number" placeholder="Koszt (EC)" style="padding:8px 12px;border:1px solid var(--slate-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;">
+        <input id="rw-stock" type="number" placeholder="Dostępna liczba" style="padding:8px 12px;border:1px solid var(--slate-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;">
+        <input id="rw-icon" placeholder="Emoji (np. ☕)" style="padding:8px 12px;border:1px solid var(--slate-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;">
+        <div style="grid-column:1/-1;display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="addReward()">Dodaj</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('add-reward-form').style.display='none'">Anuluj</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page: Settings -->
+  <div id="page-settings" class="page">
+    <div class="main-header"><h1>Ustawienia programu</h1></div>
+
+    <div class="card">
+      <div class="card-header"><h3>Przeliczniki Eco-Coins</h3></div>
+      <div class="card-body">
+        <div class="settings-row">
+          <div><div class="label">Kroki → EC</div><div class="desc">Ile kroków za 1 EC</div></div>
+          <input type="number" value="200" min="50" max="500">
+        </div>
+        <div class="settings-row">
+          <div><div class="label">Dzienny limit kroków (EC)</div><div class="desc">Maksymalnie EC z kroków dziennie</div></div>
+          <input type="number" value="40" min="10" max="100">
+        </div>
+        <div class="settings-row">
+          <div><div class="label">Dzienny limit deklaracji</div><div class="desc">Maksymalna liczba eko-deklaracji dziennie</div></div>
+          <input type="number" value="3" min="1" max="10">
+        </div>
+        <div class="settings-row">
+          <div><div class="label">Streak bonus (7 dni)</div><div class="desc">Procentowa premia za 7-dniową passę</div></div>
+          <input type="number" value="20" min="0" max="100"><span style="font-size:13px;color:var(--slate-600);margin-left:4px;">%</span>
+        </div>
+        <div class="settings-row">
+          <div><div class="label">Streak bonus (30 dni)</div><div class="desc">Premia za 30-dniową passę</div></div>
+          <input type="number" value="50" min="0" max="200"><span style="font-size:13px;color:var(--slate-600);margin-left:4px;">%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Wymagania</h3></div>
+      <div class="card-body">
+        <div class="settings-row">
+          <div><div class="label">Dzienny cel kroków</div><div class="desc">Domyślny cel dla nowych użytkowników</div></div>
+          <input type="number" value="8000" min="3000" max="20000">
+        </div>
+        <div class="settings-row">
+          <div><div class="label">SSO dostawca</div><div class="desc">Autoryzacja dla użytkowników</div></div>
+          <select><option>Google Workspace</option><option>Microsoft 365</option><option>Okta</option><option>Brak (email+hasło)</option></select>
+        </div>
+        <div class="settings-row">
+          <div><div class="label">Kod zaproszenia</div><div class="desc">Wymagany kod przy rejestracji</div></div>
+          <input type="text" value="INTEL-2026" style="width:140px;padding:6px 10px;border:1px solid var(--slate-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;text-align:center;">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Dane partnera</h3></div>
+      <div class="card-body">
+        <div class="settings-row">
+          <div><div class="label">Nazwa firmy</div></div>
+          <input type="text" value="Intel Technology Poland" style="width:220px;padding:6px 10px;border:1px solid var(--slate-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;">
+        </div>
+        <div class="settings-row">
+          <div><div class="label">Liczba pracowników</div></div>
+          <input type="number" value="2847" style="width:100px;padding:6px 10px;border:1px solid var(--slate-300);border-radius:var(--radius-sm);font-family:var(--font);font-size:13px;text-align:center;">
+        </div>
+        <div class="settings-row">
+          <div><div class="label">Branding kolor</div><div class="desc">Kolor akcentowy w aplikacji</div></div>
+          <input type="color" value="#2D6A4F" style="width:40px;height:32px;border:none;cursor:pointer;">
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn btn-primary" onclick="alert('Ustawienia zapisane (symulacja)')">💾 Zapisz ustawienia</button>
+      <button class="btn btn-secondary" onclick="alert('Przywrócono ustawienia domyślne (symulacja)')">↩️ Przywróć domyślne</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── NAVIGATION ───
+function switchPage(el, page) {
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+}
+
+// ─── USERS TABLE ───
+const users = [
+  { name: 'Michał Kowalski', email: 'michal.kowalski@intel.com', dept: 'R&D', steps: 8420, coins: 1250, streak: 12, status: 'active' },
+  { name: 'Agnieszka Różańska', email: 'agnieszka.rozanska@intel.com', dept: 'HR', steps: 7100, coins: 890, streak: 8, status: 'active' },
+  { name: 'Tomasz Wójcik', email: 'tomasz.wojcik@intel.com', dept: 'R&D', steps: 5600, coins: 450, streak: 3, status: 'active' },
+  { name: 'Katarzyna Nowak', email: 'katarzyna.nowak@intel.com', dept: 'Marketing', steps: 9200, coins: 1620, streak: 21, status: 'active' },
+  { name: 'Piotr Lewandowski', email: 'piotr.lewandowski@intel.com', dept: 'IT', steps: 4800, coins: 320, streak: 1, status: 'active' },
+  { name: 'Joanna Mazur', email: 'joanna.mazur@intel.com', dept: 'Finance', steps: 7800, coins: 1050, streak: 14, status: 'active' },
+  { name: 'Bartosz Zieliński', email: 'bartosz.zielinski@intel.com', dept: 'R&D', steps: 3400, coins: 180, streak: 0, status: 'inactive' },
+  { name: 'Maria Kwiatkowska', email: 'maria.kwiatkowska@intel.com', dept: 'HR', steps: 6300, coins: 720, streak: 6, status: 'active' },
+  { name: 'Jakub Adamski', email: 'jakub.adamski@intel.com', dept: 'IT', steps: 8900, coins: 1450, streak: 18, status: 'active' },
+  { name: 'Ewa Kamińska', email: 'ewa.kaminska@intel.com', dept: 'Marketing', steps: 5100, coins: 390, streak: 2, status: 'inactive' },
+  { name: 'Rafał Grabowski', email: 'rafal.grabowski@intel.com', dept: 'R&D', steps: 7600, coins: 980, streak: 10, status: 'active' },
+  { name: 'Natalia Pawlak', email: 'natalia.pawlak@intel.com', dept: 'Finance', steps: 6700, coins: 560, streak: 5, status: 'active' },
+];
+
+function renderUsers(filter) {
+  const tbody = document.getElementById('users-table');
+  const q = (filter || '').toLowerCase();
+  const filtered = users.filter(u =>
+    u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.dept.toLowerCase().includes(q)
+  );
+  let html = '<tr><th>Pracownik</th><th>Dział</th><th>Kroki (śr.)</th><th>Eco-Coins</th><th>Passa</th><th>Status</th></tr>';
+  filtered.forEach(u => {
+    const initials = u.name.split(' ').map(s => s[0]).join('');
+    const colors = ['#2D6A4F','#D4A373','#E07A5F','#95D5B2','#1B4332','#64748B','#40916C','#B45309','#1D4ED8','#831843','#0F766E','#BE185D'];
+    const avatarColor = colors[users.indexOf(u) % colors.length];
+    const streakBadge = u.streak >= 7 ? 'green' : u.streak >= 3 ? 'yellow' : 'gray';
+    const statusBadge = u.status === 'active' ? 'green' : 'red';
+    html += `<tr><td><div class="user-info"><div class="user-avatar" style="background:${avatarColor}">${initials}</div><div><div class="name">${u.name}</div><div class="email">${u.email}</div></div></div></td><td>${u.dept}</td><td>${u.steps.toLocaleString()}</td><td>${u.coins}</td><td><span class="badge ${streakBadge}">${u.streak} dni</span></td><td><span class="badge ${statusBadge}">${u.status === 'active' ? 'Aktywny' : 'Nieaktywny'}</span></td></tr>`;
+  });
+  if (filtered.length === 0) html += '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--slate-600)">Brak wyników</td></tr>';
+  tbody.innerHTML = html;
+}
+
+function filterUsers() {
+  renderUsers(document.getElementById('user-search').value);
+}
+
+renderUsers();
+
+// ─── REWARDS ───
+function showAddReward() {
+  document.getElementById('add-reward-form').style.display = 'block';
+}
+
+function addReward() {
+  const name = document.getElementById('rw-name').value.trim();
+  const cost = document.getElementById('rw-cost').value;
+  const stock = document.getElementById('rw-stock').value;
+  const icon = document.getElementById('rw-icon').value.trim() || '🎁';
+  if (!name || !cost) { alert('Wpisz nazwę i koszt nagrody'); return; }
+  const colors = ['#FEF3C7','#D8F3DC','#F1F5F9','#FEE2E2','#FFE4D6','#DBEAFE'];
+  const bg = colors[Math.floor(Math.random() * colors.length)];
+  const card = document.createElement('div');
+  card.className = 'reward-card';
+  card.innerHTML = `
+    <div class="rw-icon" style="background:${bg}">${icon}</div>
+    <div class="rw-name">${name}</div>
+    <div class="rw-cost">${cost} EC</div>
+    <div class="rw-stock">Dostępnych: ${stock || '∞'}</div>
+    <div class="rw-actions"><button class="btn btn-sm btn-secondary">✏️</button><button class="btn btn-sm btn-secondary" onclick="this.closest('.reward-card').remove()">🗑️</button></div>`;
+  document.getElementById('rewards-grid').appendChild(card);
+  document.getElementById('add-reward-form').style.display = 'none';
+  document.getElementById('rw-name').value = '';
+  document.getElementById('rw-cost').value = '';
+  document.getElementById('rw-stock').value = '';
+  document.getElementById('rw-icon').value = '';
+}
+</script>
+
+</body>
+</html>

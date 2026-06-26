@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Root — Koncepcje logo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #F1F5F9;
+    padding: 60px 40px;
+    color: #1E293B;
+  }
+  h1 { font-size: 28px; color: #1B4332; margin-bottom: 8px; }
+  .sub { color: #64748B; margin-bottom: 40px; font-size: 15px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    max-width: 960px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px 24px 24px;
+    text-align: center;
+    border: 1px solid #E2E8F0;
+    transition: all .2s;
+    cursor: pointer;
+  }
+  .card:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,.08);
+    transform: translateY(-2px);
+    border-color: #95D5B2;
+  }
+  .card .preview {
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .card .label { font-size: 13px; font-weight: 600; color: #1E293B; }
+  .card .desc { font-size: 11px; color: #64748B; margin-top: 4px; }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 999px;
+    margin-top: 8px;
+  }
+  .badge.selected { background: #D8F3DC; color: #1B4332; }
+  .badge.option { background: #F1F5F9; color: #64748B; }
+  .section-title { font-size: 18px; font-weight: 700; color: #1B4332; margin: 40px 0 20px; }
+</style>
+</head>
+<body>
+
+<h1>🌱 Root — koncepcje logo</h1>
+<p class="sub">Różne kierunki wizualne dla logo aplikacji. Każdy łączy naturę, wzrost i zakorzenienie.</p>
+
+<div class="section-title">Symbol (ikonka aplikacji)</div>
+<div class="grid">
+  <div class="card">
+    <div class="preview">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="16" fill="url(#g1)"/>
+        <path d="M32 10C24 10 16 16 16 24C16 28 18 32 22 34C24 35 26 35 28 34" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M32 10C40 10 48 16 48 24C48 28 46 32 42 34C40 35 38 35 36 34" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <line x1="32" y1="34" x2="32" y2="54" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M22 48C22 50 26 54 32 54" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6"/>
+        <path d="M42 48C42 50 38 54 32 54" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6"/>
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="64" y2="64"><stop stop-color="#95D5B2"/><stop offset="1" stop-color="#2D6A4F"/></linearGradient></defs>
+      </svg>
+    </div>
+    <div class="label">Liść + korzeń</div>
+    <div class="desc">Liść (wzrost) i korzeń (nawyk) w jednym symbolu. Gradient marki.</div>
+    <span class="badge selected">Wybrany w prototypie</span>
+  </div>
+
+  <div class="card">
+    <div class="preview">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="16" fill="#1B4332"/>
+        <circle cx="32" cy="32" r="18" stroke="#95D5B2" stroke-width="2" fill="none"/>
+        <path d="M22 38C26 30 30 26 32 22C34 26 38 30 42 38" stroke="#95D5B2" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M32 32V44" stroke="#95D5B2" stroke-width="2" stroke-linecap="round"/>
+        <path d="M26 40C28 42 30 44 32 44" stroke="#D4A373" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+        <path d="M38 40C36 42 34 44 32 44" stroke="#D4A373" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="label">Krąg + kiełek</div>
+    <div class="desc">Zamknięty krąg nawyku, wewnątrz kiełkująca roślina. Ciemne tło.</div>
+    <span class="badge option">Opcja</span>
+  </div>
+
+  <div class="card">
+    <div class="preview">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="16" fill="url(#g3)"/>
+        <path d="M32 12C32 12 16 22 16 32C16 40 20 46 26 48C28 49 30 49 32 48" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M32 12C32 12 48 22 48 32C48 40 44 46 38 48C36 49 34 49 32 48" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <line x1="32" y1="48" x2="32" y2="56" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+        <defs><linearGradient id="g3" x1="0" y1="0" x2="64" y2="64"><stop stop-color="#D4A373"/><stop offset="1" stop-color="#2D6A4F"/></linearGradient></defs>
+      </svg>
+    </div>
+    <div class="label">Otwarta księga / liść</div>
+    <div class="desc">Kształt liścia przypominający otwartą księgę — nauka nawyków.</div>
+    <span class="badge option">Opcja</span>
+  </div>
+
+  <div class="card">
+    <div class="preview">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="16" fill="#F1F5F9"/>
+        <circle cx="32" cy="32" r="20" fill="none" stroke="#2D6A4F" stroke-width="2.5"/>
+        <circle cx="32" cy="32" r="20" fill="none" stroke="url(#g4)" stroke-width="6" stroke-dasharray="30 96"/>
+        <path d="M32 18V32L40 38" stroke="#1B4332" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M24 42C26 44 29 46 32 46C35 46 38 44 40 42" stroke="#2D6A4F" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.5"/>
+        <defs><linearGradient id="g4" x1="0" y1="0" x2="64" y2="64"><stop stop-color="#D4A373"/><stop offset="1" stop-color="#E07A5F"/></linearGradient></defs>
+      </svg>
+    </div>
+    <div class="label">Zegar / cykl nawyku</div>
+    <div class="desc">Koło postępu (jak pierścień Activity) + wskazówka. Nawyk jako cykl.</div>
+    <span class="badge option">Opcja</span>
+  </div>
+
+  <div class="card">
+    <div class="preview">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="16" fill="#2D6A4F"/>
+        <path d="M18 46C22 38 28 30 32 18C36 30 42 38 46 46" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M32 18V40" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="32" cy="18" r="4" fill="#D4A373"/>
+        <path d="M24 38C26 42 29 46 32 46C35 46 38 42 40 38" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+      </svg>
+    </div>
+    <div class="label">Kiełek z korzeniem</div>
+    <div class="desc">Kwiat/kiełek powyżej, korzeń poniżej. Wzrost + fundament.</div>
+    <span class="badge option">Opcja</span>
+  </div>
+
+  <div class="card">
+    <div class="preview">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="16" fill="url(#g6)"/>
+        <path d="M32 8V56" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+        <path d="M32 20C24 20 16 26 16 34" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M32 20C40 20 48 26 48 34" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M16 34C16 38 20 42 24 42" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6"/>
+        <path d="M48 34C48 38 44 42 40 42" stroke="white" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.6"/>
+        <circle cx="32" cy="34" r="8" fill="white" opacity="0.2"/>
+        <defs><linearGradient id="g6" x1="0" y1="0" x2="64" y2="64"><stop stop-color="#1B4332"/><stop offset="1" stop-color="#2D6A4F"/></linearGradient></defs>
+      </svg>
+    </div>
+    <div class="label">Drzewo / ścieżka</div>
+    <div class="desc">Pień drzewa = ścieżka. Gałęzie = korzenie. W centrum owoc/ nagroda.</div>
+    <span class="badge option">Opcja</span>
+  </div>
+</div>
+
+<div class="section-title">Wordmark (logo tekstowe)</div>
+<div class="grid">
+  <div class="card" style="grid-column:span 1">
+    <div class="preview" style="flex-direction:column;gap:4px;">
+      <div style="font-size:36px;font-weight:800;color:#1B4332;letter-spacing:-1px;">root</div>
+      <div style="font-size:10px;color:#64748B;letter-spacing:2px;text-transform:uppercase;">Zakorzeń dobre nawyki</div>
+    </div>
+    <div class="label">Root — klasyczny</div>
+    <div class="desc">Inter 800, Deep Forest, minuskuła. Czysto i czytelnie.</div>
+    <span class="badge selected">Wybrany w prototypie</span>
+  </div>
+  <div class="card">
+    <div class="preview" style="flex-direction:column;gap:4px;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+          <path d="M20 4C14 4 8 9 8 16C8 20 10 24 14 26" stroke="#2D6A4F" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M20 4C26 4 32 9 32 16C32 20 30 24 26 26" stroke="#2D6A4F" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <line x1="20" y1="26" x2="20" y2="36" stroke="#2D6A4F" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <span style="font-size:32px;font-weight:800;color:#1B4332;letter-spacing:-1px;">Root</span>
+      </div>
+    </div>
+    <div class="label">Root z ikonką</div>
+    <div class="desc">Symbol + nazwa obok. Standard brandowy.</div>
+    <span class="badge option">Opcja</span>
+  </div>
+  <div class="card">
+    <div class="preview" style="flex-direction:column;gap:4px;">
+      <div style="display:flex;align-items:center;">
+        <span style="font-size:32px;font-weight:800;color:#1B4332;letter-spacing:-1px;">r</span>
+        <svg width="20" height="24" viewBox="0 0 24 28" fill="none" style="margin:0 2px;">
+          <path d="M12 2C8 2 4 6 4 10C4 13 6 15 8 16" stroke="#2D6A4F" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <path d="M12 2C16 2 20 6 20 10C20 13 18 15 16 16" stroke="#2D6A4F" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <line x1="12" y1="16" x2="12" y2="24" stroke="#2D6A4F" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <span style="font-size:32px;font-weight:800;color:#1B4332;letter-spacing:-1px;">ot</span>
+      </div>
+    </div>
+    <div class="label">Root z leaf-em jako 'o'</div>
+    <div class="desc">Litera 'o' zastąpiona symbolem liścia/korzenia. Kreatywne.</div>
+    <span class="badge option">Opcja</span>
+  </div>
+</div>
+
+<div style="margin-top:48px;padding:24px;background:#fff;border-radius:16px;border:1px solid #E2E8F0;max-width:640px;">
+  <div style="font-size:14px;font-weight:700;color:#1B4332;margin-bottom:8px;">Rekomendacja</div>
+  <p style="font-size:13px;color:#64748B;line-height:1.5;">
+    <strong>Liść + korzeń</strong> jako ikonka — najczytelniejsza w małym rozmiarze, działa zarówno na jasnym jak i ciemnym tle.
+    Wordmark: <strong>Root z ikonką obok</strong> — uniwersalny, skaluje się na nagłówki, app store, social media.
+    Kolorystyka: gradient z palety marki (Sage → Moss Green).
+  </p>
+</div>
+
+</body>
+</html>

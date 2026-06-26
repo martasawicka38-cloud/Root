@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Root — Prototyp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="app">
+
+  <!-- ════════ SCREEN: AUTH ════════ -->
+  <div id="auth" class="screen active vh-fix">
+    <div class="auth-header">
+      <div class="auth-logo-wrap">
+        <svg width="72" height="72" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#95D5B2"/><stop offset="100%" stop-color="#2D6A4F"/></linearGradient></defs>
+          <rect x="4" y="4" width="72" height="72" rx="18" fill="url(#lg)" opacity="0.12"/>
+          <path d="M20 28 C20 22, 28 18, 40 18 C52 18, 60 22, 60 28 L60 56 C60 56, 52 50, 40 50 C28 50, 20 56, 20 56 L20 28Z" fill="url(#lg)" opacity="0.5"/>
+          <path d="M20 32 C20 26, 28 22, 40 22 C52 22, 60 26, 60 32 L60 58 C60 58, 52 52, 40 52 C28 52, 20 58, 20 58 L20 32Z" fill="url(#lg)"/>
+          <path d="M40 22 L40 52" stroke="white" stroke-width="2" opacity="0.4"/>
+          <path d="M40 30 C44 28, 48 30, 50 34 C48 38, 44 40, 40 38" fill="white" opacity="0.35"/>
+        </svg>
+      </div>
+      <div class="auth-brand">
+        <span class="auth-brand-root">R</span>
+        <span class="auth-brand-leaf">🍃</span>
+        <span class="auth-brand-root">o</span>
+        <span class="auth-brand-leaf">🍃</span>
+        <span class="auth-brand-root">t</span>
+      </div>
+      <p class="auth-tagline">Zakorzeń dobre nawyki</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuth(this,'login')">Zaloguj</button>
+      <button class="auth-tab" onclick="switchAuth(this,'register')">Rejestracja</button>
+    </div>
+
+    <div id="auth-login" class="auth-form">
+      <div class="field-group">
+        <label>Adres e-mail</label>
+        <input type="email" class="auth-input" placeholder="jan@example.com" value="jan@hestia.pl">
+      </div>
+      <div class="field-group">
+        <label>Hasło</label>
+        <input type="password" class="auth-input" placeholder="••••••••" value="haslo123">
+        <button class="auth-forgot" onclick="openResetPw()">Nie pamiętam hasła</button>
+      </div>
+      <button class="btn-primary auth-btn" onclick="authLogin()">Zaloguj się</button>
+      <div class="auth-divider"><span>lub kontynuuj przez</span></div>
+      <div class="auth-sso">
+        <button class="auth-sso-btn">G</button>
+        <button class="auth-sso-btn"></button>
+      </div>
+    </div>
+
+    <div id="auth-register" class="auth-form" style="display:none">
+      <div class="field-group">
+        <label>Adres e-mail</label>
+        <input type="email" class="auth-input" placeholder="jan@example.com" value="jan@hestia.pl">
+      </div>
+      <div class="field-group">
+        <label>Hasło</label>
+        <input type="password" class="auth-input" placeholder="Utwórz hasło">
+      </div>
+      <div class="field-group">
+        <label>Kod zaproszenia</label>
+        <input type="text" class="auth-input invite" id="invite-code" placeholder="np. INTEL-2025" value="INTEL-2025" readonly>
+      </div>
+      <div class="field-group">
+        <label>Partner</label>
+        <div class="partner-toggle">
+          <button class="partner-btn active" id="partner-intel" onclick="switchPartner('intel')">
+            <span class="partner-logo">🔵</span>
+            <span>Intel Poland</span>
+          </button>
+          <button class="partner-btn" id="partner-ergo" onclick="switchPartner('ergo')">
+            <span class="partner-logo">🛡️</span>
+            <span>ERGO Hestia</span>
+          </button>
+        </div>
+      </div>
+      <button class="btn-primary auth-btn" onclick="authRegister()">Załóż konto</button>
+    </div>
+  </div>
+
+  <!-- ════════ PASSWORD RESET MODAL ════════ -->
+  <div class="modal-overlay" id="modal-reset">
+    <div class="modal-sheet modal-reset-sheet">
+      <div class="modal-handle"></div>
+      <div class="reset-form" id="reset-form">
+        <h2 class="reset-title">Resetowanie hasła</h2>
+        <p class="reset-desc">Podaj adres e-mail powiązany z kontem. Wyślemy Ci link do ustawienia nowego hasła.</p>
+        <div class="field-group">
+          <label>Adres e-mail</label>
+          <input type="email" class="auth-input" id="reset-email" placeholder="jan@example.com" value="jan@hestia.pl">
+        </div>
+        <button class="btn-primary auth-btn" onclick="sendResetLink()">Wyślij link</button>
+        <button class="rd-btn secondary" onclick="closeResetPw()" style="margin-top:8px">Anuluj</button>
+      </div>
+      <div class="reset-success" id="reset-success" style="display:none">
+        <div class="success-check">✅</div>
+        <div class="success-title">Link wysłany!</div>
+        <div class="success-sub">Sprawdź skrzynkę odbiorczą. Link ważny przez 24 godziny.</div>
+        <button class="btn-primary" onclick="closeResetPw()" style="margin-top:16px">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN: ONBOARDING ════════ -->
+  <div id="onboarding" class="screen hidden">
+    <div class="ob-progress">
+      <div class="ob-dot active"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+    </div>
+
+    <!-- Step 1: Mission -->
+    <div class="ob-step active" id="ob-1">
+      <div class="ob-illustration">
+        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="36" fill="#D8F3DC" opacity="0.5"/>
+          <path d="M40 12 C40 12, 30 28, 30 40 C30 50, 35 56, 40 56 C45 56, 50 50, 50 40 C50 28, 40 12, 40 12Z" fill="#2D6A4F" opacity="0.8"/>
+          <path d="M40 20 C40 20, 34 30, 34 38 C34 44, 37 48, 40 48 C43 48, 46 44, 46 38 C46 30, 40 20, 40 20Z" fill="#95D5B2"/>
+          <circle cx="40" cy="36" r="4" fill="#1B4332"/>
+          <path d="M36 44 C36 44, 38 48, 40 48 C42 48, 44 44, 44 44" stroke="#1B4332" stroke-width="1.5" fill="none"/>
+        </svg>
+      </div>
+      <h2 class="ob-title">Witaj w Root! 🌱</h2>
+      <p class="ob-desc">Każdy krok, każda eko-deklaracja i każda aktywność fizyczna przybliża Cię do lepszej wersji siebie — i zdrowszej planety.</p>
+      <button class="btn-primary ob-btn" onclick="nextOb()">Dalej</button>
+    </div>
+
+    <!-- Step 2: RODO -->
+    <div class="ob-step" id="ob-2">
+      <div class="ob-illustration">
+        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8" y="16" width="64" height="48" rx="8" fill="#D8F3DC" opacity="0.5"/>
+          <rect x="14" y="22" width="52" height="36" rx="4" fill="white" stroke="#2D6A4F" stroke-width="1.5"/>
+          <path d="M26 40 L34 48 L54 28" stroke="#2D6A4F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="ob-title">Zgoda na przetwarzanie danych</h2>
+      <p class="ob-desc">Abyś mógł w pełni korzystać z Root, potrzebujemy Twojej zgody na przetwarzanie danych osobowych i danych dotyczących aktywności fizycznej.</p>
+      <div class="ob-rodo" id="ob-rodo">
+        <label class="checkbox-row">
+          <input type="checkbox" id="rodo-check" onchange="document.getElementById('ob-2-btn').disabled = !this.checked">
+          <span class="checkbox-custom"></span>
+          <span>Zgadzam się na przetwarzanie moich danych osobowych w celu korzystania z aplikacji Root zgodnie z <a href="#">polityką prywatności</a>.</span>
+        </label>
+        <label class="checkbox-row">
+          <input type="checkbox" id="rodo-health" onchange="document.getElementById('ob-2-btn').disabled = !(this.checked && document.getElementById('rodo-check').checked)">
+          <span class="checkbox-custom"></span>
+          <span>Wyrażam zgodę na przetwarzanie danych dotyczących mojej aktywności fizycznej w celach statystycznych i promocyjnych.</span>
+        </label>
+      </div>
+      <button class="btn-primary ob-btn" id="ob-2-btn" disabled onclick="nextOb()">Dalej</button>
+    </div>
+
+    <!-- Step 3: First challenge -->
+    <div class="ob-step" id="ob-3">
+      <div class="ob-illustration">
+        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="36" fill="#D8F3DC" opacity="0.5"/>
+          <path d="M28 44 C28 36, 34 30, 40 30 C46 30, 52 36, 52 44" stroke="#2D6A4F" stroke-width="3" fill="none"/>
+          <path d="M40 30 L40 22 M34 26 L40 22 L46 26" stroke="#2D6A4F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="40" cy="48" r="8" fill="#D4A373" opacity="0.3"/>
+          <text x="40" y="52" text-anchor="middle" fill="#1B4332" font-size="14" font-weight="bold">🔥</text>
+        </svg>
+      </div>
+      <h2 class="ob-title">Twój pierwszy cel</h2>
+      <p class="ob-desc">Zrób dziś <strong>8 000 kroków</strong> — to zaledwie godzina spaceru! Zbierzesz pierwsze <strong>Eco-Coins</strong> i odblokujesz osiągnięcie "Pierwszy krok".</p>
+      <button class="btn-primary ob-btn" onclick="finishOnboarding()">Rozpocznij przygodę!</button>
+    </div>
+
+    <button class="ob-skip" onclick="finishOnboarding()">Pomiń</button>
+  </div>
+
+  <!-- ════════ SCREEN: HOME / DASHBOARD ════════ -->
+  <div id="screen-home" class="screen">
+    <div class="screen-header dash-header">
+      <div class="dash-logo-wrap">
+        <svg width="40" height="40" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="lg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#95D5B2"/><stop offset="100%" stop-color="#2D6A4F"/></linearGradient></defs>
+          <rect x="6" y="6" width="68" height="68" rx="16" fill="url(#lg2)" opacity="0.12"/>
+          <path d="M20 32 C20 26, 28 22, 40 22 C52 22, 60 26, 60 32 L60 58 C60 58, 52 52, 40 52 C28 52, 20 58, 20 58 L20 32Z" fill="url(#lg2)"/>
+          <path d="M40 22 L40 52" stroke="white" stroke-width="2.5" opacity="0.5"/>
+          <path d="M40 30 C44 28, 48 30, 50 34 C48 38, 44 40, 40 38" fill="white" opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="dash-brand">R🍃🍃t</div>
+      <div class="dash-balance-badge" onclick="openHistory()">
+        <span class="dash-balance-icon">🪙</span>
+        <span class="dash-balance-amount" id="dash-balance">450</span>
+        <span class="dash-balance-label">EC</span>
+      </div>
+      <button class="dash-notif-btn" onclick="openNotifications()">
+        <span>🔔</span>
+        <span class="dash-notif-dot" id="notif-dot"></span>
+      </button>
+    </div>
+
+    <div class="dash-greeting">👋 Dzień dobry, <strong>Jan</strong></div>
+
+    <div class="offline-banner" id="offline-banner" style="display:none">
+      <span>📡</span>
+      <span>Brak połączenia z internetem — niektóre funkcje mogą być niedostępne</span>
+    </div>
+
+    <div class="progress-card">
+      <div class="progress-header">
+        <span class="progress-title">Dzienny cel kroków</span>
+        <span class="progress-steps"><span class="steps-number">6 200</span> / 8 000</span>
+      </div>
+      <div class="progress-outer">
+        <div class="progress-fill animating" style="width:78%"></div>
+      </div>
+      <div class="progress-stats">
+        <span>Postęp: <strong>78%</strong></span>
+        <span>1 800 kroków do celu</span>
+      </div>
+    </div>
+
+    <!-- Streak badge -->
+    <div class="streak-card" onclick="navigate('screen-rank')">
+      <div class="streak-fire">🔥</div>
+      <div class="streak-info">
+        <span class="streak-days"><strong>5</strong> dni</span>
+        <span class="streak-label">passa aktywności</span>
+      </div>
+      <div class="streak-bonus">+20%</div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="quick-grid">
+      <div class="quick-item" onclick="navigate('screen-activity')">
+        <div class="quick-icon">🏃</div>
+        <span>Dodaj aktywność</span>
+      </div>
+      <div class="quick-item" onclick="openDeclarations()">
+        <div class="quick-icon">🌿</div>
+        <span>Deklaracje</span>
+      </div>
+      <div class="quick-item" onclick="navigate('screen-market')">
+        <div class="quick-icon">🏪</div>
+        <span>Rynek nagród</span>
+      </div>
+      <div class="quick-item" onclick="navigate('screen-rank')">
+        <div class="quick-icon">🏆</div>
+        <span>Ranking</span>
+      </div>
+    </div>
+
+    <!-- Eko-deklaracje carousel -->
+    <div class="section-title">Eko-deklaracje</div>
+    <div class="eco-carousel" id="eco-carousel">
+      <div class="eco-card" onclick="openDeclarations()">
+        <div class="eco-card-bg"></div>
+        <div class="eco-card-icon">🚲</div>
+        <div class="eco-card-title">Rower zamiast auta</div>
+        <div class="eco-card-pts">+5 EC</div>
+      </div>
+      <div class="eco-card" onclick="openDeclarations()">
+        <div class="eco-card-bg" style="background: linear-gradient(135deg,#FEF3C7,#FDE68A)"></div>
+        <div class="eco-card-icon">♻️</div>
+        <div class="eco-card-title">Segregacja odpadów</div>
+        <div class="eco-card-pts">+3 EC</div>
+      </div>
+      <div class="eco-card" onclick="openDeclarations()">
+        <div class="eco-card-bg" style="background: linear-gradient(135deg,#E0E7FF,#C7D2FE)"></div>
+        <div class="eco-card-icon">💡</div>
+        <div class="eco-card-title">Oszczędzanie energii</div>
+        <div class="eco-card-pts">+3 EC</div>
+      </div>
+    </div>
+
+    <!-- Challenge banner -->
+    <div class="section-title" style="margin-top:16px">Wyzwanie tygodnia</div>
+    <div class="challenge-banner" onclick="openChallenge()">
+      <div class="challenge-banner-content">
+        <div class="challenge-banner-badge">Zespół ERGO Hestia</div>
+        <div class="challenge-banner-title">🌱 10 000 kroków dziennie</div>
+        <div class="challenge-banner-sub">Razem z kolegami z pracy • 6 dni zostało</div>
+        <div class="challenge-banner-bar">
+          <div class="challenge-banner-progress" style="width:65%"></div>
+        </div>
+        <div class="challenge-banner-pct">65% · 147/225 osób</div>
+      </div>
+      <div class="challenge-banner-arrow">›</div>
+    </div>
+
+    <div class="spacer20"></div>
+  </div>
+
+  <!-- ════════ SCREEN: ACTIVITY LOG ════════ -->
+  <div id="screen-activity" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="navigate('screen-home')">‹</button>
+      <h1>Dodaj aktywność</h1>
+      <div class="header-spacer"></div>
+    </div>
+
+    <p class="act-intro">Wybierz aktywność — przeliczymy na kroki.</p>
+
+    <div class="act-types" id="act-types">
+      <div class="act-type selected" data-type="walking" onclick="selectActivity(this,'walking')">
+        <div class="act-icon">🚶</div>
+        <div class="act-name">Spacer</div>
+        <div class="act-conversion">krokomierz</div>
+      </div>
+      <div class="act-type" data-type="running" onclick="selectActivity(this,'running')">
+        <div class="act-icon">🏃</div>
+        <div class="act-name">Bieganie</div>
+        <div class="act-conversion">krokomierz</div>
+      </div>
+      <div class="act-type" data-type="cycling" onclick="selectActivity(this,'cycling')">
+        <div class="act-icon">🚴</div>
+        <div class="act-name">Rower</div>
+        <div class="act-conversion">krokomierz/GPS</div>
+      </div>
+      <div class="act-type" data-type="swimming" onclick="selectActivity(this,'swimming')">
+        <div class="act-icon">🏊</div>
+        <div class="act-name">Pływanie</div>
+        <div class="act-conversion">180/min</div>
+      </div>
+      <div class="act-type" data-type="yoga" onclick="selectActivity(this,'yoga')">
+        <div class="act-icon">🧘</div>
+        <div class="act-name">Joga</div>
+        <div class="act-conversion">50/min</div>
+      </div>
+      <div class="act-type" data-type="gym" onclick="selectActivity(this,'gym')">
+        <div class="act-icon">🏋️</div>
+        <div class="act-name">Siłownia</div>
+        <div class="act-conversion">100/min</div>
+      </div>
+    </div>
+
+    <!-- App connection (for walking/running/cycling) -->
+    <div class="act-section" id="act-connect-section">
+      <h4 class="act-section-title">Połączone aplikacje</h4>
+      <div class="app-grid">
+        <div class="app-card" onclick="toggleApp(this,'healthkit')">
+          <div class="app-icon">🍎</div>
+          <div class="app-info">
+            <div class="app-name">Apple Health</div>
+            <div class="app-status" id="status-healthkit">Rozłączone</div>
+          </div>
+          <button class="app-connect" id="btn-healthkit">Połącz</button>
+        </div>
+        <div class="app-card" onclick="toggleApp(this,'googlefit')">
+          <div class="app-icon">📱</div>
+          <div class="app-info">
+            <div class="app-name">Google Fit</div>
+            <div class="app-status" id="status-googlefit">Rozłączone</div>
+          </div>
+          <button class="app-connect" id="btn-googlefit">Połącz</button>
+        </div>
+        <div class="app-card" onclick="toggleApp(this,'garmin')">
+          <div class="app-icon">⌚</div>
+          <div class="app-info">
+            <div class="app-name">Garmin</div>
+            <div class="app-status" id="status-garmin">Rozłączone</div>
+          </div>
+          <button class="app-connect" id="btn-garmin">Połącz</button>
+        </div>
+        <div class="app-card" onclick="toggleApp(this,'fitbit')">
+          <div class="app-icon">🏅</div>
+          <div class="app-info">
+            <div class="app-name">Fitbit</div>
+            <div class="app-status" id="status-fitbit">Rozłączone</div>
+          </div>
+          <button class="app-connect" id="btn-fitbit">Połącz</button>
+        </div>
+      </div>
+      <div class="act-manual-fallback">
+        <button class="act-manual-toggle" id="act-manual-toggle" onclick="toggleManual()">➕ Dodaj ręcznie czas i dystans</button>
+        <div class="act-manual-fields" id="act-manual-fields">
+          <div class="act-input-group act-input-group-sm">
+            <label>Czas trwania</label>
+            <div class="act-input-row">
+              <input type="number" id="act-duration" value="30" min="1" max="300" oninput="calcEstimate()">
+              <span class="unit">minut</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manual input + photo (for swimming/yoga/gym) -->
+    <div id="act-manual-section">
+      <div class="act-input-group">
+        <label>Czas trwania</label>
+        <div class="act-input-row">
+          <input type="number" id="act-duration2" value="30" min="1" max="300" oninput="calcEstimate()">
+          <span class="unit">minut</span>
+        </div>
+      </div>
+      <div class="act-section">
+        <h4 class="act-section-title">Dowód aktywności (opcjonalnie)</h4>
+        <div class="act-photo-area" id="act-photo-area" onclick="toggleActPhoto()">
+          <div class="photo-placeholder">📷</div>
+          <div class="photo-label">Dodaj zdjęcie biletu lub paragonu</div>
+          <div class="photo-sub">Bilet wstępu, karnet, paragon — potwierdź aktywność</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="act-estimate" id="act-estimate">
+      <div class="est-label">Szacowane kroki</div>
+      <div class="est-value" id="act-est-steps">3 600</div>
+      <div class="est-sub">+18 EC (przy dziennym limicie)</div>
+    </div>
+
+    <button class="act-log-btn" id="act-log-btn" onclick="logActivity()">➕ Dodaj do dzisiejszego dnia</button>
+
+    <div class="act-section">
+      <h4 class="act-section-title">Dzisiaj</h4>
+    </div>
+    <div class="act-history" id="act-history"></div>
+
+    <div class="spacer20"></div>
+  </div>
+
+  <!-- ════════ SCREEN: EKO-DEKLARACJE (full list) ════════ -->
+  <div id="screen-declarations" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="navigate('screen-home')">‹</button>
+      <h1>Eko-deklaracje</h1>
+      <div class="header-spacer"></div>
+    </div>
+    <p class="decl-intro">Potwierdź swoje eko-nawyki i zbieraj Eco-Coins! Możesz dodać max 3 dziennie.</p>
+    <div class="decl-counter" id="decl-counter">
+      <span class="decl-counter-current" id="decl-count">2</span>
+      <span class="decl-counter-sep">/</span>
+      <span class="decl-counter-max">3</span>
+      <span class="decl-counter-label">dzisiaj</span>
+    </div>
+
+    <div class="decl-full-list" id="decl-full-list">
+      <div class="decl-full-item" data-pts="5">
+        <div class="decl-emoji">🚲</div>
+        <div class="decl-info">
+          <div class="decl-name">Dojazd rowerem do pracy</div>
+          <div class="decl-desc">Zamiast samochodu</div>
+        </div>
+        <div class="decl-pts">+5</div>
+      </div>
+      <div class="decl-full-item done" data-pts="3">
+        <div class="decl-emoji">♻️</div>
+        <div class="decl-info">
+          <div class="decl-name">Segregacja odpadów</div>
+          <div class="decl-desc">Posegregowane dzisiaj</div>
+        </div>
+        <div class="decl-pts">+3</div>
+      </div>
+      <div class="decl-full-item done" data-pts="3">
+        <div class="decl-emoji">💡</div>
+        <div class="decl-info">
+          <div class="decl-name">Oszczędzanie energii</div>
+          <div class="decl-desc">Wyłączone nieużywane światła</div>
+        </div>
+        <div class="decl-pts">+3</div>
+      </div>
+      <div class="decl-full-item" data-pts="5">
+        <div class="decl-emoji">🚶</div>
+        <div class="decl-info">
+          <div class="decl-name">Pieszo zamiast auta</div>
+          <div class="decl-desc">Krótkie trasy na piechotę</div>
+        </div>
+        <div class="decl-pts">+5</div>
+      </div>
+      <div class="decl-full-item" data-pts="4">
+        <div class="decl-emoji">🛍️</div>
+        <div class="decl-info">
+          <div class="decl-name">Własna torba na zakupy</div>
+          <div class="decl-desc">Bez foliówki</div>
+        </div>
+        <div class="decl-pts">+4</div>
+      </div>
+      <div class="decl-full-item" data-pts="2">
+        <div class="decl-emoji">🚰</div>
+        <div class="decl-info">
+          <div class="decl-name">Butelka wielokrotnego użytku</div>
+          <div class="decl-desc">Uniknąłem plastiku</div>
+        </div>
+        <div class="decl-pts">+2</div>
+      </div>
+    </div>
+    <div class="spacer20"></div>
+  </div>
+
+  <!-- ════════ CONFIRMATION MODAL ════════ -->
+  <div class="modal-overlay" id="modal-decl">
+    <div class="modal-sheet modal-form" id="modal-form">
+      <div class="modal-handle"></div>
+      <div class="modal-title">🚲 Dojazd rowerem do pracy</div>
+      <div class="modal-pts-badge">+<span>5</span> EC</div>
+      <div class="photo-area" id="photo-area" onclick="togglePhoto()">
+        <div class="photo-icon">📷</div>
+        <div class="photo-label">Dodaj zdjęcie (opcjonalnie)</div>
+        <div class="photo-sub">Zrób zdjęcie lub wybierz z galerii</div>
+      </div>
+      <textarea class="modal-textarea" id="decl-desc" placeholder="Komentarz (opcjonalnie)"></textarea>
+      <button class="btn-primary modal-confirm" id="modal-confirm" onclick="confirmDecl()">Potwierdź i zdobądź +5 EC</button>
+    </div>
+    <div class="modal-sheet modal-success" id="modal-success" style="display:none">
+      <div class="modal-handle"></div>
+      <div class="success-check">✅</div>
+      <div class="success-title">Eko-deklaracja przyjęta!</div>
+      <div class="success-pts pts-added">+5</div>
+      <div class="success-sub">Punkty zostaną dodane po weryfikacji</div>
+      <button class="btn-primary" onclick="closeModal()">Super!</button>
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN: MARKET / REWARDS ════════ -->
+  <div id="screen-market" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="navigate('screen-home')">‹</button>
+      <h1>Rynek nagród</h1>
+      <div class="header-spacer"></div>
+    </div>
+    <div class="market-filter" id="market-filter">
+      <button class="mf-pill active" onclick="filterMarket(this,'all')">Wszystko</button>
+      <button class="mf-pill" onclick="filterMarket(this,'food')">Kawa ☕</button>
+      <button class="mf-pill" onclick="filterMarket(this,'wellness')">Wellness</button>
+      <button class="mf-pill" onclick="filterMarket(this,'sport')">Sport</button>
+      <button class="mf-pill" onclick="filterMarket(this,'eco')">Eko</button>
+    </div>
+
+    <div class="market-grid stagger" id="market-grid">
+      <div class="market-item mf-food" onclick="openReward('☕','Kawa w sieciówce','American Cafe','200 EC','#FEF3C7','Darmowa kawa w dowolnej kawiarni American Cafe na terenie Trójmiasta. Do wyboru: latte, cappuccino, espresso lub americano. Możesz dodać mleko roślinne bez dopłaty.','K4W4-2B8X')">
+        <div class="market-item-img" style="background:#FEF3C7">☕</div>
+        <div class="market-item-info">
+          <div class="market-item-title">Kawa w sieciówce</div>
+          <div class="market-item-merchant">American Cafe</div>
+          <div class="market-item-cost">200 EC</div>
+        </div>
+      </div>
+      <div class="market-item mf-wellness" onclick="openReward('🧘','Joga w Centrum','Centrum Jogi Sopot','350 EC','#E0E7FF','Wejściówka na zajęcia jogi w Centrum Jogi w Sopocie. Zajęcia dla początkujących i średniozaawansowanych.','J0G4-9C2D')">
+        <div class="market-item-img" style="background:#E0E7FF">🧘</div>
+        <div class="market-item-info">
+          <div class="market-item-title">Joga w Centrum</div>
+          <div class="market-item-merchant">Centrum Jogi Sopot</div>
+          <div class="market-item-cost">350 EC</div>
+        </div>
+      </div>
+      <div class="market-item mf-sport" onclick="openReward('🏊','Karnet na basen','Aquapark Sopot','500 EC','#DBEAFE','Miesięczny karnet na basen w Aquaparku Sopot. Obejmuje strefę basenów sportowych i rekreacyjnych.','B4S3-7X9M')">
+        <div class="market-item-img" style="background:#DBEAFE">🏊</div>
+        <div class="market-item-info">
+          <div class="market-item-title">Karnet na basen</div>
+          <div class="market-item-merchant">Aquapark Sopot</div>
+          <div class="market-item-cost">500 EC</div>
+        </div>
+      </div>
+      <div class="market-item mf-eco" onclick="openReward('🌱','Zestup roślinny','Zielony Zakątek','150 EC','#D1FAE5','Zestaw 3 sadzonek roślin doniczkowych do biura lub domu.','R05T-4P2Q')">
+        <div class="market-item-img" style="background:#D1FAE5">🌱</div>
+        <div class="market-item-info">
+          <div class="market-item-title">Zestup roślinny</div>
+          <div class="market-item-merchant">Zielony Zakątek</div>
+          <div class="market-item-cost">150 EC</div>
+        </div>
+      </div>
+      <div class="market-item mf-sport" onclick="openReward('💪','Trening personalny','BodyLab Gdańsk','800 EC','#FCE7F3','60-minutowy trening personalny z wykwalifikowanym trenerem w jednej z najlepszych siłowni w Gdańsku.','TR3N-5P3C')">
+        <div class="market-item-img" style="background:#FCE7F3">💪</div>
+        <div class="market-item-info">
+          <div class="market-item-title">Trening personalny</div>
+          <div class="market-item-merchant">BodyLab Gdańsk</div>
+          <div class="market-item-cost">800 EC</div>
+        </div>
+      </div>
+      <div class="market-item mf-food" onclick="openReward('🥗','Lunch fit','FitBistro Gdynia','300 EC','#FEF3C7','Zestaw lunchowy: sałatka lub bowl + sok. Dostępne w 3 wariantach.','F1T-9L4N')">
+        <div class="market-item-img" style="background:#FEF3C7">🥗</div>
+        <div class="market-item-info">
+          <div class="market-item-title">Lunch fit</div>
+          <div class="market-item-merchant">FitBistro Gdynia</div>
+          <div class="market-item-cost">300 EC</div>
+        </div>
+      </div>
+    </div>
+    <div class="spacer20"></div>
+  </div>
+
+  <!-- ════════ REWARD DETAIL (overlay) ════════ -->
+  <div class="reward-detail" id="screen-reward">
+    <div class="screen-header">
+      <button class="btn-back" onclick="navigate('screen-market');hideDetail()">‹</button>
+      <h1>Szczegóły nagrody</h1>
+      <div class="header-spacer"></div>
+    </div>
+
+    <!-- Info state -->
+    <div id="rd-info">
+      <div class="rd-hero">
+        <div class="rd-icon" id="rd-icon" style="background:#FEF3C7">☕</div>
+        <h2 id="rd-title">Kawa w sieciówce</h2>
+        <div class="rd-merchant" id="rd-merchant">American Cafe</div>
+        <div class="rd-cost-badge" id="rd-cost">200 EC</div>
+      </div>
+
+      <div class="rd-section">
+        <h4>Opis</h4>
+        <p id="rd-desc">Darmowa kawa w dowolnej kawiarni American Cafe na terenie Trójmiasta. Do wyboru: latte, cappuccino, espresso lub americano. Możesz dodać mleko roślinne bez dopłaty.</p>
+      </div>
+
+      <div class="rd-section">
+        <h4>Jak wykorzystać?</h4>
+        <ul>
+          <li>Wymień Eco-Coins na kod w aplikacji</li>
+          <li>Pokaż kod w kawiarni</li>
+          <li>Barista zeskanuje i poda Twoją kawę ☕</li>
+        </ul>
+      </div>
+
+      <button class="rd-btn primary" onclick="redeemReward()">Wymień za <span id="rd-cost-btn">200</span> EC</button>
+      <button class="rd-btn secondary" onclick="navigate('screen-market');hideDetail()">Wróć do katalogu</button>
+    </div>
+
+    <!-- Redeemed state -->
+    <div class="rd-redeemed" id="rd-redeemed">
+      <div class="check-big">✅</div>
+      <h3>Gratulacje!</h3>
+      <p>Wymieniłeś nagrodę. Pokaż ten kod w punkcie:</p>
+      <div class="rd-code" id="rd-code">K4W4-2B8X</div>
+      <div class="rd-qr-wrap">
+        <div class="rd-qr-placeholder" id="rd-qr-container">
+          <img id="rd-qr-img" src="" alt="QR Code" class="rd-qr-img">
+          <div id="rd-qr-fallback" class="rd-qr-fallback">
+            <div class="rd-qr-fallback-icon">📱</div>
+            <div class="rd-qr-fallback-text">Generowanie kodu QR…</div>
+          </div>
+        </div>
+      </div>
+      <div class="rd-expiry">⏳ Ważny do: 14 dni</div>
+      <button class="rd-btn primary" onclick="navigate('screen-market');hideDetail()">Wróć do katalogu</button>
+    </div>
+
+    <div class="spacer20"></div>
+  </div>
+
+  <!-- ════════ SCREEN: RANKING ════════ -->
+  <div id="screen-rank" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="navigate('screen-home')">‹</button>
+      <h1>Ranking</h1>
+      <div class="header-spacer"></div>
+    </div>
+
+    <div class="rank-tabs">
+      <button class="rank-tab active" onclick="switchRankTab(this,'team')">Drużynowy</button>
+      <button class="rank-tab" onclick="switchRankTab(this,'individual')">Indywidualny</button>
+    </div>
+
+    <!-- Team ranking -->
+    <div id="rank-team" class="rank-list">
+      <div class="podium">
+        <div class="podium-item second">
+          <div class="podium-bar" style="height:64px">🥈</div>
+          <div class="podium-name">Zespół A</div>
+          <div class="podium-pts">12 450</div>
+        </div>
+        <div class="podium-item first">
+          <div class="podium-bar" style="height:80px">🥇</div>
+          <div class="podium-name">Zespół B</div>
+          <div class="podium-pts">14 200</div>
+        </div>
+        <div class="podium-item third">
+          <div class="podium-bar" style="height:48px">🥉</div>
+          <div class="podium-name">Zespół C</div>
+          <div class="podium-pts">10 800</div>
+        </div>
+      </div>
+      <div class="rank-entries stagger">
+        <div class="rank-entry">
+          <div class="rank-pos">4</div>
+          <div class="rank-avatar av-4">M</div>
+          <div class="rank-info">
+            <div class="rank-name">Marketing</div>
+            <div class="rank-steps">9 800 kroków</div>
+          </div>
+          <div class="rank-pts">9 800</div>
+        </div>
+        <div class="rank-entry">
+          <div class="rank-pos">5</div>
+          <div class="rank-avatar av-5">IT</div>
+          <div class="rank-info">
+            <div class="rank-name">IT</div>
+            <div class="rank-steps">8 400 kroków</div>
+          </div>
+          <div class="rank-pts">8 400</div>
+        </div>
+        <div class="rank-entry me">
+          <div class="rank-pos">6</div>
+          <div class="rank-avatar av-6">HR</div>
+          <div class="rank-info">
+            <div class="rank-name">HR</div>
+            <div class="rank-steps">6 200 kroków</div>
+          </div>
+          <div class="rank-pts">6 200</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Individual ranking -->
+    <div id="rank-individual" class="rank-list" style="display:none">
+      <div class="podium">
+        <div class="podium-item second">
+          <div class="podium-bar" style="height:64px">🥈</div>
+          <div class="podium-name">Anna K.</div>
+          <div class="podium-pts">15 200</div>
+        </div>
+        <div class="podium-item first">
+          <div class="podium-bar" style="height:80px">🥇</div>
+          <div class="podium-name">Piotr W.</div>
+          <div class="podium-pts">18 500</div>
+        </div>
+        <div class="podium-item third">
+          <div class="podium-bar" style="height:48px">🥉</div>
+          <div class="podium-name">Maria L.</div>
+          <div class="podium-pts">13 100</div>
+        </div>
+      </div>
+      <div class="rank-entries stagger">
+        <div class="rank-entry">
+          <div class="rank-pos">4</div>
+          <div class="rank-avatar av-1">T</div>
+          <div class="rank-info">
+            <div class="rank-name">Tomasz R.</div>
+            <div class="rank-steps">11 200 kroków</div>
+          </div>
+          <div class="rank-pts">11 200</div>
+        </div>
+        <div class="rank-entry">
+          <div class="rank-pos">5</div>
+          <div class="rank-avatar av-2">K</div>
+          <div class="rank-info">
+            <div class="rank-name">Katarzyna M.</div>
+            <div class="rank-steps">9 800 kroków</div>
+          </div>
+          <div class="rank-pts">9 800</div>
+        </div>
+        <div class="rank-entry me">
+          <div class="rank-pos">6</div>
+          <div class="rank-avatar av-3">J</div>
+          <div class="rank-info">
+            <div class="rank-name">Jan K.</div>
+            <div class="rank-steps">6 200 kroków</div>
+          </div>
+          <div class="rank-pts">6 200</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN: PROFILE ════════ -->
+  <div id="screen-profile" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="navigate('screen-home')">‹</button>
+      <h1>Profil</h1>
+      <div class="header-spacer"></div>
+    </div>
+
+    <div class="profile-avatar" id="profile-avatar" onclick="navigate('screen-edit')">
+      <div class="avatar-big av-3">J</div>
+      <div class="avatar-edit-badge">✏️</div>
+    </div>
+    <div class="profile-name">Jan Kowalski</div>
+    <div class="profile-email">jan@hestia.pl</div>
+
+    <div class="profile-stats-row">
+      <div class="profile-stat">
+        <div class="profile-stat-value">🔥5</div>
+        <div class="profile-stat-label">Passa (dni)</div>
+      </div>
+      <div class="profile-stat" onclick="openAchievements()" style="cursor:pointer">
+        <div class="profile-stat-value">🏅12</div>
+        <div class="profile-stat-label">Osiągnięcia</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value">🌿24</div>
+        <div class="profile-stat-label">Deklaracje</div>
+      </div>
+    </div>
+
+    <div class="profile-settings stagger">
+      <div class="profile-row" onclick="navigate('screen-edit')">
+        <span class="profile-row-icon">👤</span>
+        <span>Edytuj profil</span>
+        <span class="profile-arrow">›</span>
+      </div>
+      <div class="profile-row" onclick="openHistory()">
+        <span class="profile-row-icon">📋</span>
+        <span>Historia transakcji</span>
+        <span class="profile-arrow">›</span>
+      </div>
+      <div class="profile-row" onclick="openAchievements()">
+        <span class="profile-row-icon">🏅</span>
+        <span>Osiągnięcia</span>
+        <span class="profile-arrow">›</span>
+      </div>
+      <div class="profile-row" onclick="openSettings()">
+        <span class="profile-row-icon">🔔</span>
+        <span>Ustawienia</span>
+        <span class="profile-arrow">›</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ SCREEN: TRANSACTION HISTORY ════════ -->
+  <div id="screen-history" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="navigate('screen-home')">‹</button>
+      <h1>Historia transakcji</h1>
+      <div class="header-spacer"></div>
+    </div>
+
+    <div class="hist-balance">
+      <span class="hist-balance-label">Dostępne Eco-Coins</span>
+      <span class="hist-balance-value" id="hist-balance">450</span>
+    </div>
+
+    <div class="hist-filter" id="hist-filter">
+      <button class="mf-pill active" onclick="filterHistory(this,'all')">Wszystko</button>
+      <button class="mf-pill" onclick="filterHistory(this,'earned')">Zdobyte</button>
+      <button class="mf-pill" onclick="filterHistory(this,'spent')">Wydane</button>
+    </div>
+
+    <div class="hist-list" id="hist-list"></div>
+    <div class="spacer20"></div>
+  </div>
+
+  <!-- ════════ SCREEN: CHALLENGE DETAIL ════════ -->
+  <div id="screen-challenge" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="navigate('screen-home')">‹</button>
+      <h1>Wyzwanie</h1>
+      <div class="header-spacer"></div>
+    </div>
+
+    <div class="ch-hero">
+      <div class="ch-icon">🌱</div>
+      <h2 class="ch-title">10 000 kroków dziennie</h2>
+      <div class="ch-badge">Zespół ERGO Hestia</div>
+      <div class="ch-timer">⏳ 6 dni 14 godzin</div>
+    </div>
+
+    <div class="ch-section">
+      <h4>Twój postęp</h4>
+      <div class="ch-progress-bar">
+        <div class="ch-progress-fill" style="width:71%"></div>
+      </div>
+      <div class="ch-progress-stats">
+        <span>5 z 7 dni</span>
+        <span>71%</span>
+      </div>
+    </div>
+
+    <div class="ch-section">
+      <h4>Zasady</h4>
+      <ul>
+        <li>Każdego dnia przez 7 dni z rzędu zrób minimum 10 000 kroków</li>
+        <li>Liczymy kroki z krokomierza w telefonie lub smartwatcha</li>
+        <li>Pominięcie jednego dnia resetuje postęp</li>
+        <li>Wszyscy w zespole, którzy ukończą, dostają bonus 200 EC</li>
+      </ul>
+    </div>
+
+    <div class="ch-section">
+      <h4>Ranking uczestników</h4>
+      <div class="hist-list" id="ch-leaderboard">
+        <div class="hist-item">
+          <span class="ch-lb-pos">1</span>
+          <span class="ch-lb-name">Piotr W.</span>
+          <span class="ch-lb-days">7 dni</span>
+        </div>
+        <div class="hist-item">
+          <span class="ch-lb-pos">2</span>
+          <span class="ch-lb-name">Anna K.</span>
+          <span class="ch-lb-days">6 dni</span>
+        </div>
+        <div class="hist-item">
+          <span class="ch-lb-pos">3</span>
+          <span class="ch-lb-name">Tomasz R.</span>
+          <span class="ch-lb-days">5 dni</span>
+        </div>
+        <div class="hist-item me">
+          <span class="ch-lb-pos me">4</span>
+          <span class="ch-lb-name me">Jan K.</span>
+          <span class="ch-lb-days me">5 dni</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="spacer20"></div>
+  </div>
+
+  <!-- ════════ SCREEN: NOTIFICATIONS ════════ -->
+  <div id="screen-notifications" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="navigate('screen-home')">‹</button>
+      <h1>Powiadomienia</h1>
+      <button class="notif-clear" onclick="clearAllNotifs()">Wyczyść</button>
+    </div>
+    <div class="notif-list" id="notif-list"></div>
+    <div class="spacer20"></div>
+  </div>
+
+  <!-- ════════ SCREEN: EDIT PROFILE ════════ -->
+  <div id="screen-edit" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="navigate('screen-profile')">‹</button>
+      <h1>Edytuj profil</h1>
+      <div class="header-spacer"></div>
+    </div>
+
+    <div class="edit-avatar" id="edit-avatar">
+      <div class="avatar-big av-3" id="edit-avatar-preview">J</div>
+      <div class="edit-avatar-grid" id="edit-avatar-grid"></div>
+    </div>
+
+    <div class="edit-section">
+      <h4>Podstawowe informacje</h4>
+      <div class="field-group">
+        <label>Imię i nazwisko</label>
+        <input type="text" class="auth-input" id="edit-name" value="Jan Kowalski">
+      </div>
+      <div class="field-group">
+        <label>Dzienny cel kroków</label>
+        <div class="act-input-row">
+          <input type="number" id="edit-step-goal" value="8000" min="1000" max="50000" step="500">
+          <span class="unit">kroków</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit-section">
+      <h4>Powiadomienia</h4>
+      <label class="edit-toggle">
+        <span>Przypomnienie o codziennym celu</span>
+        <div class="toggle"><input type="checkbox" checked><div class="toggle-slider"></div></div>
+      </label>
+      <label class="edit-toggle">
+        <span>Nowe wyzwania i nagrody</span>
+        <div class="toggle"><input type="checkbox" checked><div class="toggle-slider"></div></div>
+      </label>
+      <label class="edit-toggle">
+        <span>Newsletter eko</span>
+        <div class="toggle"><input type="checkbox"><div class="toggle-slider"></div></div>
+      </label>
+    </div>
+
+    <div class="edit-section">
+      <h4>Godziny ciszy</h4>
+      <div class="edit-silent-row">
+        <span>Od</span>
+        <select class="edit-select" id="edit-silent-from">
+          <option>22:00</option><option>23:00</option><option>00:00</option>
+        </select>
+        <span>Do</span>
+        <select class="edit-select" id="edit-silent-to">
+          <option>06:00</option><option>07:00</option><option selected>08:00</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-primary auth-btn" onclick="saveProfile()">Zapisz zmiany</button>
+    <div class="spacer20"></div>
+  </div>
+
+  <!-- ════════ SCREEN: ACHIEVEMENTS ════════ -->
+  <div id="screen-achievements" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="navigate('screen-profile')">‹</button>
+      <h1>Osiągnięcia</h1>
+      <div class="header-spacer"></div>
+    </div>
+    <div class="ach-stats-row">
+      <div class="ach-stat">
+        <span class="ach-stat-value" id="ach-unlocked">0</span>
+        <span class="ach-stat-label">Zdobyte</span>
+      </div>
+      <div class="ach-stat">
+        <span class="ach-stat-value" id="ach-total">0</span>
+        <span class="ach-stat-label">Wszystkich</span>
+      </div>
+      <div class="ach-stat">
+        <span class="ach-stat-value" id="ach-pct">0%</span>
+        <span class="ach-stat-label">Postęp</span>
+      </div>
+    </div>
+    <div class="ach-grid" id="ach-grid"></div>
+    <div class="spacer20"></div>
+  </div>
+
+  <!-- ════════ SCREEN: SETTINGS ════════ -->
+  <div id="screen-settings" class="screen">
+    <div class="screen-header">
+      <button class="btn-back" onclick="navigate('screen-profile')">‹</button>
+      <h1>Ustawienia</h1>
+      <div class="header-spacer"></div>
+    </div>
+
+    <div class="edit-section">
+      <h4>Powiadomienia</h4>
+      <label class="edit-toggle">
+        <span>Przypomnienie o codziennym celu</span>
+        <div class="toggle"><input type="checkbox" checked><div class="toggle-slider"></div></div>
+      </label>
+      <label class="edit-toggle">
+        <span>Nowe wyzwania i nagrody</span>
+        <div class="toggle"><input type="checkbox" checked><div class="toggle-slider"></div></div>
+      </label>
+      <label class="edit-toggle">
+        <span>Newsletter eko</span>
+        <div class="toggle"><input type="checkbox"><div class="toggle-slider"></div></div>
+      </label>
+      <label class="edit-toggle">
+        <span>Eco-Coins i transakcje</span>
+        <div class="toggle"><input type="checkbox" checked><div class="toggle-slider"></div></div>
+      </label>
+    </div>
+
+    <div class="edit-section">
+      <h4>Prywatność</h4>
+      <label class="edit-toggle">
+        <span>Udostępnianie postępów w rankingu</span>
+        <div class="toggle"><input type="checkbox" checked><div class="toggle-slider"></div></div>
+      </label>
+      <label class="edit-toggle">
+        <span>Anonimowe dane statystyczne</span>
+        <div class="toggle"><input type="checkbox" checked><div class="toggle-slider"></div></div>
+      </label>
+      <div class="settings-link" onclick="alert('Przekierowanie do polityki prywatności...')">
+        <span>Polityka prywatności</span>
+        <span class="profile-arrow">›</span>
+      </div>
+      <div class="settings-link" onclick="alert('Przekierowanie do regulaminu...')">
+        <span>Regulamin aplikacji</span>
+        <span class="profile-arrow">›</span>
+      </div>
+    </div>
+
+    <div class="edit-section">
+      <h4>O aplikacji</h4>
+      <div class="settings-link">
+        <span>Wersja</span>
+        <span class="settings-value">1.0.0 (build 7)</span>
+      </div>
+      <div class="settings-link">
+        <span>Aplikacja Root</span>
+        <span class="settings-value">Wellbeing × Sustainability</span>
+      </div>
+      <div class="settings-link">
+        <span>Partner</span>
+        <span class="settings-value" id="settings-partner">Intel Poland</span>
+      </div>
+    </div>
+
+    <button class="settings-logout" onclick="logoutApp()">🚪 Wyloguj się</button>
+    <div class="spacer20"></div>
+  </div>
+
+  <!-- ════════ ACTIVITY EDIT MODAL ════════ -->
+  <div id="edit-activity-modal" class="modal-overlay" onclick="if(event.target===this)cancelEditActivity()">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="edit-act-header">
+        <span id="edit-act-icon" style="font-size:32px"></span>
+        <span id="edit-act-name" style="font-size:18px;font-weight:700;color:var(--slate-900)"></span>
+      </div>
+      <div style="padding:0 6px;margin-top:var(--space-sm)">
+        <label style="display:flex;justify-content:space-between;font-size:15px;font-weight:600;color:var(--slate-700);margin-bottom:8px">
+          <span>Czas trwania</span>
+          <span id="edit-act-value">30 min</span>
+        </label>
+        <input type="range" id="edit-act-slider" min="5" max="180" value="30" step="5"
+               style="width:100%;-webkit-appearance:none;accent-color:var(--moss-green);height:6px;border-radius:3px;background:var(--slate-200);outline:none">
+        <div style="display:flex;justify-content:space-between;font-size:var(--caption);color:var(--slate-500);margin-top:4px">
+          <span>5 min</span><span>3 godz.</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:var(--space-sm);margin-top:var(--space-md)">
+        <button class="modal-btn secondary" onclick="cancelEditActivity()" style="flex:1">Anuluj</button>
+        <button class="modal-btn primary" onclick="saveEditActivity()" style="flex:1">Zapisz</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ TAB BAR ════════ -->
+  <div class="tab-bar">
+    <button class="tab-item active" data-tab="screen-home">
+      <span class="tab-icon">🏠</span><span>Dom</span>
+    </button>
+    <button class="tab-item" data-tab="screen-market">
+      <span class="tab-icon">🏪</span><span>Rynek</span>
+    </button>
+    <button class="tab-item" data-tab="screen-rank">
+      <span class="tab-icon">🏆</span><span>Ranking</span>
+    </button>
+    <button class="tab-item" data-tab="screen-profile">
+      <span class="tab-icon">👤</span><span>Profil</span>
+    </button>
+    <div class="tab-indicator" id="tab-indicator"></div>
+  </div>
+
+  </div><!-- /#app -->
+
+  <script src="script.js"></script>
+
+</body>
+</html>
