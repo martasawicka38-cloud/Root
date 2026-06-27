@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   counterBadgeFull: {
-    backgroundColor: "#FEE2E2",
+    backgroundColor: colors.errorBg,
   },
   counterText: {
     fontSize: 13,
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     borderColor: colors.slate200,
     borderRadius: radius.md,
     padding: 14,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputBg,
   },
   cardIconWrap: {
     width: 44,

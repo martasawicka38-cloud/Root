@@ -401,6 +401,31 @@ export async function fetchEcoActivityLogs() {
   return data;
 }
 
+// Admin endpoints for reward activities
+export async function createRewardActivity(input: {
+  name: string;
+  description?: string;
+  icon: string;
+  category: string;
+  basePoints: number;
+  activityType: string;
+  expiresAt?: string;
+  companyId: string;
+}) {
+  const { data } = await api.post<EcoActivity>("/eco-activities/admin/create", input);
+  return data;
+}
+
+export async function deleteRewardActivity(id: string) {
+  const { data } = await api.delete<{ ok: boolean }>(`/eco-activities/admin/${id}`);
+  return data;
+}
+
+export async function fetchCompanyActivities(companyId: string) {
+  const { data } = await api.get<EcoActivity[]>(`/eco-activities/admin/company/${companyId}`);
+  return data;
+}
+
 export async function fetchLeaderboard(period: LeaderboardPeriod) {
   const { data } = await api.get<LeaderboardEntry[]>(`/leaderboard/${period}`);
   return data;

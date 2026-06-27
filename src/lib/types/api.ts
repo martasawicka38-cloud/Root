@@ -210,6 +210,11 @@ export type EcoActivity = {
   active: boolean;
   createdAt: string;
   completedToday?: boolean;
+  completedOneTime?: boolean;
+  activityType?: string;
+  expiresAt?: string | null;
+  companyId?: string | null;
+  createdByUserId?: string | null;
 };
 
 export type UserEcoActivityLog = {

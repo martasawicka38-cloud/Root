@@ -87,6 +87,7 @@ model Company {
   users            User[]                   @relation("UserCompany")
   tokens           CompanyToken[]
   challenges       Challenge[]
+  ecoActivities    EcoActivity[]
   globalPermission CompanyGlobalPermission?
 }
 
@@ -218,14 +219,22 @@ model RootStage {
 }
 
 model EcoActivity {
-  id          String      @id @default(cuid())
-  name        String      @unique
-  description String?
-  icon        String      @default("🌱")
-  category    EcoCategory
-  basePoints  Int         @default(10)
-  active      Boolean     @default(true)
-  createdAt   DateTime    @default(now())
+  id              String       @id @default(cuid())
+  name            String       @unique
+  description     String?
+  icon            String       @default("leaf")
+  category        EcoCategory
+  basePoints      Int          @default(10)
+  active          Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+
+  // Reward activity fields
+  activityType    String       @default("permanent") // one_time | cyclical | permanent
+  expiresAt       DateTime?    // for cyclical activities
+  companyId       String?      // null = global, specific = company-only
+  createdByUserId String?      // who created it
+
+  company Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   logs UserEcoActivityLog[]
 }

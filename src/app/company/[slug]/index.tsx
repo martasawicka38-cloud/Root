@@ -24,12 +24,15 @@ import {
   createChallenge,
   fetchChallenges,
   deleteChallenge,
+  createRewardActivity,
+  deleteRewardActivity,
+  fetchCompanyActivities,
 } from "../../../lib/api/endpoints";
-import type { CompanyToken } from "../../../lib/types/api";
+import type { CompanyToken, EcoActivity } from "../../../lib/types/api";
 import { colors, radius } from "../../../styles/tokens";
 import { useAppStore } from "../../../store/useAppStore";
 
-type Tab = "employees" | "analytics" | "tokens" | "challenges";
+type Tab = "employees" | "analytics" | "tokens" | "challenges" | "activities";
 
 export default function CompanyPanelScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -149,6 +152,36 @@ export default function CompanyPanelScreen() {
     },
   });
 
+  const companyId = companyQuery.data?.id;
+
+  const activitiesQuery = useQuery({
+    queryKey: ["company", slug, "activities"],
+    queryFn: () => fetchCompanyActivities(companyId!),
+    enabled: !!companyId,
+  });
+
+  const createActivityMutation = useMutation({
+    mutationFn: (input: {
+      name: string;
+      description?: string;
+      icon: string;
+      category: string;
+      basePoints: number;
+      activityType: string;
+      expiresAt?: string;
+    }) => createRewardActivity({ ...input, companyId: companyId! }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company", slug, "activities"] });
+    },
+  });
+
+  const deleteActivityMutation = useMutation({
+    mutationFn: (id: string) => deleteRewardActivity(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company", slug, "activities"] });
+    },
+  });
+
   if (userRole !== "company" && userRole !== "superadmin") {
     return (
       <View style={styles.fallbackRoot}>
@@ -178,6 +211,7 @@ export default function CompanyPanelScreen() {
           { key: "employees" as Tab, label: "Pracownicy" },
           { key: "analytics" as Tab, label: "Analityka" },
           { key: "tokens" as Tab, label: "Tokeny" },
+          { key: "activities" as Tab, label: "Aktywności" },
           { key: "challenges" as Tab, label: "Nagrody" },
         ].map((t) => (
           <Pressable
@@ -249,6 +283,15 @@ export default function CompanyPanelScreen() {
               query={tokensQuery}
               onGenerate={() => generateTokenMutation.mutate()}
               generating={generateTokenMutation.isPending}
+            />
+          )}
+          {tab === "activities" && (
+            <ActivitiesTab
+              query={activitiesQuery}
+              onCreate={(input) => createActivityMutation.mutate(input)}
+              creating={createActivityMutation.isPending}
+              onDelete={(id) => deleteActivityMutation.mutate(id)}
+              deleting={deleteActivityMutation.isPending}
             />
           )}
           {tab === "challenges" && (
@@ -354,13 +397,13 @@ function EmployeesTab({
                 style={[styles.inputSmall, { flex: 2 }]}
                 value={editEmployeeName}
                 onChangeText={onEditNameChange}
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={colors.inputPlaceholder}
               />
               <TextInput
                 style={[styles.inputSmall, { flex: 2 }]}
                 value={editEmployeeEmail}
                 onChangeText={onEditEmailChange}
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor={colors.inputPlaceholder}
                 autoCapitalize="none"
               />
               <Text style={[styles.tableCell, { flex: 1 }]}>{e.balance}</Text>
@@ -375,7 +418,7 @@ function EmployeesTab({
                   onPress={onEditSave}
                   disabled={editingEmployee || !editEmployeeName}
                 >
-                  <Text style={[styles.actionBtnText, { color: "#40916C" }]}>
+                  <Text style={[styles.actionBtnText, { color: colors.success }]}>
                     Zapisz
                   </Text>
                 </Pressable>
@@ -394,7 +437,7 @@ function EmployeesTab({
                 <Text
                   style={{
                     fontSize: 13,
-                    color: "#991B1B",
+                    color: colors.error,
                     fontWeight: "600",
                     alignSelf: "center",
                   }}
@@ -410,7 +453,7 @@ function EmployeesTab({
                   onPress={onDeleteConfirm}
                   disabled={deletingEmployee}
                 >
-                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>
+                  <Text style={[styles.actionBtnText, { color: colors.error }]}>
                     {deletingEmployee ? "Usuwanie..." : "Tak"}
                   </Text>
                 </Pressable>
@@ -428,13 +471,13 @@ function EmployeesTab({
                 <View
                   style={[
                     styles.badge,
-                    { backgroundColor: e.isActive ? "#D8F3DC" : "#FFE5E5" },
+                    { backgroundColor: e.isActive ? colors.successBg : colors.errorBg },
                   ]}
                 >
                   <Text
                     style={[
                       styles.badgeText,
-                      { color: e.isActive ? "#40916C" : "#D62828" },
+                      { color: e.isActive ? colors.success : colors.error },
                     ]}
                   >
                     {e.isActive ? "Aktywny" : "Nieaktywny"}
@@ -445,7 +488,7 @@ function EmployeesTab({
                 <Pressable
                   style={[
                     styles.actionBtn,
-                    { borderColor: "#CBD5E1", backgroundColor: "#F8FAFC" },
+                    { borderColor: colors.creamDark, backgroundColor: colors.inputBg },
                   ]}
                   onPress={() => onEditStart(e.id, e.name, e.email)}
                 >
@@ -459,8 +502,8 @@ function EmployeesTab({
                   style={[
                     styles.actionBtn,
                     {
-                      borderColor: e.isActive ? "#FECACA" : "#BBF7D0",
-                      backgroundColor: e.isActive ? "#FEF2F2" : "#F0FDF4",
+                      borderColor: e.isActive ? colors.errorBorder : colors.successBorder,
+                      backgroundColor: e.isActive ? colors.errorBg : colors.successBg,
                     },
                     togglingId === e.id && { opacity: 0.5 },
                   ]}
@@ -470,7 +513,7 @@ function EmployeesTab({
                   <Text
                     style={[
                       styles.actionBtnText,
-                      { color: e.isActive ? "#D62828" : "#40916C" },
+                      { color: e.isActive ? colors.error : colors.success },
                     ]}
                   >
                     {e.isActive ? "Dezaktywuj" : "Aktywuj"}
@@ -479,11 +522,11 @@ function EmployeesTab({
                 <Pressable
                   style={[
                     styles.actionBtn,
-                    { borderColor: "#FECACA", backgroundColor: "#FEF2F2" },
+                    { borderColor: colors.errorBorder, backgroundColor: colors.errorBg },
                   ]}
                   onPress={() => onDeleteStart(e.id)}
                 >
-                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>
+                  <Text style={[styles.actionBtnText, { color: colors.error }]}>
                     Usun
                   </Text>
                 </Pressable>
@@ -740,21 +783,21 @@ function ChallengesTab({
             placeholder="Tytul"
             value={title}
             onChangeText={setTitle}
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={colors.inputPlaceholder}
           />
           <TextInput
             style={styles.inputSmall}
             placeholder="Opis (opcjonalny)"
             value={description}
             onChangeText={setDescription}
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={colors.inputPlaceholder}
           />
           <TextInput
             style={styles.inputSmall}
             placeholder="Punkty EC"
             value={points}
             onChangeText={setPoints}
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={colors.inputPlaceholder}
             keyboardType="numeric"
           />
           {canCreateGlobal && (
@@ -766,7 +809,7 @@ function ChallengesTab({
                     borderRadius: radius.sm,
                     alignItems: "center",
                     backgroundColor:
-                      scope === "company" ? "#F8FAFC" : colors.slate100,
+                      scope === "company" ? colors.inputBg : colors.slate100,
                   },
                   scope === "company" && {
                     backgroundColor: colors.white,
@@ -800,7 +843,7 @@ function ChallengesTab({
                     borderRadius: radius.sm,
                     alignItems: "center",
                     backgroundColor:
-                      scope === "global" ? "#F8FAFC" : colors.slate100,
+                      scope === "global" ? colors.inputBg : colors.slate100,
                   },
                   scope === "global" && {
                     backgroundColor: colors.white,
@@ -873,13 +916,13 @@ function ChallengesTab({
                 <View
                   style={[
                     styles.badge,
-                    { backgroundColor: c.active ? "#D8F3DC" : "#FFE5E5" },
+                    { backgroundColor: c.active ? colors.successBg : colors.errorBg },
                   ]}
                 >
                   <Text
                     style={[
                       styles.badgeText,
-                      { color: c.active ? "#40916C" : "#D62828" },
+                      { color: c.active ? colors.success : colors.error },
                     ]}
                   >
                     {c.active ? "Aktywny" : "Nieaktywny"}
@@ -890,15 +933,178 @@ function ChallengesTab({
                 <Pressable
                   style={[
                     styles.actionBtn,
-                    { borderColor: "#FECACA", backgroundColor: "#FEF2F2" },
+                    { borderColor: colors.errorBorder, backgroundColor: colors.errorBg },
                     deleting && { opacity: 0.5 },
                   ]}
                   onPress={() => onDelete(c.id)}
                   disabled={deleting}
                 >
-                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>
+                  <Text style={[styles.actionBtnText, { color: colors.error }]}>
                     Usun
                   </Text>
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+    </>
+  );
+}
+
+function ActivitiesTab({
+  query,
+  onCreate,
+  creating,
+  onDelete,
+  deleting,
+}: {
+  query: { data?: EcoActivity[]; isPending: boolean; error: Error | null };
+  onCreate: (input: {
+    name: string;
+    description?: string;
+    icon: string;
+    category: string;
+    basePoints: number;
+    activityType: string;
+    expiresAt?: string;
+  }) => void;
+  creating: boolean;
+  onDelete: (id: string) => void;
+  deleting: boolean;
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [icon, setIcon] = useState("leaf");
+  const [category, setCategory] = useState("MOBILITY");
+  const [basePoints, setBasePoints] = useState("10");
+  const [activityType, setActivityType] = useState<"one_time" | "cyclical">("cyclical");
+  const [expiresAt, setExpiresAt] = useState("");
+
+  if (query.isPending)
+    return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
+  if (query.error)
+    return (
+      <View style={styles.errorCard}>
+        <Text style={styles.errorText}>Nie udalo sie zaladowac aktywnosci.</Text>
+        <Text style={styles.errorDetail}>{query.error.message}</Text>
+      </View>
+    );
+
+  const activities = query.data ?? [];
+
+  const handleCreate = () => {
+    if (!name || !basePoints) return;
+    onCreate({
+      name,
+      description: description || undefined,
+      icon,
+      category,
+      basePoints: parseInt(basePoints, 10),
+      activityType,
+      expiresAt: activityType === "cyclical" && expiresAt ? expiresAt : undefined,
+    });
+    setName("");
+    setDescription("");
+    setBasePoints("10");
+    setActivityType("cyclical");
+    setExpiresAt("");
+    setShowForm(false);
+  };
+
+  return (
+    <>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <Text style={styles.pageTitle}>Aktywnosci pracownikow ({activities.length})</Text>
+        <Pressable style={[styles.genBigBtn, showForm && { opacity: 0.7 }]} onPress={() => setShowForm(!showForm)}>
+          <Text style={styles.genBigBtnText}>{showForm ? "Anuluj" : "Dodaj aktywnosc"}</Text>
+        </Pressable>
+      </View>
+
+      {showForm && (
+        <View style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 16, gap: 10, marginBottom: 16 }}>
+          <TextInput style={styles.inputSmall} placeholder="Nazwa aktywnosci" value={name} onChangeText={setName} placeholderTextColor={colors.inputPlaceholder} />
+          <TextInput style={styles.inputSmall} placeholder="Opis (opcjonalny)" value={description} onChangeText={setDescription} placeholderTextColor={colors.inputPlaceholder} />
+          <TextInput style={styles.inputSmall} placeholder="Ikona (np. leaf, bike, run)" value={icon} onChangeText={setIcon} placeholderTextColor={colors.inputPlaceholder} />
+          <TextInput style={styles.inputSmall} placeholder="Punkty bazowe" value={basePoints} onChangeText={setBasePoints} keyboardType="numeric" placeholderTextColor={colors.inputPlaceholder} />
+
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.slate700 }}>Kategoria:</Text>
+          <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+            {["MOBILITY", "CIRCULARITY", "LOCAL_CONSUMPTION", "NATURE_ACTIVITY"].map((c) => (
+              <Pressable
+                key={c}
+                style={[styles.actionBtn, category === c && { backgroundColor: colors.mossGreen, borderColor: colors.mossGreen }]}
+                onPress={() => setCategory(c)}
+              >
+                <Text style={[styles.actionBtnText, category === c && { color: colors.white }]}>
+                  {{ MOBILITY: "Mobilnosc", CIRCULARITY: "Cykularnosc", LOCAL_CONSUMPTION: "Lokalne", NATURE_ACTIVITY: "Natura" }[c]}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.slate700 }}>Typ aktywnosci:</Text>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Pressable
+              style={[styles.actionBtn, activityType === "one_time" && { backgroundColor: colors.mossGreen, borderColor: colors.mossGreen }]}
+              onPress={() => setActivityType("one_time")}
+            >
+              <Text style={[styles.actionBtnText, activityType === "one_time" && { color: colors.white }]}>Jednorazowa</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.actionBtn, activityType === "cyclical" && { backgroundColor: colors.mossGreen, borderColor: colors.mossGreen }]}
+              onPress={() => setActivityType("cyclical")}
+            >
+              <Text style={[styles.actionBtnText, activityType === "cyclical" && { color: colors.white }]}>Cykliczna (raz dziennie)</Text>
+            </Pressable>
+          </View>
+
+          {activityType === "cyclical" && (
+            <TextInput style={styles.inputSmall} placeholder="Data zakonczenia (RRRR-MM-DD)" value={expiresAt} onChangeText={setExpiresAt} placeholderTextColor={colors.inputPlaceholder} />
+          )}
+
+          <Pressable style={[styles.genBigBtn, (!name || !basePoints || creating) && { opacity: 0.5 }]} onPress={handleCreate} disabled={!name || !basePoints || creating}>
+            <Text style={styles.genBigBtnText}>{creating ? "Tworzenie..." : "Utworz aktywnosc"}</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {activities.length === 0 ? (
+        <Text style={styles.emptyText}>Brak aktywnosci. Kliknij Dodaj aktywnosc, aby utworzyc pierwsza.</Text>
+      ) : (
+        <View style={{ gap: 4 }}>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Nazwa</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Typ</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Punkty</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Wygasa</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 0.7 }]}>Akcje</Text>
+          </View>
+          {activities.map((a) => (
+            <View key={a.id} style={styles.tableRow}>
+              <View style={{ flex: 2 }}>
+                <Text style={[styles.tableCell, { fontWeight: "600" }]}>{a.name}</Text>
+                {a.description && <Text style={{ fontSize: 12, color: colors.slate500 }}>{a.description}</Text>}
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={[styles.badge, { backgroundColor: a.activityType === "one_time" ? colors.warningBg : colors.successBg }]}>
+                  <Text style={[styles.badgeText, { color: a.activityType === "one_time" ? colors.warning : colors.success }]}>
+                    {a.activityType === "one_time" ? "Jednorazowa" : "Cykliczna"}
+                  </Text>
+                </View>
+              </View>
+              <Text style={[styles.tableCell, { flex: 1 }]}>{a.basePoints} pkt</Text>
+              <Text style={[styles.tableCell, { flex: 1, fontSize: 12 }]}>
+                {a.expiresAt ? new Date(a.expiresAt).toLocaleDateString("pl-PL") : "-"}
+              </Text>
+              <View style={{ flex: 0.7 }}>
+                <Pressable
+                  style={[styles.actionBtn, { borderColor: colors.errorBorder, backgroundColor: colors.errorBg }, deleting && { opacity: 0.5 }]}
+                  onPress={() => onDelete(a.id)}
+                  disabled={deleting}
+                >
+                  <Text style={[styles.actionBtnText, { color: colors.error }]}>Usun</Text>
                 </Pressable>
               </View>
             </View>
@@ -988,13 +1194,13 @@ function TokensTab({
                 <View
                   style={[
                     styles.badge,
-                    { backgroundColor: t.used ? "#FFE5E5" : "#D8F3DC" },
+                    { backgroundColor: t.used ? colors.errorBg : colors.successBg },
                   ]}
                 >
                   <Text
                     style={[
                       styles.badgeText,
-                      { color: t.used ? "#D62828" : "#40916C" },
+                      { color: t.used ? colors.error : colors.success },
                     ]}
                   >
                     {t.used ? "Uzyty" : "Aktywny"}
@@ -1121,9 +1327,9 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   errorCard: {
-    backgroundColor: "#FEF2F2",
+    backgroundColor: colors.errorBg,
     borderWidth: 1,
-    borderColor: "#FECACA",
+    borderColor: colors.errorBorder,
     borderRadius: radius.sm,
     padding: 16,
     gap: 8,
@@ -1131,11 +1337,11 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#991B1B",
+    color: colors.error,
   },
   errorDetail: {
     fontSize: 13,
-    color: "#991B1B",
+    color: colors.error,
   },
   tableHeader: {
     flexDirection: "row",
@@ -1194,12 +1400,12 @@ const styles = StyleSheet.create({
     color: colors.slate700,
   },
   actionBtnSuccess: {
-    borderColor: "#BBF7D0",
-    backgroundColor: "#F0FDF4",
+    borderColor: colors.successBorder,
+    backgroundColor: colors.successBg,
   },
   actionBtnWarn: {
-    borderColor: "#FECACA",
-    backgroundColor: "#FEF2F2",
+    borderColor: colors.errorBorder,
+    backgroundColor: colors.errorBg,
   },
   inputSmall: {
     fontSize: 13,

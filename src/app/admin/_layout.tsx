@@ -1,6 +1,8 @@
 import { Stack } from "expo-router";
 import { Platform, StyleSheet, Text, View } from "react-native";
 
+import { colors } from "../../styles/tokens";
+
 export default function AdminLayout() {
   if (Platform.OS !== "web") {
     return (
@@ -26,12 +28,12 @@ const styles = StyleSheet.create({
   fallbackTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#1B4332",
+    color: colors.deepForest,
     textAlign: "center",
   },
   fallbackText: {
     fontSize: 15,
-    color: "#64748B",
+    color: colors.olive,
     textAlign: "center",
     marginTop: 8,
   },

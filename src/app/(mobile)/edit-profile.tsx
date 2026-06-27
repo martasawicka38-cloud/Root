@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     padding: 14,
     fontSize: 15,
     color: colors.slate900,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputBg,
   },
   button: {
     marginTop: 16,

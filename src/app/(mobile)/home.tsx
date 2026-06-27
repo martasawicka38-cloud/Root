@@ -1,7 +1,7 @@
 import { Link } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import {
   BikeIcon,
@@ -16,7 +16,7 @@ import {
 
 import { Screen } from "../../features/common/Screen";
 import { fetchMe } from "../../lib/api/endpoints";
-import { colors, radius, spacing } from "../../styles/tokens";
+import { colors } from "../../styles/tokens";
 
 const CARD_W = 188;
 
@@ -33,19 +33,19 @@ export default function HomeScreen() {
       icon: BikeIcon,
       label: "Rower zamiast auta",
       points: "+5",
-      tint: "#CCE0E2",
+      bgColor: colors.greenLight,
     },
     {
       icon: RecycleIcon,
       label: "Segregacja odpadow",
       points: "+3",
-      tint: "#E5E8DF",
+      bgColor: colors.creamDark,
     },
     {
       icon: LightbulbIcon,
       label: "Oszczedzanie energii",
       points: "+3",
-      tint: "#E4E8F2",
+      bgColor: colors.creamMedium,
     },
   ];
 
@@ -67,99 +67,120 @@ export default function HomeScreen() {
       }
     }, 3200);
 
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, [declarationCards.length]);
 
   const allCards = [...declarationCards, ...declarationCards];
 
   return (
     <Screen>
-      <Text style={styles.screenTitle}>
+      <Text style={styles.greeting}>
         Dzien dobry,{" "}
-        <Text style={styles.screenTitleAccent}>{profileName.split(" ")[0]}</Text>
+        <Text style={styles.greetingName}>{profileName.split(" ")[0]}</Text>
       </Text>
 
-      <View style={styles.card}>
-        <View style={styles.cardRow}>
-          <Text style={styles.cardLabel}>Dzienny cel krokow</Text>
-          <Text style={styles.cardValue}>
-            <Text style={styles.cardValueMain}>
+      {/* Steps Card */}
+      <View style={[styles.card, styles.cardLight, { marginBottom: 16 }]}>
+        <View style={styles.cardBody}>
+          <View style={styles.stepsHeader}>
+            <Text style={styles.labelSmall}>Dzienny cel krokow</Text>
+            <Text style={styles.stepsValue}>
               {currentSteps.toLocaleString("pl-PL")}
+              <Text style={styles.stepsGoal}>
+                {" "}/ {stepGoal.toLocaleString("pl-PL")}
+              </Text>
             </Text>
-            <Text style={styles.cardValueSub}>
-              {" "}/ {stepGoal.toLocaleString("pl-PL")}
+          </View>
+
+          <View style={styles.progressBarBg}>
+            <View
+              style={[styles.progressBarFill, { width: `${progress}%` }]}
+            />
+          </View>
+
+          <View style={styles.stepsFooter}>
+            <Text style={styles.labelSmall}>
+              Postep: <Text style={{ fontWeight: "600" }}>{progress}%</Text>
             </Text>
-          </Text>
-        </View>
-        <View style={styles.bar}>
-          <View style={[styles.barFill, { width: `${progress}%` }]} />
-        </View>
-        <View style={styles.cardMetaRow}>
-          <Text style={styles.cardMeta}>
-            Postep: <Text style={styles.cardMetaStrong}>{progress}%</Text>
-          </Text>
-          <Text style={styles.cardMeta}>
-            {stepGoal - currentSteps} krokow do celu
-          </Text>
+            <Text style={styles.labelSmall}>
+              {stepGoal - currentSteps} krokow do celu
+            </Text>
+          </View>
         </View>
       </View>
 
-      <View style={styles.streakCard}>
-        <View style={styles.streakLeft}>
-          <View style={styles.streakIconBox}>
-            <FireIcon size={24} color={colors.error} />
+      {/* Streak Card */}
+      <View style={[styles.card, styles.cardLight, { marginBottom: 16 }]}>
+        <View style={styles.cardBody}>
+          <View style={styles.streakRow}>
+            <View style={styles.streakLeft}>
+              <View style={styles.streakIconBox}>
+                <FireIcon size={24} color={colors.sunset} />
+              </View>
+              <View>
+                <Text style={styles.streakDays}>5 dni</Text>
+                <Text style={styles.streakLabel}>passa aktywnosci</Text>
+              </View>
+            </View>
+            <View style={styles.streakBadge}>
+              <Text style={styles.streakBadgeText}>+20%</Text>
+            </View>
           </View>
-          <View>
-            <Text style={styles.streakDays}>5 dni</Text>
-            <Text style={styles.streakLabel}>passa aktywnosci</Text>
-          </View>
-        </View>
-        <View style={styles.streakBadge}>
-          <Text style={styles.streakBadgeText}>+20%</Text>
         </View>
       </View>
 
-      <View style={styles.quickList}>
-        <Link href="/(mobile)/activity" style={styles.quickRow}>
-          <View style={styles.quickInner}>
-            <View style={styles.quickIconBox}>
+      {/* Quick Actions */}
+      <View style={styles.quickActions}>
+        <Link href="/(mobile)/activity" asChild>
+          <Pressable style={styles.actionBtn}>
+            <View style={styles.actionIconBox}>
               <RunningIcon size={22} color={colors.mossGreen} />
             </View>
-            <Text style={styles.quickLabel}>Dodaj aktywnosc</Text>
-          </View>
+            <Text style={styles.actionLabel}>Dodaj aktywnosc</Text>
+          </Pressable>
         </Link>
-        <Link href="/(mobile)/declarations" style={styles.quickRow}>
-          <View style={styles.quickInner}>
-            <View style={styles.quickIconBox}>
+
+        <Link href="/(mobile)/declarations" asChild>
+          <Pressable style={styles.actionBtn}>
+            <View style={styles.actionIconBox}>
               <LeafIcon size={22} color={colors.mossGreen} />
             </View>
-            <Text style={styles.quickLabel}>Zloz eko-deklaracje</Text>
-          </View>
+            <Text style={styles.actionLabel}>Zloz eko-deklaracje</Text>
+          </Pressable>
         </Link>
-        <Link href="/(mobile)/market" style={styles.quickRow}>
-          <View style={styles.quickInner}>
-            <View style={styles.quickIconBox}>
+
+        <Link href="/(mobile)/market" asChild>
+          <Pressable style={styles.actionBtn}>
+            <View style={styles.actionIconBox}>
               <CoinIcon size={22} color={colors.mossGreen} />
             </View>
-            <Text style={styles.quickLabel}>Przegladaj rynek nagrod</Text>
-          </View>
+            <Text style={styles.actionLabel}>Przegladaj rynek nagrod</Text>
+          </Pressable>
         </Link>
-        <Link href="/(mobile)/ranking" style={styles.quickRow}>
-          <View style={styles.quickInner}>
-            <View style={styles.quickIconBox}>
+
+        <Link href="/(mobile)/ranking" asChild>
+          <Pressable style={styles.actionBtn}>
+            <View style={styles.actionIconBox}>
               <TrophyIcon size={22} color={colors.mossGreen} />
             </View>
-            <Text style={styles.quickLabel}>Sprawdz ranking</Text>
-          </View>
+            <Text style={styles.actionLabel}>Sprawdz ranking</Text>
+          </Pressable>
         </Link>
       </View>
 
+      {/* Eko-deklaracje Carousel */}
       <Text style={styles.sectionTitle}>Eko-deklaracje</Text>
       <ScrollView
         ref={scrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.carousel}
+        contentContainerStyle={{
+          gap: 10,
+          paddingVertical: 8,
+          paddingRight: 12,
+        }}
         scrollEnabled={false}
       >
         {allCards.map((card, idx) => {
@@ -168,16 +189,25 @@ export default function HomeScreen() {
             <Link
               href="/(mobile)/declarations"
               key={`${card.label}-${idx}`}
-              style={[styles.declCard, { backgroundColor: card.tint }]}
+              style={{ width: CARD_W }}
             >
-              <Icon size={32} color={colors.deepForest} />
-              <View style={styles.declTextWrap}>
-                <Text style={styles.declLabel} numberOfLines={2}>
-                  {card.label}
-                </Text>
-                <View style={styles.declPointsRow}>
-                  <Text style={styles.declPoints}>{card.points}</Text>
-                  <Text style={styles.declUnit}>EC</Text>
+              <View
+                style={[
+                  styles.declCard,
+                  { backgroundColor: card.bgColor },
+                ]}
+              >
+                <View style={styles.declCardBody}>
+                  <Icon size={32} color={colors.brownDark} />
+                  <View style={styles.declCardInfo}>
+                    <Text style={styles.declCardLabel} numberOfLines={2}>
+                      {card.label}
+                    </Text>
+                    <View style={styles.declCardPointsRow}>
+                      <Text style={styles.declCardPoints}>{card.points}</Text>
+                      <Text style={styles.declCardPointsLabel}>EC</Text>
+                    </View>
+                  </View>
                 </View>
               </View>
             </Link>
@@ -185,20 +215,27 @@ export default function HomeScreen() {
         })}
       </ScrollView>
 
-      <Text style={styles.sectionTitle}>Wyzwanie tygodnia</Text>
-      <Link href="/(mobile)/challenge" style={styles.challengeCard}>
-        <View style={styles.challengeInner}>
-          <View style={styles.challengeHeader}>
-            <Text style={styles.challengeTeam}>ZESPOL INTEL POLAND</Text>
-            <Text style={styles.challengeTitle}>10 000 krokow dziennie</Text>
+      {/* Weekly Challenge */}
+      <Text style={[styles.sectionTitle, { marginTop: 16 }]}>
+        Wyzwanie tygodnia
+      </Text>
+      <Link href="/(mobile)/challenge" asChild>
+        <View style={styles.challengeCard}>
+          <View style={styles.cardBody}>
+            <View style={{ gap: 4 }}>
+              <Text style={styles.challengeOrg}>ZESPOL INTEL POLAND</Text>
+              <Text style={styles.challengeTitle}>10 000 krokow dziennie</Text>
+            </View>
+            <Text style={styles.labelSmall}>
+              Razem z kolegami z pracy • 6 dni zostalo
+            </Text>
+            <View style={styles.progressBarBg}>
+              <View
+                style={[styles.progressBarFillGreen, { width: "65%" }]}
+              />
+            </View>
+            <Text style={styles.labelSmall}>65% · 147/225 osob</Text>
           </View>
-          <Text style={styles.challengeDesc}>
-            Razem z kolegami z pracy • 6 dni zostalo
-          </Text>
-          <View style={styles.bar}>
-            <View style={[styles.barFillOrange, { width: "65%" }]} />
-          </View>
-          <Text style={styles.challengeStats}>65% · 147/225 osob</Text>
         </View>
       </Link>
     </Screen>
@@ -206,85 +243,68 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  screenTitle: {
-    fontSize: 22,
+  greeting: {
+    fontSize: 24,
     fontWeight: "700",
-    color: colors.slate900,
-    marginBottom: spacing.sm,
+    color: colors.brownDark,
+    marginBottom: 16,
   },
-  screenTitleAccent: {
-    color: colors.deepForest,
+  greetingName: {
+    color: colors.greenDark,
   },
-
   card: {
-    marginTop: 12,
-    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.slate200,
-    borderRadius: radius.lg,
-    padding: spacing.sm,
-    gap: 10,
+    borderColor: colors.creamDark,
+    borderRadius: 12,
   },
-  cardRow: {
+  cardLight: {
+    backgroundColor: colors.creamLight,
+  },
+  cardBody: {
+    gap: 12,
+    padding: 16,
+  },
+  stepsHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  cardLabel: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: colors.slate600,
+  labelSmall: {
+    fontSize: 13,
+    color: colors.olive,
   },
-  cardValue: {
-    fontSize: 28,
+  stepsValue: {
+    fontSize: 24,
     fontWeight: "800",
-    color: colors.deepForest,
+    color: colors.brownDark,
   },
-  cardValueMain: {
-    fontSize: 32,
-    color: colors.deepForest,
-  },
-  cardValueSub: {
-    fontSize: 20,
-    color: colors.slate400,
+  stepsGoal: {
+    fontSize: 18,
     fontWeight: "600",
+    color: colors.olive,
   },
-  bar: {
+  progressBarBg: {
     height: 8,
-    borderRadius: radius.full,
-    backgroundColor: colors.slate200,
+    borderRadius: 9999,
+    backgroundColor: colors.creamDark,
     overflow: "hidden",
   },
-  barFill: {
+  progressBarFill: {
     height: "100%",
-    backgroundColor: colors.mossGreen,
-    borderRadius: radius.full,
+    borderRadius: 9999,
+    backgroundColor: colors.greenDark,
   },
-  barFillOrange: {
+  progressBarFillGreen: {
     height: "100%",
-    backgroundColor: colors.sunset,
-    borderRadius: radius.full,
+    borderRadius: 9999,
+    backgroundColor: colors.greenBright,
   },
-  cardMetaRow: {
+  stepsFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
   },
-  cardMeta: {
-    fontSize: 13,
-    color: colors.slate600,
-  },
-  cardMetaStrong: {
-    color: colors.deepForest,
-    fontWeight: "700",
-  },
-
-  streakCard: {
-    marginTop: 10,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.slate200,
-    borderRadius: radius.lg,
-    padding: spacing.xs,
+  streakRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -292,146 +312,121 @@ const styles = StyleSheet.create({
   streakLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.x2s,
+    gap: 12,
   },
   streakIconBox: {
     width: 48,
     height: 48,
-    borderRadius: radius.md,
-    backgroundColor: "#FEE2E2",
+    borderRadius: 8,
+    backgroundColor: "rgba(139, 69, 19, 0.1)",
     alignItems: "center",
     justifyContent: "center",
   },
   streakDays: {
-    color: colors.error,
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "800",
+    color: colors.error,
   },
   streakLabel: {
-    color: colors.slate600,
     fontSize: 14,
-    marginTop: 2,
+    color: colors.olive,
+    marginTop: 4,
   },
   streakBadge: {
-    backgroundColor: "#FEF3C7",
-    borderRadius: radius.full,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    backgroundColor: colors.creamDark,
+    borderRadius: 9999,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   streakBadgeText: {
-    color: colors.warmGold,
+    fontSize: 14,
     fontWeight: "700",
-    fontSize: 15,
+    color: colors.greenBright,
   },
-
-  quickList: {
-    marginTop: spacing.xs,
-    gap: spacing.x2s,
+  quickActions: {
+    gap: 12,
+    marginBottom: 16,
   },
-  quickRow: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.slate200,
-    borderRadius: radius.md,
-  },
-  quickInner: {
+  actionBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: colors.creamDark,
+    borderRadius: 12,
   },
-  quickIconBox: {
+  actionIconBox: {
     width: 44,
     height: 44,
-    borderRadius: radius.sm,
-    backgroundColor: colors.mist,
+    borderRadius: 8,
+    backgroundColor: colors.creamMedium,
     alignItems: "center",
     justifyContent: "center",
   },
-  quickLabel: {
-    flex: 1,
+  actionLabel: {
     fontSize: 15,
     fontWeight: "600",
-    color: colors.slate900,
+    color: colors.brownDark,
   },
-
   sectionTitle: {
-    marginTop: spacing.md,
     fontSize: 18,
     fontWeight: "700",
-    color: colors.slate900,
-  },
-
-  carousel: {
-    gap: 10,
-    paddingVertical: 8,
-    paddingRight: 12,
+    color: colors.brownDark,
+    marginBottom: 12,
   },
   declCard: {
-    width: 176,
-    borderRadius: radius.md,
-    padding: spacing.xs,
-    gap: spacing.x2s,
+    borderWidth: 1,
+    borderColor: colors.creamDark,
+    borderRadius: 12,
+    overflow: "hidden",
+    width: CARD_W,
   },
-  declTextWrap: {
-    gap: 2,
+  declCardBody: {
+    padding: 16,
+    gap: 12,
   },
-  declLabel: {
+  declCardInfo: {
+    gap: 4,
+  },
+  declCardLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: colors.slate900,
-    lineHeight: 18,
+    color: colors.brownDark,
   },
-  declPointsRow: {
+  declCardPointsRow: {
     flexDirection: "row",
     alignItems: "baseline",
     gap: 4,
   },
-  declPoints: {
-    fontSize: 28,
+  declCardPoints: {
+    fontSize: 24,
     fontWeight: "800",
-    color: colors.warmGold,
+    color: colors.greenBright,
   },
-  declUnit: {
-    fontSize: 13,
+  declCardPointsLabel: {
+    fontSize: 14,
     fontWeight: "600",
-    color: colors.slate600,
-    marginTop: -2,
+    color: colors.olive,
   },
-
-  challengeCard: {
-    marginTop: 10,
-    backgroundColor: "#FEFCE8",
-    borderRadius: radius.md,
-    padding: spacing.sm,
-    borderWidth: 1,
-    borderColor: "#E7DFA9",
-  },
-  challengeInner: {
-    gap: spacing.xs,
-  },
-  challengeHeader: {
-    gap: 4,
-  },
-  challengeTeam: {
-    fontSize: 11,
+  challengeOrg: {
+    fontSize: 12,
     fontWeight: "700",
-    color: colors.warmGold,
+    color: colors.greenBright,
     letterSpacing: 1,
   },
   challengeTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: colors.deepForest,
+    color: colors.brownDark,
   },
-  challengeDesc: {
-    fontSize: 14,
-    color: colors.slate600,
-  },
-  challengeStats: {
-    fontSize: 13,
-    color: colors.slate600,
-    fontWeight: "600",
+  challengeCard: {
+    backgroundColor: colors.creamMedium,
+    borderColor: colors.creamDark,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 10,
   },
 });

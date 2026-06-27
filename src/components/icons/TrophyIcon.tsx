@@ -1,7 +1,7 @@
 import Svg, { Path } from "react-native-svg";
 import type { IconProps } from "./types";
 
-export function TrophyIcon({ size = 24, color = "#D4A373" }: IconProps) {
+export function TrophyIcon({ size = 24, color = "#C5E368" }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path

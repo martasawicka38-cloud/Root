@@ -47,7 +47,7 @@ export default function HistoryScreen() {
             style={[
               styles.pointsBadge,
               i.points < 0
-                ? { backgroundColor: "#FEE2E2" }
+                ? { backgroundColor: colors.errorBg }
                 : { backgroundColor: colors.mist },
             ]}
           >
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 14,
     borderRadius: radius.full,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputBg,
     borderWidth: 1,
     borderColor: colors.slate200,
     overflow: "hidden",
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     borderColor: colors.slate200,
     borderRadius: radius.md,
     padding: 14,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputBg,
   },
   cardName: {
     fontSize: 15,

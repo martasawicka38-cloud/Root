@@ -187,16 +187,16 @@ const styles = StyleSheet.create({
     color: colors.slate900,
   },
   errorBox: {
-    backgroundColor: "#FEF2F2",
+    backgroundColor: colors.errorBg,
     borderWidth: 1,
-    borderColor: "#FECACA",
+    borderColor: colors.errorBorder,
     borderRadius: radius.sm,
     padding: 12,
     marginBottom: 8,
   },
   errorText: {
     fontSize: 14,
-    color: "#991B1B",
+    color: colors.error,
     fontWeight: "600",
     textAlign: "center",
   },
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     padding: 14,
     fontSize: 15,
     color: colors.slate900,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputBg,
   },
   forgot: {
     alignSelf: "flex-end",

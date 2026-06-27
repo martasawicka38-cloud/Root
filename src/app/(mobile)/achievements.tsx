@@ -38,7 +38,7 @@ export default function AchievementsScreen() {
               style={[
                 styles.iconWrap,
                 isUnlocked
-                  ? { backgroundColor: "#FEF3C7" }
+                  ? { backgroundColor: colors.warningBg }
                   : { backgroundColor: colors.slate100 },
               ]}
             >
@@ -93,11 +93,11 @@ const styles = StyleSheet.create({
     borderColor: colors.slate200,
     borderRadius: radius.md,
     padding: 14,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputBg,
   },
   cardUnlocked: {
-    borderColor: "#E8D48B",
-    backgroundColor: "#FFFEF5",
+    borderColor: colors.creamDark,
+    backgroundColor: colors.creamLight,
   },
   iconWrap: {
     width: 48,

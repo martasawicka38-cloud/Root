@@ -1,7 +1,7 @@
 import Svg, { Path } from "react-native-svg";
 import type { IconProps } from "./types";
 
-export function DropIcon({ size = 24, color = "#40916C" }: IconProps) {
+export function DropIcon({ size = 24, color = "#4A5E0F" }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path

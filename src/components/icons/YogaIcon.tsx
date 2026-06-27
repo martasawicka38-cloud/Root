@@ -1,7 +1,7 @@
 import Svg, { Path, Circle } from "react-native-svg";
 import type { IconProps } from "./types";
 
-export function YogaIcon({ size = 24, color = "#1B4332" }: IconProps) {
+export function YogaIcon({ size = 24, color = "#293211" }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Circle

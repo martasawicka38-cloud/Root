@@ -9,12 +9,37 @@ export class ActivityService {
   constructor(private readonly prisma: PrismaService) {}
 
   async listEcoActivities(userId?: string) {
+    // Get user's companyId if logged in
+    let companyId: string | null = null;
+    if (userId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { companyId: true },
+      });
+      companyId = user?.companyId ?? null;
+    }
+
     const activities = await this.prisma.ecoActivity.findMany({
-      where: { active: true },
+      where: {
+        active: true,
+        OR: [
+          { companyId: null }, // Global activities
+          { companyId: companyId }, // Company-specific activities for user's company
+        ],
+      },
       orderBy: { category: "asc" },
     });
 
-    if (!userId) return activities;
+    // Filter out expired cyclical activities
+    const now = new Date();
+    const validActivities = activities.filter((a) => {
+      if (a.activityType === "cyclical" && a.expiresAt && a.expiresAt < now) {
+        return false;
+      }
+      return true;
+    });
+
+    if (!userId) return validActivities;
 
     const todayStart = this.getDayStart();
     const todayLogs = await this.prisma.userEcoActivityLog.findMany({
@@ -26,9 +51,28 @@ export class ActivityService {
     });
     const todayIds = new Set(todayLogs.map((l) => l.ecoActivityId));
 
-    return activities.map((a) => ({
+    // For one-time activities, check if user has ever completed them
+    const oneTimeIds = new Set(
+      validActivities
+        .filter((a) => a.activityType === "one_time")
+        .map((a) => a.id)
+    );
+
+    const completedOneTimeLogs = await this.prisma.userEcoActivityLog.findMany({
+      where: {
+        userId,
+        ecoActivityId: { in: Array.from(oneTimeIds) },
+      },
+      select: { ecoActivityId: true },
+    });
+    const completedOneTimeIds = new Set(
+      completedOneTimeLogs.map((l) => l.ecoActivityId)
+    );
+
+    return validActivities.map((a) => ({
       ...a,
       completedToday: todayIds.has(a.id),
+      completedOneTime: a.activityType === "one_time" && completedOneTimeIds.has(a.id),
     }));
   }
 
@@ -59,7 +103,33 @@ export class ActivityService {
       where: { id: ecoActivityId },
     });
     if (!ecoActivity) {
-      return { ok: false, message: "Aktywność nie istnieje." };
+      return { ok: false, message: "Aktywnosc nie istnieje." };
+    }
+
+    // Check if activity is expired
+    if (ecoActivity.activityType === "cyclical" && ecoActivity.expiresAt && ecoActivity.expiresAt < new Date()) {
+      return { ok: false, message: "Ta aktywnosc juz wygasla." };
+    }
+
+    // Check if user has access to this activity
+    if (ecoActivity.companyId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { companyId: true },
+      });
+      if (user?.companyId !== ecoActivity.companyId) {
+        return { ok: false, message: "Nie masz dostepu do tej aktywnosci." };
+      }
+    }
+
+    // For one-time activities, check if already completed
+    if (ecoActivity.activityType === "one_time") {
+      const existingLog = await this.prisma.userEcoActivityLog.findFirst({
+        where: { userId, ecoActivityId },
+      });
+      if (existingLog) {
+        return { ok: false, message: "Ta aktywnosc jednorazowa zostala juz wykonana." };
+      }
     }
 
     const todayStart = this.getDayStart();
@@ -67,7 +137,7 @@ export class ActivityService {
       where: { userId, ecoActivityId, createdAt: { gte: todayStart } },
     });
     if (alreadyDone > 0) {
-      return { ok: false, message: "Tę aktywność możesz wykonać tylko raz dziennie." };
+      return { ok: false, message: "Tę aktywnosc mozesz wykonac tylko raz dziennie." };
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -143,6 +213,14 @@ export class ActivityService {
           expPoints,
         },
       });
+
+      // For one-time activities, deactivate after use
+      if (ecoActivity.activityType === "one_time") {
+        await tx.ecoActivity.update({
+          where: { id: ecoActivityId },
+          data: { active: false },
+        });
+      }
 
       const user = await tx.user.findUnique({
         where: { id: userId },
@@ -270,12 +348,50 @@ export class ActivityService {
       return { canTransform: false, nextStage: null };
     }
 
-    // Users without a stage are treated as being at level 0 (pre-seed).
-    // The first stage (Ziarenko) should not trigger a transform.
     const canTransform = currentRootStageId
       ? nextStage.id !== currentRootStageId
       : nextStage.level > 1;
 
     return { canTransform, nextStage };
+  }
+
+  // Admin methods for reward activities
+  async createRewardActivity(data: {
+    name: string;
+    description?: string;
+    icon: string;
+    category: string;
+    basePoints: number;
+    activityType: string;
+    expiresAt?: string;
+    companyId: string;
+    createdByUserId: string;
+  }) {
+    return this.prisma.ecoActivity.create({
+      data: {
+        name: data.name,
+        description: data.description,
+        icon: data.icon,
+        category: data.category as any,
+        basePoints: data.basePoints,
+        activityType: data.activityType,
+        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+        companyId: data.companyId,
+        createdByUserId: data.createdByUserId,
+      },
+    });
+  }
+
+  async deleteRewardActivity(id: string) {
+    return this.prisma.ecoActivity.delete({
+      where: { id },
+    });
+  }
+
+  async listCompanyActivities(companyId: string) {
+    return this.prisma.ecoActivity.findMany({
+      where: { companyId },
+      orderBy: { createdAt: "desc" },
+    });
   }
 }

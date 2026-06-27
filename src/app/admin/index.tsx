@@ -32,12 +32,15 @@ import {
   fetchGlobalPermissions,
   grantGlobalPermission,
   revokeGlobalPermission,
+  createRewardActivity,
+  deleteRewardActivity,
+  fetchCompanyActivities,
 } from "../../lib/api/endpoints";
-import type { AdminUser, ChallengeItem, Company, CompanyGlobalPermissionItem, CompanyToken } from "../../lib/types/api";
+import type { AdminUser, ChallengeItem, Company, CompanyGlobalPermissionItem, CompanyToken, EcoActivity } from "../../lib/types/api";
 import { AppLogo } from "../../features/common/AppLogo";
 import { colors, radius } from "../../styles/tokens";
 
-type Tab = "dashboard" | "users" | "companies" | "tokens" | "challenges";
+type Tab = "dashboard" | "users" | "companies" | "tokens" | "challenges" | "activities";
 
 function Badge({ label, color, bg }: { label: string; color: string; bg: string }) {
   return (
@@ -53,9 +56,9 @@ const badgeStyles = StyleSheet.create({
 });
 
 const ROLE_BADGE: Record<string, { label: string; color: string; bg: string }> = {
-  user: { label: "Uzytkownik", color: "#1B4332", bg: "#D8F3DC" },
-  company: { label: "Firma", color: "#7B2D8B", bg: "#F3E8FF" },
-  superadmin: { label: "Superadmin", color: "#B22222", bg: "#FFE4E1" },
+  user: { label: "Uzytkownik", color: colors.deepForest, bg: colors.successBg },
+  company: { label: "Firma", color: colors.roleCompany, bg: colors.roleCompanyBg },
+  superadmin: { label: "Superadmin", color: colors.roleSuperadmin, bg: colors.roleSuperadminBg },
 };
 
 export default function AdminScreen() {
@@ -208,6 +211,7 @@ export default function AdminScreen() {
           { key: "dashboard" as Tab, label: "Dashboard" },
           { key: "users" as Tab, label: "Uzytkownicy" },
           { key: "companies" as Tab, label: "Firmy" },
+          { key: "activities" as Tab, label: "Aktywnosci" },
           { key: "challenges" as Tab, label: "Nagrody" },
           { key: "tokens" as Tab, label: "Tokeny firmowe" },
         ].map((t) => (
@@ -290,6 +294,11 @@ export default function AdminScreen() {
               tokensQuery={companyTokensQuery}
               onGenerate={() => generateCompanyTokenMutation.mutate()}
               generating={generateCompanyTokenMutation.isPending}
+            />
+          )}
+          {tab === "activities" && (
+            <ActivitiesTab
+              companiesQuery={companiesQuery}
             />
           )}
         </View>
@@ -498,9 +507,9 @@ function UsersTab({
         </Pressable>
         {createUserOpen && (
           <View style={{ gap: 10 }}>
-            <TextInput style={styles.input} placeholder="Nazwa" value={newUserName} onChangeText={onNewUserNameChange} placeholderTextColor="#94A3B8" />
-            <TextInput style={styles.input} placeholder="Email" value={newUserEmail} onChangeText={onNewUserEmailChange} placeholderTextColor="#94A3B8" autoCapitalize="none" keyboardType="email-address" />
-            <TextInput style={styles.input} placeholder="Haslo" value={newUserPassword} onChangeText={onNewUserPasswordChange} placeholderTextColor="#94A3B8" secureTextEntry />
+            <TextInput style={styles.input} placeholder="Nazwa" value={newUserName} onChangeText={onNewUserNameChange} placeholderTextColor={colors.inputPlaceholder} />
+            <TextInput style={styles.input} placeholder="Email" value={newUserEmail} onChangeText={onNewUserEmailChange} placeholderTextColor={colors.inputPlaceholder} autoCapitalize="none" keyboardType="email-address" />
+            <TextInput style={styles.input} placeholder="Haslo" value={newUserPassword} onChangeText={onNewUserPasswordChange} placeholderTextColor={colors.inputPlaceholder} secureTextEntry />
             <View style={{ flexDirection: "row", gap: 8 }}>
               <Pressable style={[styles.roleTab, newUserRole === "user" && styles.roleTabActive, { flex: 1 }]} onPress={() => onNewUserRoleChange("user")}>
                 <Text style={[styles.roleTabText, newUserRole === "user" && styles.roleTabTextActive]}>Uzytkownik</Text>
@@ -534,7 +543,7 @@ function UsersTab({
               <Text style={[styles.tableCell, { flex: 2 }]}>{u.name}</Text>
               <Text style={[styles.tableCell, { flex: 2 }]}>{u.email}</Text>
               <View style={{ flex: 1 }}>
-                <Badge {...ROLE_BADGE[u.role] ?? { label: u.role, color: "#333", bg: "#eee" }} />
+                <Badge {...ROLE_BADGE[u.role] ?? { label: u.role, color: colors.olive, bg: colors.creamLight }} />
               </View>
               <View style={{ flex: 1.5, gap: 4 }}>
                 {assignUserId === u.id ? (
@@ -545,7 +554,7 @@ function UsersTab({
                         placeholder="companyId"
                         value={assignCompanyId}
                         onChangeText={onAssignCompanyIdChange}
-                        placeholderTextColor="#94A3B8"
+                        placeholderTextColor={colors.inputPlaceholder}
                       />
                     </View>
                     <Pressable
@@ -553,7 +562,7 @@ function UsersTab({
                       onPress={onAssign}
                       disabled={assigning || !assignCompanyId}
                     >
-                      <Text style={[styles.actionBtnText, { color: "#40916C" }]}>Przypisz</Text>
+                      <Text style={[styles.actionBtnText, { color: colors.success }]}>Przypisz</Text>
                     </Pressable>
                     <Pressable style={styles.actionBtn} onPress={() => onStartAssign(null)}>
                       <Text style={styles.actionBtnText}>Anuluj</Text>
@@ -561,10 +570,10 @@ function UsersTab({
                   </View>
                 ) : (
                   <Pressable
-                    style={[styles.actionBtn, { borderColor: "#BBF7D0", backgroundColor: "#F0FDF4" }]}
+                    style={[styles.actionBtn, { borderColor: colors.successBorder, backgroundColor: colors.successBg }]}
                     onPress={() => onStartAssign(u.id)}
                   >
-                    <Text style={[styles.actionBtnText, { color: "#40916C" }]}>Przypisz do firmy</Text>
+                    <Text style={[styles.actionBtnText, { color: colors.success }]}>Przypisz do firmy</Text>
                   </Pressable>
                 )}
               </View>
@@ -589,14 +598,14 @@ function UsersTab({
         <View key={u.id} style={styles.tableRow}>
           {editUserId === u.id ? (
             <>
-              <TextInput style={[styles.inputSmall, { flex: 1.5 }]} value={editName} onChangeText={onEditNameChange} placeholderTextColor="#94A3B8" />
-              <TextInput style={[styles.inputSmall, { flex: 1.5 }]} value={editEmail} onChangeText={onEditEmailChange} placeholderTextColor="#94A3B8" autoCapitalize="none" />
+              <TextInput style={[styles.inputSmall, { flex: 1.5 }]} value={editName} onChangeText={onEditNameChange} placeholderTextColor={colors.inputPlaceholder} />
+              <TextInput style={[styles.inputSmall, { flex: 1.5 }]} value={editEmail} onChangeText={onEditEmailChange} placeholderTextColor={colors.inputPlaceholder} autoCapitalize="none" />
               <View style={{ flex: 0.8 }} />
               <Text style={[styles.tableCell, { flex: 0.8 }]}>{u.company?.name ?? "-"}</Text>
               <View style={{ flex: 0.7 }} />
               <View style={{ flex: 1.5, gap: 4, flexDirection: "row" }}>
                 <Pressable style={[styles.actionBtn, styles.actionBtnSuccess, (editingUser || !editName) && { opacity: 0.5 }]} onPress={onEditSave} disabled={editingUser || !editName}>
-                  <Text style={[styles.actionBtnText, { color: "#40916C" }]}>Zapisz</Text>
+                  <Text style={[styles.actionBtnText, { color: colors.success }]}>Zapisz</Text>
                 </Pressable>
                 <Pressable style={styles.actionBtn} onPress={onEditCancel}>
                   <Text style={styles.actionBtnText}>Anuluj</Text>
@@ -607,13 +616,13 @@ function UsersTab({
             <>
               <Text style={[styles.tableCell, { flex: 1.5 }]}>{u.name}</Text>
               <Text style={[styles.tableCell, { flex: 1.5 }]}>{u.email}</Text>
-              <View style={{ flex: 0.8 }}><Badge {...ROLE_BADGE[u.role] ?? { label: u.role, color: "#333", bg: "#eee" }} /></View>
+              <View style={{ flex: 0.8 }}><Badge {...ROLE_BADGE[u.role] ?? { label: u.role, color: colors.olive, bg: colors.creamLight }} /></View>
               <Text style={[styles.tableCell, { flex: 0.8 }]}>{u.company?.name ?? "-"}</Text>
               <View style={{ flex: 0.7 }} />
               <View style={{ flex: 1.5, gap: 4, flexDirection: "row" }}>
-                <Text style={{ fontSize: 13, color: "#991B1B", fontWeight: "600", alignSelf: "center" }}>Usunac?</Text>
+                <Text style={{ fontSize: 13, color: colors.error, fontWeight: "600", alignSelf: "center" }}>Usunac?</Text>
                 <Pressable style={[styles.actionBtn, styles.actionBtnWarn, deletingUser && { opacity: 0.5 }]} onPress={onDeleteConfirm} disabled={deletingUser}>
-                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>{deletingUser ? "Usuwanie..." : "Tak"}</Text>
+                  <Text style={[styles.actionBtnText, { color: colors.error }]}>{deletingUser ? "Usuwanie..." : "Tak"}</Text>
                 </Pressable>
                 <Pressable style={styles.actionBtn} onPress={onDeleteCancel}>
                   <Text style={styles.actionBtnText}>Nie</Text>
@@ -625,22 +634,22 @@ function UsersTab({
               <Text style={[styles.tableCell, { flex: 1.5 }]}>{u.name}</Text>
               <Text style={[styles.tableCell, { flex: 1.5 }]}>{u.email}</Text>
               <View style={{ flex: 0.8 }}>
-                <Badge {...ROLE_BADGE[u.role] ?? { label: u.role, color: "#333", bg: "#eee" }} />
+                <Badge {...ROLE_BADGE[u.role] ?? { label: u.role, color: colors.olive, bg: colors.creamLight }} />
               </View>
               <Text style={[styles.tableCell, { flex: 0.8 }]}>{u.company?.name ?? "-"}</Text>
               <View style={{ flex: 0.7 }}>
-                <Badge label={u.isActive ? "Aktywny" : "Nieaktywny"} color={u.isActive ? "#40916C" : "#D62828"} bg={u.isActive ? "#D8F3DC" : "#FFE5E5"} />
+                <Badge label={u.isActive ? "Aktywny" : "Nieaktywny"} color={u.isActive ? colors.success : colors.error} bg={u.isActive ? colors.successBg : colors.errorBg} />
               </View>
               <View style={{ flex: 1.5, gap: 4, flexDirection: "row" }}>
-                <Pressable style={[styles.actionBtn, { borderColor: "#CBD5E1", backgroundColor: "#F8FAFC" }]} onPress={() => onEditStart(u.id, u.name, u.email)}>
+                <Pressable style={[styles.actionBtn, { borderColor: colors.creamDark, backgroundColor: colors.inputBg }]} onPress={() => onEditStart(u.id, u.name, u.email)}>
                   <Text style={[styles.actionBtnText, { color: colors.slate600 }]}>Edytuj</Text>
                 </Pressable>
                 <Pressable style={[styles.actionBtn, u.isActive ? styles.actionBtnWarn : styles.actionBtnSuccess, togglingId === u.id && { opacity: 0.5 }]} onPress={() => onToggleActive(u.id)} disabled={togglingId === u.id}>
-                  <Text style={[styles.actionBtnText, { color: u.isActive ? "#D62828" : "#40916C" }]}>{u.isActive ? "Dezaktywuj" : "Aktywuj"}</Text>
+                  <Text style={[styles.actionBtnText, { color: u.isActive ? colors.error : colors.success }]}>{u.isActive ? "Dezaktywuj" : "Aktywuj"}</Text>
                 </Pressable>
                 {u.role !== "superadmin" && (
-                  <Pressable style={[styles.actionBtn, { borderColor: "#FECACA", backgroundColor: "#FEF2F2" }]} onPress={() => onDeleteStart(u.id)}>
-                    <Text style={[styles.actionBtnText, { color: "#D62828" }]}>Usun</Text>
+                  <Pressable style={[styles.actionBtn, { borderColor: colors.errorBorder, backgroundColor: colors.errorBg }]} onPress={() => onDeleteStart(u.id)}>
+                    <Text style={[styles.actionBtnText, { color: colors.error }]}>Usun</Text>
                   </Pressable>
                 )}
               </View>
@@ -673,8 +682,8 @@ function CompaniesTab({
       <View style={styles.createCard}>
         <Text style={styles.createTitle}>Dodaj nowa firme</Text>
         <View style={styles.createRow}>
-          <TextInput style={[styles.input, { flex: 1 }]} placeholder="Nazwa firmy" value={newName} onChangeText={onNameChange} placeholderTextColor="#94A3B8" />
-          <TextInput style={[styles.input, { flex: 0.5 }]} placeholder="slug" value={newSlug} onChangeText={onSlugChange} placeholderTextColor="#94A3B8" autoCapitalize="none" />
+          <TextInput style={[styles.input, { flex: 1 }]} placeholder="Nazwa firmy" value={newName} onChangeText={onNameChange} placeholderTextColor={colors.inputPlaceholder} />
+          <TextInput style={[styles.input, { flex: 0.5 }]} placeholder="slug" value={newSlug} onChangeText={onSlugChange} placeholderTextColor={colors.inputPlaceholder} autoCapitalize="none" />
           <Pressable style={[styles.createBtn, (!newName || !newSlug || creating) && { opacity: 0.5 }]} onPress={onCreateCompany} disabled={!newName || !newSlug || creating}>
             <Text style={styles.createBtnText}>Dodaj</Text>
           </Pressable>
@@ -721,7 +730,7 @@ function CompaniesTab({
                         <View key={t.id} style={styles.tokenRow}>
                           <Text style={[styles.tokenCell, { flex: 2, fontFamily: "monospace", fontSize: 12 }]}>{t.token}</Text>
                           <View style={{ flex: 0.7 }}>
-                            <Badge label={t.used ? "Uzyty" : "Dostepny"} color={t.used ? "#D62828" : "#40916C"} bg={t.used ? "#FFE5E5" : "#D8F3DC"} />
+                            <Badge label={t.used ? "Uzyty" : "Dostepny"} color={t.used ? colors.error : colors.success} bg={t.used ? colors.errorBg : colors.successBg} />
                           </View>
                           <Text style={[styles.tokenCell, { flex: 1 }]}>{new Date(t.createdAt).toLocaleDateString("pl-PL")}</Text>
                         </View>
@@ -733,6 +742,197 @@ function CompaniesTab({
             </View>
           ))}
         </View>
+      )}
+    </>
+  );
+}
+
+function ActivitiesTab({
+  companiesQuery,
+}: {
+  companiesQuery: { data?: Company[]; isPending: boolean; error: Error | null };
+}) {
+  const [selectedCompany, setSelectedCompany] = useState<string>("");
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [icon, setIcon] = useState("leaf");
+  const [category, setCategory] = useState("MOBILITY");
+  const [basePoints, setBasePoints] = useState("10");
+  const [activityType, setActivityType] = useState<"one_time" | "cyclical">("cyclical");
+  const [expiresAt, setExpiresAt] = useState("");
+
+  const queryClient = useQueryClient();
+
+  const { data: activities = [], isPending: activitiesPending } = useQuery({
+    queryKey: ["admin-activities", selectedCompany],
+    queryFn: () => fetchCompanyActivities(selectedCompany),
+    enabled: !!selectedCompany,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: createRewardActivity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-activities", selectedCompany] });
+      resetForm();
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteRewardActivity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-activities", selectedCompany] });
+    },
+  });
+
+  const resetForm = () => {
+    setShowForm(false);
+    setName("");
+    setDescription("");
+    setIcon("leaf");
+    setCategory("MOBILITY");
+    setBasePoints("10");
+    setActivityType("cyclical");
+    setExpiresAt("");
+  };
+
+  const handleSubmit = () => {
+    if (!selectedCompany || !name || !basePoints) return;
+    createMutation.mutate({
+      name,
+      description: description || undefined,
+      icon,
+      category,
+      basePoints: parseInt(basePoints, 10),
+      activityType,
+      expiresAt: activityType === "cyclical" && expiresAt ? expiresAt : undefined,
+      companyId: selectedCompany,
+    });
+  };
+
+  return (
+    <>
+      <Text style={styles.sectionTitle}>Zarzadzanie aktywnosciami</Text>
+
+      {/* Company selector */}
+      <View style={styles.filterRow}>
+        <Text style={styles.filterLabel}>Firma:</Text>
+        <View style={styles.filterButtons}>
+          {companiesQuery.data?.map((c) => (
+            <Pressable
+              key={c.id}
+              style={[styles.filterBtn, selectedCompany === c.id && styles.filterBtnActive]}
+              onPress={() => setSelectedCompany(c.id)}
+            >
+              <Text style={[styles.filterBtnText, selectedCompany === c.id && styles.filterBtnTextActive]}>
+                {c.name}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      {selectedCompany && (
+        <>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <Text style={styles.pageTitle}>Aktywnosci firmy ({activities.length})</Text>
+            <Pressable style={[styles.genBigBtn, showForm && { opacity: 0.7 }]} onPress={() => showForm ? resetForm() : setShowForm(true)}>
+              <Text style={styles.genBigBtnText}>{showForm ? "Anuluj" : "Dodaj aktywnosc"}</Text>
+            </Pressable>
+          </View>
+
+          {showForm && (
+            <View style={styles.formCard}>
+              <TextInput style={styles.input} placeholder="Nazwa aktywnosci" value={name} onChangeText={setName} placeholderTextColor={colors.inputPlaceholder} />
+              <TextInput style={styles.input} placeholder="Opis (opcjonalny)" value={description} onChangeText={setDescription} placeholderTextColor={colors.inputPlaceholder} />
+              <TextInput style={styles.input} placeholder="Ikona (np. leaf, bike, run)" value={icon} onChangeText={setIcon} placeholderTextColor={colors.inputPlaceholder} />
+              <TextInput style={styles.input} placeholder="Punkty bazowe" value={basePoints} onChangeText={setBasePoints} keyboardType="numeric" placeholderTextColor={colors.inputPlaceholder} />
+
+              <Text style={styles.formLabel}>Kategoria:</Text>
+              <View style={styles.filterButtons}>
+                {["MOBILITY", "CIRCULARITY", "LOCAL_CONSUMPTION", "NATURE_ACTIVITY"].map((c) => (
+                  <Pressable
+                    key={c}
+                    style={[styles.filterBtn, category === c && styles.filterBtnActive]}
+                    onPress={() => setCategory(c)}
+                  >
+                    <Text style={[styles.filterBtnText, category === c && styles.filterBtnTextActive]}>
+                      {{ MOBILITY: "Mobilnosc", CIRCULARITY: "Cykularnosc", LOCAL_CONSUMPTION: "Lokalne", NATURE_ACTIVITY: "Natura" }[c]}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+
+              <Text style={styles.formLabel}>Typ aktywnosci:</Text>
+              <View style={styles.filterButtons}>
+                <Pressable
+                  style={[styles.filterBtn, activityType === "one_time" && styles.filterBtnActive]}
+                  onPress={() => setActivityType("one_time")}
+                >
+                  <Text style={[styles.filterBtnText, activityType === "one_time" && styles.filterBtnTextActive]}>Jednorazowa</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.filterBtn, activityType === "cyclical" && styles.filterBtnActive]}
+                  onPress={() => setActivityType("cyclical")}
+                >
+                  <Text style={[styles.filterBtnText, activityType === "cyclical" && styles.filterBtnTextActive]}>Cykliczna (raz dziennie)</Text>
+                </Pressable>
+              </View>
+
+              {activityType === "cyclical" && (
+                <TextInput style={styles.input} placeholder="Data zakonczenia (RRRR-MM-DD)" value={expiresAt} onChangeText={setExpiresAt} placeholderTextColor={colors.inputPlaceholder} />
+              )}
+
+              <Pressable style={[styles.primaryBtn, (!name || !basePoints || createMutation.isPending) && { opacity: 0.5 }]} onPress={handleSubmit} disabled={!name || !basePoints || createMutation.isPending}>
+                <Text style={styles.primaryBtnText}>{createMutation.isPending ? "Tworzenie..." : "Utworz aktywnosc"}</Text>
+              </Pressable>
+            </View>
+          )}
+
+          {activitiesPending ? (
+            <ActivityIndicator />
+          ) : activities.length === 0 ? (
+            <Text style={styles.emptyText}>Brak aktywnosci dla tej firmy.</Text>
+          ) : (
+            <View style={{ gap: 4 }}>
+              <View style={styles.tableHeader}>
+                <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Nazwa</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Typ</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Punkty</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Wygasa</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 0.7 }]}>Akcje</Text>
+              </View>
+              {activities.map((a) => (
+                <View key={a.id} style={styles.tableRow}>
+                  <View style={{ flex: 2 }}>
+                    <Text style={[styles.tableCell, { fontWeight: "600" }]}>{a.name}</Text>
+                    {a.description && <Text style={{ fontSize: 12, color: colors.slate500 }}>{a.description}</Text>}
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={[styles.badge, { backgroundColor: a.activityType === "one_time" ? colors.warningBg : colors.successBg }]}>
+                      <Text style={[styles.badgeText, { color: a.activityType === "one_time" ? colors.warning : colors.success }]}>
+                        {a.activityType === "one_time" ? "Jednorazowa" : "Cykliczna"}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.tableCell, { flex: 1 }]}>{a.basePoints} pkt</Text>
+                  <Text style={[styles.tableCell, { flex: 1, fontSize: 12 }]}>
+                    {a.expiresAt ? new Date(a.expiresAt).toLocaleDateString("pl-PL") : "-"}
+                  </Text>
+                  <View style={{ flex: 0.7 }}>
+                    <Pressable
+                      style={[styles.dangerBtn, deleteMutation.isPending && { opacity: 0.5 }]}
+                      onPress={() => deleteMutation.mutate(a.id)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      <Text style={styles.dangerBtnText}>Usun</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </>
       )}
     </>
   );
@@ -776,7 +976,7 @@ function CompanyTokensTab({
             <View key={t.id} style={styles.tokenTableRow}>
               <Text style={[styles.tokenCell, { flex: 3, fontFamily: "monospace", fontSize: 13 }]}>{t.token}</Text>
               <View style={{ flex: 0.7 }}>
-                <Badge label={t.used ? "Uzyty" : "Dostepny"} color={t.used ? "#D62828" : "#40916C"} bg={t.used ? "#FFE5E5" : "#D8F3DC"} />
+                <Badge label={t.used ? "Uzyty" : "Dostepny"} color={t.used ? colors.error : colors.success} bg={t.used ? colors.errorBg : colors.successBg} />
               </View>
               <Text style={[styles.tokenCell, { flex: 1 }]}>{new Date(t.createdAt).toLocaleDateString("pl-PL")}</Text>
             </View>
@@ -788,12 +988,12 @@ function CompanyTokensTab({
 }
 
 const adminBadgeStyles = StyleSheet.create({
-  badge: { backgroundColor: "#FFE4E1", paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
-  text: { fontSize: 13, fontWeight: "600", color: "#B22222" },
+  badge: { backgroundColor: colors.roleSuperadminBg, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
+  text: { fontSize: 13, fontWeight: "600", color: colors.roleSuperadmin },
 });
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#F1F5F9" },
+  root: { flex: 1, backgroundColor: colors.inputBg },
   fallbackRoot: { flex: 1, justifyContent: "center", alignItems: "center", padding: 40 },
   fallbackTitle: { fontSize: 22, fontWeight: "700", color: colors.deepForest, textAlign: "center" },
   fallbackText: { fontSize: 15, color: colors.slate500, textAlign: "center", marginTop: 8 },
@@ -809,9 +1009,9 @@ const styles = StyleSheet.create({
   bodyInner: { maxWidth: 1100, width: "100%", alignSelf: "center" },
   pageTitle: { fontSize: 28, fontWeight: "700", color: colors.slate900, marginBottom: 20 },
   sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.slate900, marginBottom: 14, marginTop: 8 },
-  errorCard: { backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA", borderRadius: radius.md, padding: 20, gap: 8 },
-  errorText: { fontSize: 16, fontWeight: "600", color: "#991B1B" },
-  errorDetail: { fontSize: 14, color: "#7F1D1D" },
+  errorCard: { backgroundColor: colors.errorBg, borderWidth: 1, borderColor: colors.errorBorder, borderRadius: radius.md, padding: 20, gap: 8 },
+  errorText: { fontSize: 16, fontWeight: "600", color: colors.error },
+  errorDetail: { fontSize: 14, color: colors.deepForest },
   hintText: { fontSize: 14, color: colors.slate500, marginBottom: 16 },
   statsRow: { flexDirection: "row", gap: 16, marginBottom: 16 },
   statCard: { flex: 1, backgroundColor: colors.white, borderRadius: radius.md, borderWidth: 1, borderColor: colors.slate200, padding: 20, gap: 4 },
@@ -834,20 +1034,19 @@ const styles = StyleSheet.create({
   activityName: { fontSize: 15, fontWeight: "600", color: colors.slate900 },
   activityType: { fontSize: 13, color: colors.slate500, textTransform: "capitalize" },
   activityPoints: { fontSize: 16, fontWeight: "700", color: colors.mossGreen },
-  emptyText: { fontSize: 15, color: colors.slate500, textAlign: "center", marginTop: 24 },
   tableHeader: { flexDirection: "row", backgroundColor: colors.slate100, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 12, marginBottom: 4 },
   tableHeaderCell: { fontSize: 12, fontWeight: "700", color: colors.slate500, textTransform: "uppercase" },
   tableRow: { flexDirection: "row", alignItems: "center", backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, paddingVertical: 12, paddingHorizontal: 12, marginBottom: 4, gap: 4 },
   tableCell: { fontSize: 14, color: colors.slate900 },
   actionBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.sm, borderWidth: 1, alignItems: "center" },
-  actionBtnWarn: { borderColor: "#FECACA", backgroundColor: "#FEF2F2" },
-  actionBtnSuccess: { borderColor: "#BBF7D0", backgroundColor: "#F0FDF4" },
+  actionBtnWarn: { borderColor: colors.errorBorder, backgroundColor: colors.errorBg },
+  actionBtnSuccess: { borderColor: colors.successBorder, backgroundColor: colors.successBg },
   actionBtnText: { fontSize: 12, fontWeight: "600" },
-  inputSmall: { borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, padding: 6, fontSize: 12, color: colors.slate900, backgroundColor: "#F8FAFC" },
+  inputSmall: { borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, padding: 6, fontSize: 12, color: colors.slate900, backgroundColor: colors.inputBg },
   createCard: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 20, gap: 12, marginBottom: 8 },
   createTitle: { fontSize: 16, fontWeight: "700", color: colors.slate900 },
   createRow: { flexDirection: "row", gap: 8, alignItems: "center" },
-  input: { borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, padding: 10, fontSize: 14, color: colors.slate900, backgroundColor: "#F8FAFC" },
+  input: { borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, padding: 10, fontSize: 14, color: colors.slate900, backgroundColor: colors.inputBg },
   createBtn: { backgroundColor: colors.mossGreen, borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 20 },
   createBtnText: { color: colors.white, fontSize: 14, fontWeight: "700" },
   companyCard: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, overflow: "hidden" },
@@ -857,9 +1056,9 @@ const styles = StyleSheet.create({
   expandIcon: { fontSize: 14, color: colors.slate500, marginLeft: 12 },
   companyDetails: { borderTopWidth: 1, borderTopColor: colors.slate200, padding: 16, gap: 12 },
   tokenActions: { flexDirection: "row", justifyContent: "flex-end" },
-  genTokenBtn: { backgroundColor: "#7B2D8B", borderRadius: radius.sm, paddingVertical: 8, paddingHorizontal: 16 },
+  genTokenBtn: { backgroundColor: colors.roleCompany, borderRadius: radius.sm, paddingVertical: 8, paddingHorizontal: 16 },
   genTokenBtnText: { color: colors.white, fontSize: 13, fontWeight: "600" },
-  genBigBtn: { backgroundColor: "#7B2D8B", borderRadius: radius.md, paddingVertical: 14, paddingHorizontal: 24, alignItems: "center", marginBottom: 20, alignSelf: "flex-start" },
+  genBigBtn: { backgroundColor: colors.roleCompany, borderRadius: radius.md, paddingVertical: 14, paddingHorizontal: 24, alignItems: "center", marginBottom: 20, alignSelf: "flex-start" },
   genBigBtnText: { color: colors.white, fontSize: 15, fontWeight: "700" },
   tokensTitle: { fontSize: 14, fontWeight: "700", color: colors.slate700 },
   tokenList: { gap: 4 },
@@ -874,6 +1073,25 @@ const styles = StyleSheet.create({
   roleTabActive: { backgroundColor: colors.white, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 2 },
   roleTabText: { fontSize: 14, fontWeight: "600", color: colors.slate500 },
   roleTabTextActive: { color: colors.slate900 },
+  filterRow: { flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 16 },
+  filterLabel: { fontSize: 14, fontWeight: "600", color: colors.slate700 },
+  filterButtons: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
+  filterBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.slate200, backgroundColor: colors.white },
+  filterBtnActive: { backgroundColor: colors.mossGreen, borderColor: colors.mossGreen },
+  filterBtnText: { fontSize: 13, fontWeight: "600", color: colors.slate600 },
+  filterBtnTextActive: { color: colors.white },
+  primaryBtn: { backgroundColor: colors.mossGreen, borderRadius: 8, paddingVertical: 12, alignItems: "center", marginBottom: 16 },
+  primaryBtnText: { color: colors.white, fontSize: 14, fontWeight: "700" },
+  formCard: { backgroundColor: colors.white, borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: colors.slate200 },
+  formLabel: { fontSize: 13, fontWeight: "600", color: colors.slate700, marginBottom: 4, marginTop: 8 },
+  emptyText: { fontSize: 14, color: colors.slate500, textAlign: "center", padding: 20 },
+  dangerBtn: { backgroundColor: colors.errorBg, borderRadius: 6, paddingHorizontal: 12, paddingVertical: 6 },
+  dangerBtnText: { color: colors.error, fontSize: 12, fontWeight: "600" },
+  listRow: { flexDirection: "row", alignItems: "center", padding: 12, backgroundColor: colors.white, borderRadius: 8, marginBottom: 8, borderWidth: 1, borderColor: colors.slate200 },
+  listName: { fontSize: 14, fontWeight: "600", color: colors.slate900 },
+  listEmail: { fontSize: 12, color: colors.slate500, marginTop: 2 },
+  badge: { alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  badgeText: { fontSize: 12, fontWeight: "600" },
 });
 
 function ChallengesTab({
@@ -933,9 +1151,9 @@ function ChallengesTab({
         </Pressable>
         {showForm && (
           <View style={{ gap: 10 }}>
-            <TextInput style={styles.input} placeholder="Tytul" value={title} onChangeText={setTitle} placeholderTextColor="#94A3B8" />
-            <TextInput style={styles.input} placeholder="Opis (opcjonalny)" value={description} onChangeText={setDescription} placeholderTextColor="#94A3B8" />
-            <TextInput style={styles.input} placeholder="Punkty EC" value={points} onChangeText={setPoints} placeholderTextColor="#94A3B8" keyboardType="numeric" />
+            <TextInput style={styles.input} placeholder="Tytul" value={title} onChangeText={setTitle} placeholderTextColor={colors.inputPlaceholder} />
+            <TextInput style={styles.input} placeholder="Opis (opcjonalny)" value={description} onChangeText={setDescription} placeholderTextColor={colors.inputPlaceholder} />
+            <TextInput style={styles.input} placeholder="Punkty EC" value={points} onChangeText={setPoints} placeholderTextColor={colors.inputPlaceholder} keyboardType="numeric" />
             <Pressable
               style={[styles.createBtn, (!title || !points || creatingChallenge) && { opacity: 0.5 }]}
               onPress={handleCreate}
@@ -968,8 +1186,8 @@ function ChallengesTab({
               <Text style={[styles.tableCell, { flex: 1 }]}>{c.points} EC</Text>
               <Text style={[styles.tableCell, { flex: 1 }]}>{c._count?.participations ?? 0}</Text>
               <View style={{ flex: 1 }}>
-                <View style={[badgeStyles.badge, { backgroundColor: c.active ? "#D8F3DC" : "#FFE5E5" }]}>
-                  <Text style={[badgeStyles.text, { color: c.active ? "#40916C" : "#D62828" }]}>
+                <View style={[badgeStyles.badge, { backgroundColor: c.active ? colors.successBg : colors.errorBg }]}>
+                  <Text style={[badgeStyles.text, { color: c.active ? colors.success : colors.error }]}>
                     {c.active ? "Aktywny" : "Nieaktywny"}
                   </Text>
                 </View>
@@ -993,7 +1211,7 @@ function ChallengesTab({
               placeholder="ID firmy"
               value={selectedCompany}
               onChangeText={setSelectedCompany}
-              placeholderTextColor="#94A3B8"
+              placeholderTextColor={colors.inputPlaceholder}
             />
             <Pressable
               style={[styles.createBtn, (!selectedCompany || grantingPermission) && { opacity: 0.5 }]}
@@ -1023,19 +1241,19 @@ function ChallengesTab({
             <View key={p.id} style={styles.tableRow}>
               <Text style={[styles.tableCell, { flex: 2 }]}>{p.company.name}</Text>
               <View style={{ flex: 1 }}>
-                <View style={[badgeStyles.badge, { backgroundColor: p.used ? "#FFE5E5" : "#D8F3DC" }]}>
-                  <Text style={[badgeStyles.text, { color: p.used ? "#D62828" : "#40916C" }]}>
+                <View style={[badgeStyles.badge, { backgroundColor: p.used ? colors.errorBg : colors.successBg }]}>
+                  <Text style={[badgeStyles.text, { color: p.used ? colors.error : colors.success }]}>
                     {p.used ? "Uzyte" : "Dostepne"}
                   </Text>
                 </View>
               </View>
               <View style={{ flex: 0.7 }}>
                 <Pressable
-                  style={[styles.actionBtn, { borderColor: "#FECACA", backgroundColor: "#FEF2F2" }, revokingPermission && { opacity: 0.5 }]}
+                  style={[styles.actionBtn, { borderColor: colors.errorBorder, backgroundColor: colors.errorBg }, revokingPermission && { opacity: 0.5 }]}
                   onPress={() => onRevokePermission(p.id)}
                   disabled={revokingPermission}
                 >
-                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>Usun</Text>
+                  <Text style={[styles.actionBtnText, { color: colors.error }]}>Usun</Text>
                 </Pressable>
               </View>
             </View>

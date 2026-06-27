@@ -26,20 +26,20 @@ const ROLE_CONFIG: Record<
   user: {
     label: "Uzytkownik",
     desc: "Zakladam konto osobiste",
-    color: "#1B4332",
-    bgColor: "#D8F3DC",
+    color: colors.deepForest,
+    bgColor: colors.successBg,
   },
   employer: {
     label: "Pracownik",
     desc: "Dolaczam do firmy z kodem",
-    color: "#0B5E6E",
-    bgColor: "#E0F7FA",
+    color: colors.info,
+    bgColor: colors.infoBg,
   },
   company: {
     label: "Firma",
     desc: "Rejestruje konto firmowe",
-    color: "#7B2D8B",
-    bgColor: "#F3E8FF",
+    color: colors.roleCompany,
+    bgColor: colors.roleCompanyBg,
   },
 };
 
@@ -333,8 +333,8 @@ export default function RegisterScreen() {
       <Pressable
         style={[
           styles.button,
-          role === "employer" && { backgroundColor: "#0B5E6E" },
-          role === "company" && { backgroundColor: "#7B2D8B" },
+          role === "employer" && { backgroundColor: colors.info },
+          role === "company" && { backgroundColor: colors.roleCompany },
           (!canSubmit || loading) && styles.buttonDisabled,
         ]}
         disabled={!canSubmit || loading}
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     padding: 14,
     fontSize: 15,
     color: colors.slate900,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputBg,
   },
 
   roleRow: {
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: 12,
     gap: 4,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputBg,
   },
   roleDot: {
     width: 10,
@@ -417,16 +417,16 @@ const styles = StyleSheet.create({
   },
 
   errorBox: {
-    backgroundColor: "#FEF2F2",
+    backgroundColor: colors.errorBg,
     borderWidth: 1,
-    borderColor: "#FECACA",
+    borderColor: colors.errorBorder,
     borderRadius: radius.sm,
     padding: 12,
     marginBottom: 8,
   },
   errorText: {
     fontSize: 14,
-    color: "#991B1B",
+    color: colors.error,
     fontWeight: "600",
     textAlign: "center",
   },
@@ -434,9 +434,9 @@ const styles = StyleSheet.create({
   selectedCompanyRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E0F7FA",
+    backgroundColor: colors.infoBg,
     borderWidth: 1,
-    borderColor: "#0B5E6E",
+    borderColor: colors.info,
     borderRadius: radius.md,
     padding: 14,
   },
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
   selectedCompanyName: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#0B5E6E",
+    color: colors.info,
   },
   clearBtn: {
     paddingHorizontal: 12,
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   },
   clearBtnText: {
     fontSize: 13,
-    color: "#0B5E6E",
+    color: colors.info,
     fontWeight: "600",
   },
 
@@ -472,7 +472,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.slate200,
     borderRadius: radius.md,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.white,
     ...shadows.lg,
   },
   dropdownLoader: {

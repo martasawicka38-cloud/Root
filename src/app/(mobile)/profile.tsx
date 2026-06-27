@@ -1,6 +1,6 @@
 import { Link } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import {
   EditIcon,
@@ -12,12 +12,20 @@ import {
 } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
 import { fetchMe } from "../../lib/api/endpoints";
-import { colors, radius, spacing } from "../../styles/tokens";
+import { colors } from "../../styles/tokens";
 
 const menuItems = [
   { href: "/(mobile)/edit-profile", icon: EditIcon, label: "Edytuj profil" },
-  { href: "/(mobile)/history", icon: HistoryIcon, label: "Historia transakcji" },
-  { href: "/(mobile)/achievements", icon: MedalIcon, label: "Osiagniecia" },
+  {
+    href: "/(mobile)/history",
+    icon: HistoryIcon,
+    label: "Historia transakcji",
+  },
+  {
+    href: "/(mobile)/achievements",
+    icon: MedalIcon,
+    label: "Osiagniecia",
+  },
   { href: "/(mobile)/settings", icon: SettingsIcon, label: "Ustawienia" },
 ] as const;
 
@@ -28,12 +36,17 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
-      <Text style={styles.screenTitle}>Profil</Text>
+      <Text style={styles.title}>Profil</Text>
 
+      {/* Avatar Section */}
       <View style={styles.avatarSection}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{name[0]?.toUpperCase() ?? "J"}</Text>
-          <Link href="/(mobile)/edit-profile" style={styles.avatarEdit}>
+        <View style={styles.avatarWrapper}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarLetter}>
+              {name[0]?.toUpperCase() ?? "J"}
+            </Text>
+          </View>
+          <Link href="/(mobile)/edit-profile" style={styles.editBadge}>
             <EditIcon size={12} color={colors.white} />
           </Link>
         </View>
@@ -41,171 +54,188 @@ export default function ProfileScreen() {
         <Text style={styles.email}>{email}</Text>
       </View>
 
+      {/* Stats */}
       <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <View style={[styles.statIconWrap, { backgroundColor: "#FEE2E2" }]}>
-            <FireIcon size={20} color={colors.error} />
+        <View style={[styles.card, styles.cardLight, { flex: 1 }]}>
+          <View style={styles.statCardBody}>
+            <View style={[styles.statIconBox, { backgroundColor: "rgba(139, 69, 19, 0.1)" }]}>
+              <FireIcon size={20} color={colors.sunset} />
+            </View>
+            <Text style={styles.statValue}>5</Text>
+            <Text style={styles.statLabel}>Passa (dni)</Text>
           </View>
-          <Text style={styles.statValue}>5</Text>
-          <Text style={styles.statLabel}>Passa (dni)</Text>
         </View>
-        <View style={styles.statCard}>
-          <View style={[styles.statIconWrap, { backgroundColor: "#FEF3C7" }]}>
-            <MedalIcon size={20} color={colors.warmGold} />
+
+        <View style={[styles.card, styles.cardLight, { flex: 1 }]}>
+          <View style={styles.statCardBody}>
+            <View style={[styles.statIconBox, { backgroundColor: colors.creamDark }]}>
+              <MedalIcon size={20} color={colors.warmGold} />
+            </View>
+            <Text style={styles.statValue}>12</Text>
+            <Text style={styles.statLabel}>Osiagniecia</Text>
           </View>
-          <Text style={styles.statValue}>12</Text>
-          <Text style={styles.statLabel}>Osiagniecia</Text>
         </View>
-        <View style={styles.statCard}>
-          <View style={[styles.statIconWrap, { backgroundColor: "#D1FAE5" }]}>
-            <LeafIcon size={20} color={colors.mossGreen} />
+
+        <View style={[styles.card, styles.cardLight, { flex: 1 }]}>
+          <View style={styles.statCardBody}>
+            <View style={[styles.statIconBox, { backgroundColor: colors.greenLight }]}>
+              <LeafIcon size={20} color={colors.mossGreen} />
+            </View>
+            <Text style={styles.statValue}>24</Text>
+            <Text style={styles.statLabel}>Deklaracje</Text>
           </View>
-          <Text style={styles.statValue}>24</Text>
-          <Text style={styles.statLabel}>Deklaracje</Text>
         </View>
       </View>
 
-      <View style={styles.menuCard}>
-        {menuItems.map(({ href, icon: Icon, label }, idx) => (
-          <Link
-            key={href}
-            href={href}
-            style={[styles.menuItem, idx < menuItems.length - 1 && styles.menuItemBorder]}
-          >
-            <View style={styles.menuItemLeft}>
-              <View style={styles.menuIconWrap}>
-                <Icon size={18} color={colors.slate600} />
-              </View>
-              <Text style={styles.menuLabel}>{label}</Text>
-            </View>
-            <Text style={styles.menuArrow}>›</Text>
-          </Link>
-        ))}
+      {/* Menu */}
+      <View style={[styles.card, styles.cardLight, { marginTop: 24 }]}>
+        <View style={styles.menuContainer}>
+          {menuItems.map(({ href, icon: Icon, label }, idx) => (
+            <Link key={href} href={href} asChild>
+              <Pressable
+                style={idx < menuItems.length - 1 ? styles.menuItemWithBorder : styles.menuItem}
+              >
+                <View style={styles.menuItemLeft}>
+                  <View style={styles.menuIconBox}>
+                    <Icon size={18} color={colors.slate700} />
+                  </View>
+                  <Text style={styles.menuLabel}>{label}</Text>
+                </View>
+                <Text style={styles.menuArrow}>›</Text>
+              </Pressable>
+            </Link>
+          ))}
+        </View>
       </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  screenTitle: {
-    fontSize: 22,
+  title: {
+    fontSize: 24,
     fontWeight: "700",
-    color: colors.slate900,
-    marginBottom: spacing.sm,
+    color: colors.brownDark,
+    marginBottom: 16,
   },
   avatarSection: {
     alignItems: "center",
     marginTop: 16,
     gap: 8,
   },
+  avatarWrapper: {
+    position: "relative",
+  },
   avatar: {
     width: 88,
     height: 88,
-    borderRadius: radius.full,
-    backgroundColor: "#4FB38D",
+    borderRadius: 9999,
+    backgroundColor: colors.greenBright,
     alignItems: "center",
     justifyContent: "center",
-    position: "relative",
   },
-  avatarText: {
+  avatarLetter: {
     color: colors.white,
-    fontSize: 36,
+    fontSize: 34,
     fontWeight: "700",
   },
-  avatarEdit: {
+  editBadge: {
     position: "absolute",
     right: 0,
     bottom: 0,
     width: 28,
     height: 28,
-    borderRadius: radius.full,
-    backgroundColor: colors.mossGreen,
+    borderRadius: 9999,
+    backgroundColor: colors.olive,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 3,
-    borderColor: colors.white,
   },
   name: {
-    color: colors.slate900,
-    fontWeight: "700",
     fontSize: 20,
+    fontWeight: "700",
+    color: colors.brownDark,
   },
   email: {
-    color: colors.slate500,
     fontSize: 14,
+    color: colors.olive,
   },
   statsRow: {
-    marginTop: 16,
     flexDirection: "row",
-    gap: 10,
+    gap: 12,
+    marginTop: 24,
   },
-  statCard: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
+  card: {
     borderWidth: 1,
-    borderColor: colors.slate200,
-    borderRadius: radius.md,
-    paddingVertical: 14,
+    borderColor: colors.creamDark,
+    borderRadius: 12,
+  },
+  cardLight: {
+    backgroundColor: colors.creamLight,
+  },
+  statCardBody: {
     alignItems: "center",
     gap: 8,
+    paddingVertical: 12,
   },
-  statIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.sm,
+  statIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
   statValue: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: colors.deepForest,
+    fontSize: 20,
+    fontWeight: "700",
+    color: colors.brownDark,
   },
   statLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: colors.slate500,
+    fontSize: 12,
+    color: colors.olive,
   },
-  menuCard: {
-    marginTop: 16,
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1,
-    borderColor: colors.slate200,
-    borderRadius: radius.md,
-    overflow: "hidden",
+  menuContainer: {
+    padding: 0,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  menuItemWithBorder: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.creamDark,
   },
   menuItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.slate100,
+    borderBottomColor: colors.creamDark,
   },
   menuItemLeft: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    flex: 1,
   },
-  menuIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: radius.sm,
-    backgroundColor: colors.slate100,
+  menuIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: colors.creamMedium,
     alignItems: "center",
     justifyContent: "center",
   },
   menuLabel: {
+    flex: 1,
     fontSize: 15,
-    color: colors.slate900,
-    fontWeight: "600",
+    fontWeight: "500",
+    color: colors.brownDark,
   },
   menuArrow: {
     fontSize: 20,
-    color: colors.slate400,
-    fontWeight: "600",
+    color: colors.olive,
   },
 });

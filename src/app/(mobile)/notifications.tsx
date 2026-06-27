@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     borderColor: colors.slate200,
     borderRadius: radius.md,
     padding: 14,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputBg,
   },
   cardUnread: {
     borderColor: colors.sage,

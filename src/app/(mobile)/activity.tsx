@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputBg,
   },
   typeBtnActive: {
     borderColor: colors.mossGreen,
@@ -256,11 +256,11 @@ const styles = StyleSheet.create({
     padding: 14,
     fontSize: 16,
     color: colors.slate900,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputBg,
   },
   estimateCard: {
     marginTop: 10,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputBg,
     borderWidth: 1,
     borderColor: colors.slate200,
     borderRadius: radius.md,
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: colors.inputBg,
   },
   logItemLeft: {
     gap: 2,

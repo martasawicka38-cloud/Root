@@ -1,7 +1,7 @@
 import Svg, { Path } from "react-native-svg";
 import type { IconProps } from "./types";
 
-export function CookIcon({ size = 24, color = "#1B4332" }: IconProps) {
+export function CookIcon({ size = 24, color = "#293211" }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path
