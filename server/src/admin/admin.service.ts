@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { randomBytes } from "crypto";
+import * as bcrypt from "bcrypt";
 
 import { PrismaService } from "../prisma.service";
 import type { CreateCompanyDto } from "./dto/create-company.dto";
@@ -155,6 +156,54 @@ export class AdminService {
       where: { companyId, type: "employer_registration" },
       orderBy: { createdAt: "desc" },
     });
+  }
+
+  async createUser(dto: { name: string; email: string; password: string; role: "user" | "company" }) {
+    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    if (existing) throw new ConflictException("User with this email already exists");
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    return this.prisma.user.create({
+      data: {
+        email: dto.email,
+        name: dto.name,
+        passwordHash,
+        role: dto.role,
+      },
+      select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true },
+    });
+  }
+
+  async editUser(id: string, dto: { name?: string; email?: string; stepGoal?: number }) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException("User not found");
+
+    if (dto.email && dto.email !== user.email) {
+      const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+      if (existing) throw new ConflictException("Email already in use");
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data: dto,
+      select: { id: true, email: true, name: true, role: true, isActive: true, stepGoal: true, createdAt: true },
+    });
+  }
+
+  async deleteUser(id: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException("User not found");
+
+    await this.prisma.$transaction([
+      this.prisma.transaction.deleteMany({ where: { userId: id } }),
+      this.prisma.activity.deleteMany({ where: { userId: id } }),
+      this.prisma.declaration.deleteMany({ where: { userId: id } }),
+      this.prisma.achievement.deleteMany({ where: { userId: id } }),
+      this.prisma.notification.deleteMany({ where: { userId: id } }),
+      this.prisma.user.delete({ where: { id } }),
+    ]);
+
+    return { ok: true };
   }
 
   async listCompanyUsers(companyId: string) {

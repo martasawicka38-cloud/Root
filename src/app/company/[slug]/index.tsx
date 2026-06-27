@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from "react-native";
 
@@ -19,6 +20,7 @@ import {
   generateEmployerTokenBySlug,
   toggleUserActive,
 } from "../../../lib/api/endpoints";
+import { companyEditEmployee, companyRemoveEmployee } from "../../../lib/api/endpoints";
 import { colors, radius } from "../../../styles/tokens";
 import { useAppStore } from "../../../store/useAppStore";
 
@@ -29,6 +31,14 @@ export default function CompanyPanelScreen() {
   const userRole = useAppStore((s) => s.userRole);
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>("employees");
+
+  // Edit employee state
+  const [editEmployeeId, setEditEmployeeId] = useState<string | null>(null);
+  const [editEmployeeName, setEditEmployeeName] = useState("");
+  const [editEmployeeEmail, setEditEmployeeEmail] = useState("");
+
+  // Delete employee state
+  const [deleteEmployeeId, setDeleteEmployeeId] = useState<string | null>(null);
 
   const authQuery = useQuery({
     queryKey: ["auth", "me"],
@@ -69,6 +79,25 @@ export default function CompanyPanelScreen() {
   const toggleActiveMutation = useMutation({
     mutationFn: toggleUserActive,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company", slug, "employees"] });
+    },
+  });
+
+  const editEmployeeMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; email?: string } }) =>
+      companyEditEmployee(slug!, id, data),
+    onSuccess: () => {
+      setEditEmployeeId(null);
+      setEditEmployeeName("");
+      setEditEmployeeEmail("");
+      queryClient.invalidateQueries({ queryKey: ["company", slug, "employees"] });
+    },
+  });
+
+  const removeEmployeeMutation = useMutation({
+    mutationFn: (id: string) => companyRemoveEmployee(slug!, id),
+    onSuccess: () => {
+      setDeleteEmployeeId(null);
       queryClient.invalidateQueries({ queryKey: ["company", slug, "employees"] });
     },
   });
@@ -124,6 +153,28 @@ export default function CompanyPanelScreen() {
               query={employeesQuery}
               onToggleActive={(id) => toggleActiveMutation.mutate(id)}
               togglingId={toggleActiveMutation.isPending ? toggleActiveMutation.variables : null}
+              editEmployeeId={editEmployeeId}
+              editEmployeeName={editEmployeeName}
+              editEmployeeEmail={editEmployeeEmail}
+              onEditStart={(id, name, email) => {
+                setEditEmployeeId(id);
+                setEditEmployeeName(name);
+                setEditEmployeeEmail(email);
+              }}
+              onEditCancel={() => {
+                setEditEmployeeId(null);
+                setEditEmployeeName("");
+                setEditEmployeeEmail("");
+              }}
+              onEditNameChange={setEditEmployeeName}
+              onEditEmailChange={setEditEmployeeEmail}
+              onEditSave={() => editEmployeeMutation.mutate({ id: editEmployeeId!, data: { name: editEmployeeName, email: editEmployeeEmail } })}
+              editingEmployee={editEmployeeMutation.isPending}
+              deleteEmployeeId={deleteEmployeeId}
+              onDeleteStart={setDeleteEmployeeId}
+              onDeleteCancel={() => setDeleteEmployeeId(null)}
+              onDeleteConfirm={() => removeEmployeeMutation.mutate(deleteEmployeeId!)}
+              deletingEmployee={removeEmployeeMutation.isPending}
             />
           )}
           {tab === "analytics" && <AnalyticsTab query={analyticsQuery} />}
@@ -142,10 +193,27 @@ export default function CompanyPanelScreen() {
 
 function EmployeesTab({
   query, onToggleActive, togglingId,
+  editEmployeeId, editEmployeeName, editEmployeeEmail,
+  onEditStart, onEditCancel, onEditNameChange, onEditEmailChange, onEditSave, editingEmployee,
+  deleteEmployeeId, onDeleteStart, onDeleteCancel, onDeleteConfirm, deletingEmployee,
 }: {
   query: { data?: { id: string; name: string; email: string; isActive: boolean; balance: number }[]; isPending: boolean; error: Error | null };
   onToggleActive: (id: string) => void;
   togglingId: string | null;
+  editEmployeeId: string | null;
+  editEmployeeName: string;
+  editEmployeeEmail: string;
+  onEditStart: (id: string, name: string, email: string) => void;
+  onEditCancel: () => void;
+  onEditNameChange: (v: string) => void;
+  onEditEmailChange: (v: string) => void;
+  onEditSave: () => void;
+  editingEmployee: boolean;
+  deleteEmployeeId: string | null;
+  onDeleteStart: (id: string | null) => void;
+  onDeleteCancel: () => void;
+  onDeleteConfirm: () => void;
+  deletingEmployee: boolean;
 }) {
   if (query.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
   if (query.error) return (
@@ -167,31 +235,72 @@ function EmployeesTab({
         <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Email</Text>
         <Text style={[styles.tableHeaderCell, { flex: 1 }]}>EC</Text>
         <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Status</Text>
-        <Text style={[styles.tableHeaderCell, { flex: 0.7 }]}>Akcje</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Akcje</Text>
       </View>
       {query.data.map((e) => (
         <View key={e.id} style={styles.tableRow}>
-          <Text style={[styles.tableCell, { flex: 2 }]}>{e.name}</Text>
-          <Text style={[styles.tableCell, { flex: 2 }]}>{e.email}</Text>
-          <Text style={[styles.tableCell, { flex: 1 }]}>{e.balance}</Text>
-          <View style={{ flex: 1 }}>
-            <View style={[styles.badge, { backgroundColor: e.isActive ? "#D8F3DC" : "#FFE5E5" }]}>
-              <Text style={[styles.badgeText, { color: e.isActive ? "#40916C" : "#D62828" }]}>
-                {e.isActive ? "Aktywny" : "Nieaktywny"}
-              </Text>
-            </View>
-          </View>
-          <View style={{ flex: 0.7 }}>
-            <Pressable
-              style={[styles.actionBtn, { borderColor: e.isActive ? "#FECACA" : "#BBF7D0", backgroundColor: e.isActive ? "#FEF2F2" : "#F0FDF4" }, togglingId === e.id && { opacity: 0.5 }]}
-              onPress={() => onToggleActive(e.id)}
-              disabled={togglingId === e.id}
-            >
-              <Text style={[styles.actionBtnText, { color: e.isActive ? "#D62828" : "#40916C" }]}>
-                {e.isActive ? "Dezaktywuj" : "Aktywuj"}
-              </Text>
-            </Pressable>
-          </View>
+          {editEmployeeId === e.id ? (
+            <>
+              <TextInput style={[styles.inputSmall, { flex: 2 }]} value={editEmployeeName} onChangeText={onEditNameChange} placeholderTextColor="#94A3B8" />
+              <TextInput style={[styles.inputSmall, { flex: 2 }]} value={editEmployeeEmail} onChangeText={onEditEmailChange} placeholderTextColor="#94A3B8" autoCapitalize="none" />
+              <Text style={[styles.tableCell, { flex: 1 }]}>{e.balance}</Text>
+              <View style={{ flex: 1 }} />
+              <View style={{ flex: 1, gap: 4, flexDirection: "row" }}>
+                <Pressable style={[styles.actionBtn, styles.actionBtnSuccess, (editingEmployee || !editEmployeeName) && { opacity: 0.5 }]} onPress={onEditSave} disabled={editingEmployee || !editEmployeeName}>
+                  <Text style={[styles.actionBtnText, { color: "#40916C" }]}>Zapisz</Text>
+                </Pressable>
+                <Pressable style={styles.actionBtn} onPress={onEditCancel}>
+                  <Text style={styles.actionBtnText}>Anuluj</Text>
+                </Pressable>
+              </View>
+            </>
+          ) : deleteEmployeeId === e.id ? (
+            <>
+              <Text style={[styles.tableCell, { flex: 2 }]}>{e.name}</Text>
+              <Text style={[styles.tableCell, { flex: 2 }]}>{e.email}</Text>
+              <Text style={[styles.tableCell, { flex: 1 }]}>{e.balance}</Text>
+              <View style={{ flex: 1 }} />
+              <View style={{ flex: 1, gap: 4, flexDirection: "row" }}>
+                <Text style={{ fontSize: 13, color: "#991B1B", fontWeight: "600", alignSelf: "center" }}>Usunac?</Text>
+                <Pressable style={[styles.actionBtn, styles.actionBtnWarn, deletingEmployee && { opacity: 0.5 }]} onPress={onDeleteConfirm} disabled={deletingEmployee}>
+                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>{deletingEmployee ? "Usuwanie..." : "Tak"}</Text>
+                </Pressable>
+                <Pressable style={styles.actionBtn} onPress={onDeleteCancel}>
+                  <Text style={styles.actionBtnText}>Nie</Text>
+                </Pressable>
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={[styles.tableCell, { flex: 2 }]}>{e.name}</Text>
+              <Text style={[styles.tableCell, { flex: 2 }]}>{e.email}</Text>
+              <Text style={[styles.tableCell, { flex: 1 }]}>{e.balance}</Text>
+              <View style={{ flex: 1 }}>
+                <View style={[styles.badge, { backgroundColor: e.isActive ? "#D8F3DC" : "#FFE5E5" }]}>
+                  <Text style={[styles.badgeText, { color: e.isActive ? "#40916C" : "#D62828" }]}>
+                    {e.isActive ? "Aktywny" : "Nieaktywny"}
+                  </Text>
+                </View>
+              </View>
+              <View style={{ flex: 1, gap: 4, flexDirection: "row" }}>
+                <Pressable style={[styles.actionBtn, { borderColor: "#CBD5E1", backgroundColor: "#F8FAFC" }]} onPress={() => onEditStart(e.id, e.name, e.email)}>
+                  <Text style={[styles.actionBtnText, { color: colors.slate600 }]}>Edytuj</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.actionBtn, { borderColor: e.isActive ? "#FECACA" : "#BBF7D0", backgroundColor: e.isActive ? "#FEF2F2" : "#F0FDF4" }, togglingId === e.id && { opacity: 0.5 }]}
+                  onPress={() => onToggleActive(e.id)}
+                  disabled={togglingId === e.id}
+                >
+                  <Text style={[styles.actionBtnText, { color: e.isActive ? "#D62828" : "#40916C" }]}>
+                    {e.isActive ? "Dezaktywuj" : "Aktywuj"}
+                  </Text>
+                </Pressable>
+                <Pressable style={[styles.actionBtn, { borderColor: "#FECACA", backgroundColor: "#FEF2F2" }]} onPress={() => onDeleteStart(e.id)}>
+                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>Usun</Text>
+                </Pressable>
+              </View>
+            </>
+          )}
         </View>
       ))}
     </>
@@ -208,7 +317,7 @@ function AnalyticsTab({ query }: {
     totalPoints: number;
     weeklySteps: { day: string; steps: number }[];
     recentActivity: { id: string; userName: string; type: string; points: number; createdAt: string }[];
-  }; isPending: boolean; error: Error | null };
+  } | undefined; isPending: boolean; error: Error | null };
 }) {
   if (query.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
   if (query.error) return (
@@ -217,95 +326,69 @@ function AnalyticsTab({ query }: {
       <Text style={styles.errorDetail}>{query.error.message}</Text>
     </View>
   );
-  const d = query.data!;
+
+  const d = query.data;
+  if (!d) return null;
 
   return (
     <>
       <Text style={styles.pageTitle}>Analityka</Text>
 
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{d.employees.length}</Text>
-          <Text style={styles.statLabel}>Pracownikow</Text>
-        </View>
+      <View style={{ flexDirection: "row", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{d.totalActivities}</Text>
           <Text style={styles.statLabel}>Aktywnosci</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{d.totalSteps.toLocaleString("pl-PL")}</Text>
+          <Text style={styles.statValue}>{d.totalSteps.toLocaleString()}</Text>
           <Text style={styles.statLabel}>Krokow</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{d.totalDeclarations}</Text>
           <Text style={styles.statLabel}>Deklaracji</Text>
         </View>
-      </View>
-
-      <View style={styles.statsRow}>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{d.totalPoints.toLocaleString("pl-PL")}</Text>
-          <Text style={styles.statLabel}>EC w obiegu</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{d.totalEarned.toLocaleString("pl-PL")}</Text>
-          <Text style={styles.statLabel}>EC zarobione</Text>
+          <Text style={styles.statValue}>{d.totalEarned}</Text>
+          <Text style={styles.statLabel}>Zarobione EC</Text>
         </View>
       </View>
 
-      <Text style={styles.sectionTitle}>Ranking pracownikow</Text>
-      {d.employees.length === 0 ? (
-        <Text style={styles.emptyText}>Brak pracownikow.</Text>
-      ) : (
-        <View style={styles.rankList}>
-          {[...d.employees].sort((a, b) => b.points - a.points).map((e, i) => (
-            <View key={e.id} style={styles.rankRow}>
-              <Text style={styles.rankPos}>{i + 1}.</Text>
-              <Text style={styles.rankName}>{e.name}</Text>
-              <Text style={styles.rankPoints}>{e.points} EC</Text>
+      {d.employees.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>Ranking pracownikow</Text>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderCell, { flex: 3 }]}>Pracownik</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1, textAlign: "right" }]}>PKT</Text>
+          </View>
+          {d.employees.map((emp, i) => (
+            <View key={emp.id} style={styles.tableRow}>
+              <Text style={[styles.tableCell, { flex: 3 }]}>{i + 1}. {emp.name}</Text>
+              <Text style={[styles.tableCell, { flex: 1, textAlign: "right" }]}>{emp.points}</Text>
             </View>
           ))}
-        </View>
+        </>
       )}
 
-      <Text style={styles.sectionTitle}>Kroki w ostatnim tygodniu</Text>
-      <View style={styles.chartRow}>
-        {d.weeklySteps.map((day) => {
-          const max = Math.max(...d.weeklySteps.map((d) => d.steps), 1);
-          return (
-            <View key={day.day} style={styles.chartCol}>
-              <Text style={styles.chartBarValue}>{day.steps > 0 ? (day.steps / 1000).toFixed(1) + "k" : ""}</Text>
-              <View style={[styles.chartBar, { height: Math.max((day.steps / max) * 120, 4) }]} />
-              <Text style={styles.chartLabel}>{new Date(day.day).toLocaleDateString("pl-PL", { weekday: "short" })}</Text>
-            </View>
-          );
-        })}
-      </View>
-
-      <Text style={styles.sectionTitle}>Ostatnie aktywnosci</Text>
-      {d.recentActivity.length === 0 ? (
-        <Text style={styles.emptyText}>Brak aktywnosci.</Text>
-      ) : (
-        <View style={styles.activityList}>
-          {d.recentActivity.map((act) => (
-            <View key={act.id} style={styles.activityRow}>
-              <View style={styles.activityLeft}>
-                <Text style={styles.activityName}>{act.userName}</Text>
-                <Text style={styles.activityType}>{act.type}</Text>
+      {d.recentActivity.length > 0 && (
+        <>
+          <Text style={styles.sectionTitle}>Ostatnie aktywnosci</Text>
+          {d.recentActivity.map((a) => (
+            <View key={a.id} style={styles.tableRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: "600", color: colors.slate900 }}>{a.userName}</Text>
+                <Text style={{ fontSize: 12, color: colors.slate500 }}>{a.type} · {new Date(a.createdAt).toLocaleDateString()}</Text>
               </View>
-              <Text style={styles.activityPoints}>+{act.points} EC</Text>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: colors.mossGreen }}>+{a.points}</Text>
             </View>
           ))}
-        </View>
+        </>
       )}
     </>
   );
 }
 
-function TokensTab({
-  query, onGenerate, generating,
-}: {
-  query: { data?: { id: string; token: string; used: boolean; createdAt: string }[]; isPending: boolean; error: Error | null };
+function TokensTab({ query, onGenerate, generating }: {
+  query: { data?: { id: string; code: string; used: boolean; usedBy?: string; createdAt: string; usedAt?: string }[] | undefined; isPending: boolean; error: Error | null };
   onGenerate: () => void;
   generating: boolean;
 }) {
@@ -317,41 +400,41 @@ function TokensTab({
     </View>
   );
 
+  const tokens = query.data ?? [];
+
   return (
     <>
-      <Text style={styles.pageTitle}>Tokeny dla pracownikow</Text>
-      <Text style={styles.hintText}>Tokeny umozliwiaja pracownikom rejestracje i dolaczenie do Twojej firmy.</Text>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <Text style={styles.pageTitle}>Tokeny ({tokens.length})</Text>
+        <Pressable
+          style={[styles.genBigBtn, generating && { opacity: 0.5 }]}
+          onPress={onGenerate}
+          disabled={generating}
+        >
+          <Text style={styles.genBigBtnText}>{generating ? "Generowanie..." : "Generuj token"}</Text>
+        </Pressable>
+      </View>
 
-      <Pressable
-        style={[styles.genBigBtn, generating && { opacity: 0.5 }]}
-        onPress={onGenerate}
-        disabled={generating}
-      >
-        <Text style={styles.genBigBtnText}>
-          {generating ? "Generowanie..." : "Generuj token"}
-        </Text>
-      </Pressable>
-
-      {query.data?.length === 0 ? (
-        <Text style={styles.emptyText}>Brak tokenow.</Text>
+      {tokens.length === 0 ? (
+        <Text style={styles.emptyText}>Brak tokenow. Kliknij "Generuj token", aby utworzyc pierwszy.</Text>
       ) : (
-        <View style={styles.tokenTable}>
+        <View style={styles.tokenListFull}>
           <View style={styles.tokenTableHeader}>
-            <Text style={[styles.tokenHeaderCell, { flex: 3 }]}>Token</Text>
-            <Text style={[styles.tokenHeaderCell, { flex: 0.7 }]}>Status</Text>
-            <Text style={[styles.tokenHeaderCell, { flex: 1 }]}>Data</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Kod</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Status</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Utworzono</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Uzyty przez</Text>
           </View>
-          {query.data?.map((t) => (
+          {tokens.map((t) => (
             <View key={t.id} style={styles.tokenTableRow}>
-              <Text style={[styles.tokenCell, { flex: 3, fontFamily: "monospace" as const, fontSize: 12 }]}>{t.token}</Text>
-              <View style={{ flex: 0.7 }}>
+              <Text style={[styles.tokenCell, { flex: 2, fontFamily: "monospace", fontWeight: "700" }]}>{t.code}</Text>
+              <View style={{ flex: 1 }}>
                 <View style={[styles.badge, { backgroundColor: t.used ? "#FFE5E5" : "#D8F3DC" }]}>
-                  <Text style={[styles.badgeText, { color: t.used ? "#D62828" : "#40916C" }]}>
-                    {t.used ? "Uzyty" : "Dostepny"}
-                  </Text>
+                  <Text style={[styles.badgeText, { color: t.used ? "#D62828" : "#40916C" }]}>{t.used ? "Uzyty" : "Aktywny"}</Text>
                 </View>
               </View>
-              <Text style={[styles.tokenCell, { flex: 1 }]}>{new Date(t.createdAt).toLocaleDateString("pl-PL")}</Text>
+              <Text style={[styles.tokenCell, { flex: 1.5 }]}>{new Date(t.createdAt).toLocaleString()}</Text>
+              <Text style={[styles.tokenCell, { flex: 1 }]}>{t.usedBy ?? "-"}</Text>
             </View>
           ))}
         </View>
@@ -361,69 +444,258 @@ function TokensTab({
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#F1F5F9" },
-  fallbackRoot: { flex: 1, justifyContent: "center", alignItems: "center", padding: 40 },
-  fallbackTitle: { fontSize: 22, fontWeight: "700", color: colors.deepForest, textAlign: "center" },
-  fallbackText: { fontSize: 15, color: colors.slate500, textAlign: "center", marginTop: 8 },
-  topbar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 32, paddingVertical: 14, backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.slate200 },
-  topbarTitle: { fontSize: 18, fontWeight: "700", color: colors.deepForest },
-  topbarRight: { flexDirection: "row", alignItems: "center", gap: 12 },
-  backLink: { fontSize: 14, color: colors.mossGreen, fontWeight: "600" },
-  navTabs: { flexDirection: "row", backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.slate200, paddingHorizontal: 32 },
-  navTab: { paddingVertical: 12, paddingHorizontal: 20, borderBottomWidth: 2, borderBottomColor: "transparent" },
-  navTabActive: { borderBottomColor: "#0B5E6E" },
-  navTabText: { fontSize: 14, fontWeight: "600", color: colors.slate500 },
-  navTabTextActive: { color: "#0B5E6E" },
-  body: { paddingHorizontal: 32, paddingTop: 28, paddingBottom: 48 },
-  bodyInner: { maxWidth: 1100, width: "100%", alignSelf: "center" },
-  welcome: { fontSize: 20, fontWeight: "700", color: colors.slate900, marginBottom: 20 },
-  pageTitle: { fontSize: 28, fontWeight: "700", color: colors.slate900, marginBottom: 20 },
-  sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.slate900, marginBottom: 14, marginTop: 16 },
-  errorCard: { backgroundColor: "#FEF2F2", borderWidth: 1, borderColor: "#FECACA", borderRadius: radius.md, padding: 20, gap: 8 },
-  errorText: { fontSize: 16, fontWeight: "600", color: "#991B1B" },
-  errorDetail: { fontSize: 14, color: "#7F1D1D" },
-  hintText: { fontSize: 14, color: colors.slate500, marginBottom: 16 },
-
-  statsRow: { flexDirection: "row", gap: 16, marginBottom: 16 },
-  statCard: { flex: 1, backgroundColor: colors.white, borderRadius: radius.md, borderWidth: 1, borderColor: colors.slate200, padding: 20, gap: 4 },
-  statValue: { fontSize: 32, fontWeight: "800", color: colors.deepForest },
-  statLabel: { fontSize: 14, color: colors.slate500, fontWeight: "500" },
-
-  tableHeader: { flexDirection: "row", backgroundColor: colors.slate100, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 12, marginBottom: 4 },
-  tableHeaderCell: { fontSize: 12, fontWeight: "700", color: colors.slate500, textTransform: "uppercase" as const },
-  tableRow: { flexDirection: "row", alignItems: "center", backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, paddingVertical: 12, paddingHorizontal: 12, marginBottom: 4, gap: 4 },
-  tableCell: { fontSize: 14, color: colors.slate900 },
-  badge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 },
-  badgeText: { fontSize: 12, fontWeight: "600" },
-  actionBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.sm, borderWidth: 1, alignItems: "center" },
-  actionBtnText: { fontSize: 12, fontWeight: "600" },
-
-  emptyText: { fontSize: 15, color: colors.slate500, textAlign: "center", marginTop: 24 },
-
-  rankList: { gap: 4, marginBottom: 16 },
-  rankRow: { flexDirection: "row", alignItems: "center", backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 12 },
-  rankPos: { fontSize: 16, fontWeight: "700", color: colors.slate400, width: 30 },
-  rankName: { flex: 1, fontSize: 15, fontWeight: "600", color: colors.slate900 },
-  rankPoints: { fontSize: 15, fontWeight: "700", color: colors.mossGreen },
-
-  chartRow: { flexDirection: "row", gap: 8, marginBottom: 24, alignItems: "flex-end" },
-  chartCol: { flex: 1, alignItems: "center", gap: 4 },
-  chartBarValue: { fontSize: 11, color: colors.slate500, fontWeight: "600" },
-  chartBar: { width: "100%", maxWidth: 40, backgroundColor: "#0B5E6E", borderRadius: radius.sm, minHeight: 4 },
-  chartLabel: { fontSize: 11, color: colors.slate500, textTransform: "capitalize" as const },
-
-  activityList: { gap: 8 },
-  activityRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 14 },
-  activityLeft: { gap: 2 },
-  activityName: { fontSize: 15, fontWeight: "600", color: colors.slate900 },
-  activityType: { fontSize: 13, color: colors.slate500, textTransform: "capitalize" as const },
-  activityPoints: { fontSize: 16, fontWeight: "700", color: "#0B5E6E" },
-
-  tokenTable: { gap: 4 },
-  tokenTableHeader: { flexDirection: "row", backgroundColor: colors.slate100, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 12, marginBottom: 4 },
-  tokenHeaderCell: { fontSize: 11, fontWeight: "700", color: colors.slate500, textTransform: "uppercase" as const },
-  tokenTableRow: { flexDirection: "row", alignItems: "center", backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, paddingVertical: 12, paddingHorizontal: 12, marginBottom: 4 },
-  tokenCell: { fontSize: 13, color: colors.slate900 },
-  genBigBtn: { backgroundColor: "#0B5E6E", borderRadius: radius.md, paddingVertical: 14, paddingHorizontal: 24, alignItems: "center", marginBottom: 20, alignSelf: "flex-start" },
-  genBigBtnText: { color: colors.white, fontSize: 15, fontWeight: "700" },
+  root: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  fallbackRoot: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  fallbackTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: colors.slate900,
+    marginBottom: 8,
+  },
+  fallbackText: {
+    fontSize: 15,
+    color: colors.slate500,
+    textAlign: "center",
+  },
+  topbar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.slate200,
+  },
+  topbarTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.slate900,
+  },
+  topbarRight: {
+    flexDirection: "row",
+    gap: 12,
+    alignItems: "center",
+  },
+  backLink: {
+    fontSize: 14,
+    color: colors.mossGreen,
+    fontWeight: "600",
+  },
+  navTabs: {
+    flexDirection: "row",
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.slate200,
+    paddingHorizontal: 16,
+  },
+  navTab: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  navTabActive: {
+    borderBottomColor: colors.mossGreen,
+  },
+  navTabText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.slate500,
+  },
+  navTabTextActive: {
+    color: colors.mossGreen,
+  },
+  body: {
+    padding: 24,
+  },
+  bodyInner: {
+    maxWidth: 960,
+    width: "100%",
+    alignSelf: "center",
+  },
+  welcome: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.slate500,
+    marginBottom: 24,
+  },
+  pageTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.slate900,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.slate700,
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: colors.slate500,
+    textAlign: "center",
+    marginTop: 24,
+  },
+  errorCard: {
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    borderRadius: radius.sm,
+    padding: 16,
+    gap: 8,
+  },
+  errorText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#991B1B",
+  },
+  errorDetail: {
+    fontSize: 13,
+    color: "#991B1B",
+  },
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: colors.slate100,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    borderRadius: radius.sm,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 4,
+  },
+  tableHeaderCell: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.slate500,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  tableRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    borderRadius: radius.sm,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginBottom: 4,
+  },
+  tableCell: {
+    fontSize: 14,
+    color: colors.slate900,
+  },
+  badge: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: radius.sm,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  actionBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    backgroundColor: colors.white,
+    alignItems: "center",
+  },
+  actionBtnText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.slate700,
+  },
+  actionBtnSuccess: {
+    borderColor: "#BBF7D0",
+    backgroundColor: "#F0FDF4",
+  },
+  actionBtnWarn: {
+    borderColor: "#FECACA",
+    backgroundColor: "#FEF2F2",
+  },
+  inputSmall: {
+    fontSize: 13,
+    color: colors.slate900,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    borderRadius: radius.sm,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    backgroundColor: colors.white,
+  },
+  statCard: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    borderRadius: radius.sm,
+    padding: 16,
+    minWidth: 120,
+    flex: 1,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.mossGreen,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.slate500,
+    marginTop: 4,
+  },
+  genBigBtn: {
+    backgroundColor: colors.mossGreen,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: radius.sm,
+  },
+  genBigBtnText: {
+    color: colors.white,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  tokenCell: {
+    fontSize: 13,
+    color: colors.slate900,
+  },
+  tokenListFull: {
+    gap: 4,
+  },
+  tokenTableHeader: {
+    flexDirection: "row",
+    backgroundColor: colors.slate100,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    borderRadius: radius.sm,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginBottom: 4,
+  },
+  tokenTableRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    borderRadius: radius.sm,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginBottom: 4,
+  },
 });

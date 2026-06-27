@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 
 import { AdminService } from "./admin.service";
 import { CreateCompanyDto } from "./dto/create-company.dto";
@@ -69,5 +69,20 @@ export class AdminController {
   @Get("company-tokens")
   listCompanyTokens() {
     return this.adminService.listCompanyRegistrationTokens();
+  }
+
+  @Post("users")
+  createUser(@Body() dto: { name: string; email: string; password: string; role: "user" | "company" }) {
+    return this.adminService.createUser(dto);
+  }
+
+  @Patch("users/:id")
+  editUser(@Param("id") id: string, @Body() dto: { name?: string; email?: string; stepGoal?: number }) {
+    return this.adminService.editUser(id, dto);
+  }
+
+  @Delete("users/:id")
+  deleteUser(@Param("id") id: string) {
+    return this.adminService.deleteUser(id);
   }
 }

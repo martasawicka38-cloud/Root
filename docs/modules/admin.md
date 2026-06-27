@@ -45,7 +45,7 @@ Panel admina działa wyłącznie na web. Komponent sprawdza `Platform.OS !== "we
 | Web-only guard | ✅ |
 | Placeholder dashboard | ✅ |
 | Dashboard z metrykami (API) | ✅ |
-| Zarządzanie użytkownikami | ❌ |
+| Zarządzanie użytkownikami | ✅ |
 | Zarządzanie nagrodami | ❌ |
 | Zarządzanie deklaracjami | ❌ |
 | Podgląd rankingów | ❌ |

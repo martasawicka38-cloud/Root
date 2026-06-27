@@ -133,6 +133,45 @@ export class CompanyService {
     });
   }
 
+  async editEmployee(slug: string, employeeId: string, userId: string, dto: { name?: string; email?: string }) {
+    const company = await this.prisma.company.findUnique({ where: { slug } });
+    if (!company) throw new NotFoundException("Company not found");
+    await this.verifyOwnership(slug, userId);
+
+    const employee = await this.prisma.user.findFirst({
+      where: { id: employeeId, companyId: company.id, role: "employer" },
+    });
+    if (!employee) throw new NotFoundException("Employee not found");
+
+    if (dto.email && dto.email !== employee.email) {
+      const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
+      if (existing) throw new Error("Email already in use");
+    }
+
+    return this.prisma.user.update({
+      where: { id: employeeId },
+      data: dto,
+      select: { id: true, email: true, name: true, isActive: true, balance: true, createdAt: true },
+    });
+  }
+
+  async removeEmployee(slug: string, employeeId: string, userId: string) {
+    const company = await this.prisma.company.findUnique({ where: { slug } });
+    if (!company) throw new NotFoundException("Company not found");
+    await this.verifyOwnership(slug, userId);
+
+    const employee = await this.prisma.user.findFirst({
+      where: { id: employeeId, companyId: company.id, role: "employer" },
+    });
+    if (!employee) throw new NotFoundException("Employee not found");
+
+    return this.prisma.user.update({
+      where: { id: employeeId },
+      data: { companyId: null },
+      select: { id: true, email: true, name: true },
+    });
+  }
+
   private async verifyOwnership(slug: string, userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },

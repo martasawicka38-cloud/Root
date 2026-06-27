@@ -12,6 +12,9 @@ import {
 } from "react-native";
 
 import {
+  adminCreateUser,
+  adminDeleteUser,
+  adminEditUser,
   createCompany,
   fetchAdminDashboard,
   fetchAdminUsers,
@@ -57,6 +60,15 @@ export default function AdminScreen() {
   const [expandedCompanyId, setExpandedCompanyId] = useState<string | null>(null);
   const [assignUserId, setAssignUserId] = useState<string | null>(null);
   const [assignCompanyId, setAssignCompanyId] = useState("");
+  const [createUserOpen, setCreateUserOpen] = useState(false);
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserPassword, setNewUserPassword] = useState("");
+  const [newUserRole, setNewUserRole] = useState<"user" | "company">("user");
+  const [editUserId, setEditUserId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const dashboardQuery = useQuery({
     queryKey: ["admin", "dashboard"],
@@ -136,6 +148,33 @@ export default function AdminScreen() {
     },
   });
 
+  const createUserMutation = useMutation({
+    mutationFn: () => adminCreateUser({ name: newUserName, email: newUserEmail, password: newUserPassword, role: newUserRole }),
+    onSuccess: () => {
+      setCreateUserOpen(false);
+      setNewUserName(""); setNewUserEmail(""); setNewUserPassword("");
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "unassigned"] });
+    },
+  });
+
+  const editUserMutation = useMutation({
+    mutationFn: () => adminEditUser(editUserId!, { name: editName, email: editEmail }),
+    onSuccess: () => {
+      setEditUserId(null);
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+    },
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: () => adminDeleteUser(deleteConfirmId!),
+    onSuccess: () => {
+      setDeleteConfirmId(null);
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "unassigned"] });
+    },
+  });
+
   if (Platform.OS !== "web") {
     return (
       <View style={styles.fallbackRoot}>
@@ -195,6 +234,32 @@ export default function AdminScreen() {
               assigning={assignMutation.isPending}
               onRemove={(id) => removeMutation.mutate(id)}
               removing={removeMutation.isPending}
+              createUserOpen={createUserOpen}
+              onCreateUserToggle={() => setCreateUserOpen(!createUserOpen)}
+              newUserName={newUserName}
+              newUserEmail={newUserEmail}
+              newUserPassword={newUserPassword}
+              newUserRole={newUserRole}
+              onNewUserNameChange={setNewUserName}
+              onNewUserEmailChange={setNewUserEmail}
+              onNewUserPasswordChange={setNewUserPassword}
+              onNewUserRoleChange={setNewUserRole}
+              onCreateUser={() => createUserMutation.mutate()}
+              creatingUser={createUserMutation.isPending}
+              editUserId={editUserId}
+              editName={editName}
+              editEmail={editEmail}
+              onEditStart={(id, name, email) => { setEditUserId(id); setEditName(name); setEditEmail(email); }}
+              onEditCancel={() => setEditUserId(null)}
+              onEditNameChange={setEditName}
+              onEditEmailChange={setEditEmail}
+              onEditSave={() => editUserMutation.mutate()}
+              editingUser={editUserMutation.isPending}
+              deleteConfirmId={deleteConfirmId}
+              onDeleteStart={setDeleteConfirmId}
+              onDeleteCancel={() => setDeleteConfirmId(null)}
+              onDeleteConfirm={() => deleteUserMutation.mutate()}
+              deletingUser={deleteUserMutation.isPending}
             />
           )}
           {tab === "companies" && (
@@ -357,6 +422,13 @@ function UsersTab({
   usersQuery, unassignedQuery, companiesQuery, onToggleActive, togglingId,
   assignUserId, assignCompanyId, onStartAssign, onAssignCompanyIdChange,
   onAssign, assigning, onRemove, removing,
+  createUserOpen, onCreateUserToggle,
+  newUserName, newUserEmail, newUserPassword, newUserRole,
+  onNewUserNameChange, onNewUserEmailChange, onNewUserPasswordChange, onNewUserRoleChange,
+  onCreateUser, creatingUser,
+  editUserId, editName, editEmail,
+  onEditStart, onEditCancel, onEditNameChange, onEditEmailChange, onEditSave, editingUser,
+  deleteConfirmId, onDeleteStart, onDeleteCancel, onDeleteConfirm, deletingUser,
 }: {
   usersQuery: { data?: AdminUser[]; isPending: boolean; error: Error | null };
   unassignedQuery: { data?: AdminUser[]; isPending: boolean; error: Error | null };
@@ -371,6 +443,29 @@ function UsersTab({
   assigning: boolean;
   onRemove: (id: string) => void;
   removing: boolean;
+  createUserOpen: boolean;
+  onCreateUserToggle: () => void;
+  newUserName: string; newUserEmail: string; newUserPassword: string;
+  newUserRole: "user" | "company";
+  onNewUserNameChange: (v: string) => void;
+  onNewUserEmailChange: (v: string) => void;
+  onNewUserPasswordChange: (v: string) => void;
+  onNewUserRoleChange: (v: "user" | "company") => void;
+  onCreateUser: () => void;
+  creatingUser: boolean;
+  editUserId: string | null;
+  editName: string; editEmail: string;
+  onEditStart: (id: string, name: string, email: string) => void;
+  onEditCancel: () => void;
+  onEditNameChange: (v: string) => void;
+  onEditEmailChange: (v: string) => void;
+  onEditSave: () => void;
+  editingUser: boolean;
+  deleteConfirmId: string | null;
+  onDeleteStart: (id: string | null) => void;
+  onDeleteCancel: () => void;
+  onDeleteConfirm: () => void;
+  deletingUser: boolean;
 }) {
   const pending = usersQuery.isPending;
   const error = usersQuery.error;
@@ -388,6 +483,35 @@ function UsersTab({
   return (
     <>
       <Text style={styles.pageTitle}>Zarzadzanie uzytkownikami</Text>
+
+      <View style={styles.createCard}>
+        <Pressable onPress={onCreateUserToggle} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <Text style={styles.createTitle}>Dodaj uzytkownika</Text>
+          <Text style={{ fontSize: 18, color: colors.slate500 }}>{createUserOpen ? "▲" : "▼"}</Text>
+        </Pressable>
+        {createUserOpen && (
+          <View style={{ gap: 10 }}>
+            <TextInput style={styles.input} placeholder="Nazwa" value={newUserName} onChangeText={onNewUserNameChange} placeholderTextColor="#94A3B8" />
+            <TextInput style={styles.input} placeholder="Email" value={newUserEmail} onChangeText={onNewUserEmailChange} placeholderTextColor="#94A3B8" autoCapitalize="none" keyboardType="email-address" />
+            <TextInput style={styles.input} placeholder="Haslo" value={newUserPassword} onChangeText={onNewUserPasswordChange} placeholderTextColor="#94A3B8" secureTextEntry />
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <Pressable style={[styles.roleTab, newUserRole === "user" && styles.roleTabActive, { flex: 1 }]} onPress={() => onNewUserRoleChange("user")}>
+                <Text style={[styles.roleTabText, newUserRole === "user" && styles.roleTabTextActive]}>Uzytkownik</Text>
+              </Pressable>
+              <Pressable style={[styles.roleTab, newUserRole === "company" && styles.roleTabActive, { flex: 1 }]} onPress={() => onNewUserRoleChange("company")}>
+                <Text style={[styles.roleTabText, newUserRole === "company" && styles.roleTabTextActive]}>Firma</Text>
+              </Pressable>
+            </View>
+            <Pressable
+              style={[styles.createBtn, (!newUserName || !newUserEmail || !newUserPassword || creatingUser) && { opacity: 0.5 }]}
+              onPress={onCreateUser}
+              disabled={!newUserName || !newUserEmail || !newUserPassword || creatingUser}
+            >
+              <Text style={styles.createBtnText}>{creatingUser ? "Tworzenie..." : "Utworz uzytkownika"}</Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
 
       <Text style={styles.sectionTitle}>Uzytkownicy bez firmy</Text>
       {unassignedQuery.data && unassignedQuery.data.length > 0 ? (
@@ -446,40 +570,75 @@ function UsersTab({
 
       <Text style={styles.sectionTitle}>Wszyscy uzytkownicy (bez pracownikow)</Text>
       <View style={styles.tableHeader}>
-        <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Nazwa</Text>
-        <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Email</Text>
-        <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Rola</Text>
-        <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Firma</Text>
-        <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Status</Text>
-        <Text style={[styles.tableHeaderCell, { flex: 0.7 }]}>Akcje</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Nazwa</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Email</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 0.8 }]}>Rola</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 0.8 }]}>Firma</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 0.7 }]}>Status</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Akcje</Text>
       </View>
 
       {usersQuery.data?.map((u) => (
         <View key={u.id} style={styles.tableRow}>
-          <Text style={[styles.tableCell, { flex: 2 }]}>{u.name}</Text>
-          <Text style={[styles.tableCell, { flex: 2 }]}>{u.email}</Text>
-          <View style={{ flex: 1 }}>
-            <Badge {...ROLE_BADGE[u.role] ?? { label: u.role, color: "#333", bg: "#eee" }} />
-          </View>
-          <Text style={[styles.tableCell, { flex: 1 }]}>{u.company?.name ?? "-"}</Text>
-          <View style={{ flex: 1 }}>
-            <Badge
-              label={u.isActive ? "Aktywny" : "Nieaktywny"}
-              color={u.isActive ? "#40916C" : "#D62828"}
-              bg={u.isActive ? "#D8F3DC" : "#FFE5E5"}
-            />
-          </View>
-          <View style={{ flex: 0.7, gap: 4 }}>
-            <Pressable
-              style={[styles.actionBtn, u.isActive ? styles.actionBtnWarn : styles.actionBtnSuccess, togglingId === u.id && { opacity: 0.5 }]}
-              onPress={() => onToggleActive(u.id)}
-              disabled={togglingId === u.id}
-            >
-              <Text style={[styles.actionBtnText, { color: u.isActive ? "#D62828" : "#40916C" }]}>
-                {u.isActive ? "Dezaktywuj" : "Aktywuj"}
-              </Text>
-            </Pressable>
-          </View>
+          {editUserId === u.id ? (
+            <>
+              <TextInput style={[styles.inputSmall, { flex: 1.5 }]} value={editName} onChangeText={onEditNameChange} placeholderTextColor="#94A3B8" />
+              <TextInput style={[styles.inputSmall, { flex: 1.5 }]} value={editEmail} onChangeText={onEditEmailChange} placeholderTextColor="#94A3B8" autoCapitalize="none" />
+              <View style={{ flex: 0.8 }} />
+              <Text style={[styles.tableCell, { flex: 0.8 }]}>{u.company?.name ?? "-"}</Text>
+              <View style={{ flex: 0.7 }} />
+              <View style={{ flex: 1.5, gap: 4, flexDirection: "row" }}>
+                <Pressable style={[styles.actionBtn, styles.actionBtnSuccess, (editingUser || !editName) && { opacity: 0.5 }]} onPress={onEditSave} disabled={editingUser || !editName}>
+                  <Text style={[styles.actionBtnText, { color: "#40916C" }]}>Zapisz</Text>
+                </Pressable>
+                <Pressable style={styles.actionBtn} onPress={onEditCancel}>
+                  <Text style={styles.actionBtnText}>Anuluj</Text>
+                </Pressable>
+              </View>
+            </>
+          ) : deleteConfirmId === u.id ? (
+            <>
+              <Text style={[styles.tableCell, { flex: 1.5 }]}>{u.name}</Text>
+              <Text style={[styles.tableCell, { flex: 1.5 }]}>{u.email}</Text>
+              <View style={{ flex: 0.8 }}><Badge {...ROLE_BADGE[u.role] ?? { label: u.role, color: "#333", bg: "#eee" }} /></View>
+              <Text style={[styles.tableCell, { flex: 0.8 }]}>{u.company?.name ?? "-"}</Text>
+              <View style={{ flex: 0.7 }} />
+              <View style={{ flex: 1.5, gap: 4, flexDirection: "row" }}>
+                <Text style={{ fontSize: 13, color: "#991B1B", fontWeight: "600", alignSelf: "center" }}>Usunac?</Text>
+                <Pressable style={[styles.actionBtn, styles.actionBtnWarn, deletingUser && { opacity: 0.5 }]} onPress={onDeleteConfirm} disabled={deletingUser}>
+                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>{deletingUser ? "Usuwanie..." : "Tak"}</Text>
+                </Pressable>
+                <Pressable style={styles.actionBtn} onPress={onDeleteCancel}>
+                  <Text style={styles.actionBtnText}>Nie</Text>
+                </Pressable>
+              </View>
+            </>
+          ) : (
+            <>
+              <Text style={[styles.tableCell, { flex: 1.5 }]}>{u.name}</Text>
+              <Text style={[styles.tableCell, { flex: 1.5 }]}>{u.email}</Text>
+              <View style={{ flex: 0.8 }}>
+                <Badge {...ROLE_BADGE[u.role] ?? { label: u.role, color: "#333", bg: "#eee" }} />
+              </View>
+              <Text style={[styles.tableCell, { flex: 0.8 }]}>{u.company?.name ?? "-"}</Text>
+              <View style={{ flex: 0.7 }}>
+                <Badge label={u.isActive ? "Aktywny" : "Nieaktywny"} color={u.isActive ? "#40916C" : "#D62828"} bg={u.isActive ? "#D8F3DC" : "#FFE5E5"} />
+              </View>
+              <View style={{ flex: 1.5, gap: 4, flexDirection: "row" }}>
+                <Pressable style={[styles.actionBtn, { borderColor: "#CBD5E1", backgroundColor: "#F8FAFC" }]} onPress={() => onEditStart(u.id, u.name, u.email)}>
+                  <Text style={[styles.actionBtnText, { color: colors.slate600 }]}>Edytuj</Text>
+                </Pressable>
+                <Pressable style={[styles.actionBtn, u.isActive ? styles.actionBtnWarn : styles.actionBtnSuccess, togglingId === u.id && { opacity: 0.5 }]} onPress={() => onToggleActive(u.id)} disabled={togglingId === u.id}>
+                  <Text style={[styles.actionBtnText, { color: u.isActive ? "#D62828" : "#40916C" }]}>{u.isActive ? "Dezaktywuj" : "Aktywuj"}</Text>
+                </Pressable>
+                {u.role !== "superadmin" && (
+                  <Pressable style={[styles.actionBtn, { borderColor: "#FECACA", backgroundColor: "#FEF2F2" }]} onPress={() => onDeleteStart(u.id)}>
+                    <Text style={[styles.actionBtnText, { color: "#D62828" }]}>Usun</Text>
+                  </Pressable>
+                )}
+              </View>
+            </>
+          )}
         </View>
       ))}
     </>
@@ -704,4 +863,8 @@ const styles = StyleSheet.create({
   tokenListFull: { gap: 4 },
   tokenTableHeader: { flexDirection: "row", backgroundColor: colors.slate100, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, paddingVertical: 10, paddingHorizontal: 12, marginBottom: 4 },
   tokenTableRow: { flexDirection: "row", alignItems: "center", backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, paddingVertical: 12, paddingHorizontal: 12, marginBottom: 4 },
+  roleTab: { paddingVertical: 10, borderRadius: radius.sm, alignItems: "center", backgroundColor: colors.slate100 },
+  roleTabActive: { backgroundColor: colors.white, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 2 },
+  roleTabText: { fontSize: 14, fontWeight: "600", color: colors.slate500 },
+  roleTabTextActive: { color: colors.slate900 },
 });

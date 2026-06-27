@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
 
 import { JwtAuthGuard } from "../common/jwt-auth.guard";
 import { CurrentUser } from "../common/current-user.decorator";
@@ -47,5 +47,24 @@ export class CompanyController {
     @CurrentUser() user: { userId: string },
   ) {
     return this.companyService.generateEmployerToken(slug, user.userId);
+  }
+
+  @Patch(":slug/employees/:id")
+  editEmployee(
+    @Param("slug") slug: string,
+    @Param("id") id: string,
+    @Body() dto: { name?: string; email?: string },
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.companyService.editEmployee(slug, id, user.userId, dto);
+  }
+
+  @Delete(":slug/employees/:id")
+  removeEmployee(
+    @Param("slug") slug: string,
+    @Param("id") id: string,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.companyService.removeEmployee(slug, id, user.userId);
   }
 }

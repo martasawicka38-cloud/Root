@@ -260,3 +260,28 @@ export async function generateEmployerTokenBySlug(slug: string) {
   const { data } = await api.post<CompanyToken>(`/company/${slug}/generate-token`);
   return data;
 }
+
+export async function adminCreateUser(input: { name: string; email: string; password: string; role: "user" | "company" }) {
+  const { data } = await api.post("/admin/users", input);
+  return data;
+}
+
+export async function adminEditUser(id: string, input: { name?: string; email?: string; stepGoal?: number }) {
+  const { data } = await api.patch(`/admin/users/${id}`, input);
+  return data;
+}
+
+export async function adminDeleteUser(id: string) {
+  const { data } = await api.delete(`/admin/users/${id}`);
+  return data;
+}
+
+export async function companyEditEmployee(slug: string, id: string, input: { name?: string; email?: string }) {
+  const { data } = await api.patch(`/company/${slug}/employees/${id}`, input);
+  return data;
+}
+
+export async function companyRemoveEmployee(slug: string, id: string) {
+  const { data } = await api.delete(`/company/${slug}/employees/${id}`);
+  return data;
+}
