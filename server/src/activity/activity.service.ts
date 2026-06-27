@@ -8,11 +8,28 @@ import { ACTIVITY_CONFIG } from "./activity.config";
 export class ActivityService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async listEcoActivities() {
-    return this.prisma.ecoActivity.findMany({
+  async listEcoActivities(userId?: string) {
+    const activities = await this.prisma.ecoActivity.findMany({
       where: { active: true },
       orderBy: { category: "asc" },
     });
+
+    if (!userId) return activities;
+
+    const todayStart = this.getDayStart();
+    const todayLogs = await this.prisma.userEcoActivityLog.findMany({
+      where: {
+        userId,
+        createdAt: { gte: todayStart },
+      },
+      select: { ecoActivityId: true },
+    });
+    const todayIds = new Set(todayLogs.map((l) => l.ecoActivityId));
+
+    return activities.map((a) => ({
+      ...a,
+      completedToday: todayIds.has(a.id),
+    }));
   }
 
   async getUserLogs(userId: string) {
@@ -45,6 +62,14 @@ export class ActivityService {
       return { ok: false, message: "Aktywność nie istnieje." };
     }
 
+    const todayStart = this.getDayStart();
+    const alreadyDone = await this.prisma.userEcoActivityLog.count({
+      where: { userId, ecoActivityId, createdAt: { gte: todayStart } },
+    });
+    if (alreadyDone > 0) {
+      return { ok: false, message: "Tę aktywność możesz wykonać tylko raz dziennie." };
+    }
+
     return this.prisma.$transaction(async (tx) => {
       const now = new Date();
 
@@ -68,8 +93,6 @@ export class ActivityService {
         weekCount < ACTIVITY_CONFIG.DIMINISHING_TIERS.length
           ? ACTIVITY_CONFIG.DIMINISHING_TIERS[weekCount]
           : 0.0;
-
-      const todayStart = this.getDayStart(now);
 
       const todayCategoryAgg = await tx.userEcoActivityLog.aggregate({
         where: {

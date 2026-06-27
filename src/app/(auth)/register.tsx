@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 
-import { AppLogo } from "../../features/common/AppLogo";
+
 import { Screen } from "../../features/common/Screen";
 import { fetchPublicCompanies, loginUser, registerUser } from "../../lib/api/endpoints";
 import { colors, radius, shadows } from "../../styles/tokens";
@@ -138,10 +138,8 @@ export default function RegisterScreen() {
 
   return (
     <Screen>
-      <View style={styles.logoSection}>
-        <AppLogo compact />
-        <Text style={styles.tagline}>Zakorzen dobre nawyki</Text>
-      </View>
+      <View style={{ height: 24 }} />
+      <Text style={styles.tagline}>Zakorzen dobre nawyki</Text>
 
       <Text style={styles.title}>Zaloz konto</Text>
 

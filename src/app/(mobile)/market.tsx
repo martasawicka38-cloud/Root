@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { CoinIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
 import { fetchMarket, fetchWallet } from "../../lib/api/endpoints";
-import { colors, radius } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
 
 const filters = ["all", "food", "wellness", "sport", "eco"] as const;
@@ -37,11 +37,7 @@ export default function MarketScreen() {
 
   return (
     <Screen>
-      <View style={styles.header}>
-        <Text style={styles.headerBack}>‹</Text>
-        <Text style={styles.headerTitle}>Rynek nagrod</Text>
-        <View style={styles.headerBack} />
-      </View>
+      <Text style={styles.screenTitle}>Rynek nagrod</Text>
 
       <View style={styles.balanceRow}>
         <View style={styles.balanceIconWrap}>
@@ -100,23 +96,11 @@ export default function MarketScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  headerBack: {
-    width: 24,
+  screenTitle: {
     fontSize: 22,
-    color: colors.slate900,
-  },
-  headerTitle: {
-    fontSize: 18,
     fontWeight: "700",
-    color: colors.deepForest,
-    textAlign: "center",
-    flex: 1,
+    color: colors.slate900,
+    marginBottom: spacing.sm,
   },
   balanceRow: {
     flexDirection: "row",

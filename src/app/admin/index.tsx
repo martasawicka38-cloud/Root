@@ -34,6 +34,7 @@ import {
   revokeGlobalPermission,
 } from "../../lib/api/endpoints";
 import type { AdminUser, ChallengeItem, Company, CompanyGlobalPermissionItem, CompanyToken } from "../../lib/types/api";
+import { AppLogo } from "../../features/common/AppLogo";
 import { colors, radius } from "../../styles/tokens";
 
 type Tab = "dashboard" | "users" | "companies" | "tokens" | "challenges";
@@ -194,7 +195,7 @@ export default function AdminScreen() {
   return (
     <View style={styles.root}>
       <View style={styles.topbar}>
-        <Text style={styles.topbarTitle}>Eco-Pulse Admin</Text>
+        <AppLogo size={22} />
         <View style={styles.topbarRight}>
           <View style={adminBadgeStyles.badge}>
             <Text style={adminBadgeStyles.text}>Superadmin</Text>
@@ -797,7 +798,7 @@ const styles = StyleSheet.create({
   fallbackTitle: { fontSize: 22, fontWeight: "700", color: colors.deepForest, textAlign: "center" },
   fallbackText: { fontSize: 15, color: colors.slate500, textAlign: "center", marginTop: 8 },
   topbar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 32, paddingVertical: 14, backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.slate200 },
-  topbarTitle: { fontSize: 18, fontWeight: "700", color: colors.deepForest },
+
   topbarRight: { flexDirection: "row", alignItems: "center", gap: 12 },
   navTabs: { flexDirection: "row", backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.slate200, paddingHorizontal: 32 },
   navTab: { paddingVertical: 12, paddingHorizontal: 20, borderBottomWidth: 2, borderBottomColor: "transparent" },

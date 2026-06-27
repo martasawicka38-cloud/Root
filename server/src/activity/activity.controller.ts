@@ -16,8 +16,8 @@ export class ActivityController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  list() {
-    return this.activityService.listEcoActivities();
+  list(@CurrentUser() user: { userId: string }) {
+    return this.activityService.listEcoActivities(user.userId);
   }
 
   @Post("submit")

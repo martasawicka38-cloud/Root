@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import {
-  BellIcon,
   BikeIcon,
   CoinIcon,
   FireIcon,
@@ -14,22 +13,17 @@ import {
   RunningIcon,
   TrophyIcon,
 } from "../../components/icons";
-import { AppLogo } from "../../features/common/AppLogo";
+
 import { Screen } from "../../features/common/Screen";
-import { fetchMe, fetchWallet } from "../../lib/api/endpoints";
+import { fetchMe } from "../../lib/api/endpoints";
 import { colors, radius, spacing } from "../../styles/tokens";
 
-const CARD_W = 188; // card width + gap
+const CARD_W = 188;
 
 export default function HomeScreen() {
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
-  const { data: wallet } = useQuery({
-    queryKey: ["wallet"],
-    queryFn: fetchWallet,
-  });
 
   const profileName = me?.name ?? "";
-  const balance = wallet?.balance ?? me?.balance ?? 0;
   const stepGoal = me?.stepGoal ?? 8000;
   const currentSteps = 6200;
   const progress = Math.min(100, Math.round((currentSteps / stepGoal) * 100));
@@ -80,24 +74,9 @@ export default function HomeScreen() {
 
   return (
     <Screen>
-      <View style={styles.header}>
-        <AppLogo compact />
-        <View style={styles.headerActions}>
-          <View style={styles.balancePill}>
-            <CoinIcon size={16} color={colors.warmGold} />
-            <Text style={styles.balanceValue}>{balance}</Text>
-            <Text style={styles.balanceUnit}>EC</Text>
-          </View>
-          <Link href="/(mobile)/notifications" style={styles.bellButton}>
-            <BellIcon size={22} color={colors.warmGold} />
-            <View style={styles.bellDot} />
-          </Link>
-        </View>
-      </View>
-
-      <Text style={styles.greeting}>
+      <Text style={styles.screenTitle}>
         Dzien dobry,{" "}
-        <Text style={styles.greetingName}>{profileName.split(" ")[0]}</Text>
+        <Text style={styles.screenTitleAccent}>{profileName.split(" ")[0]}</Text>
       </Text>
 
       <View style={styles.card}>
@@ -227,57 +206,14 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  balancePill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#C6ECD2",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radius.full,
-  },
-  balanceValue: {
-    color: colors.deepForest,
-    fontWeight: "800",
-    fontSize: 18,
-  },
-  balanceUnit: {
-    color: colors.slate600,
-    fontWeight: "600",
-    fontSize: 13,
-  },
-  bellButton: {
-    position: "relative",
-    padding: 4,
-  },
-  bellDot: {
-    position: "absolute",
-    top: 4,
-    right: 4,
-    width: 6,
-    height: 6,
-    borderRadius: 999,
-    backgroundColor: colors.error,
-  },
-  greeting: {
-    marginTop: 12,
-    fontSize: 18,
-    color: colors.slate700,
-    fontWeight: "500",
-  },
-  greetingName: {
-    color: colors.slate900,
+  screenTitle: {
+    fontSize: 22,
     fontWeight: "700",
+    color: colors.slate900,
+    marginBottom: spacing.sm,
+  },
+  screenTitleAccent: {
+    color: colors.deepForest,
   },
 
   card: {

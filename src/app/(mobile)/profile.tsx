@@ -12,7 +12,7 @@ import {
 } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
 import { fetchMe } from "../../lib/api/endpoints";
-import { colors, radius } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 
 const menuItems = [
   { href: "/(mobile)/edit-profile", icon: EditIcon, label: "Edytuj profil" },
@@ -28,11 +28,7 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
-      <View style={styles.header}>
-        <Text style={styles.headerBack}>‹</Text>
-        <Text style={styles.headerTitle}>Profil</Text>
-        <View style={styles.headerBack} />
-      </View>
+      <Text style={styles.screenTitle}>Profil</Text>
 
       <View style={styles.avatarSection}>
         <View style={styles.avatar}>
@@ -91,22 +87,11 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  headerBack: {
-    width: 24,
+  screenTitle: {
     fontSize: 22,
-    color: colors.slate900,
-  },
-  headerTitle: {
-    fontSize: 18,
     fontWeight: "700",
-    color: colors.deepForest,
-    textAlign: "center",
-    flex: 1,
+    color: colors.slate900,
+    marginBottom: spacing.sm,
   },
   avatarSection: {
     alignItems: "center",

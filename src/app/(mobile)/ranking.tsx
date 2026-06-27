@@ -214,7 +214,7 @@ export default function RankingScreen() {
 }
 
 const styles = StyleSheet.create({
-  screenTitle: { fontSize: 22, fontWeight: "700", color: colors.slate900, marginBottom: spacing.x2s },
+  screenTitle: { fontSize: 22, fontWeight: "700", color: colors.slate900, marginBottom: spacing.sm },
 
   scopeRow: { flexDirection: "row", gap: 8, marginBottom: spacing.xs },
   scopeTab: { flex: 1, paddingVertical: 10, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, alignItems: "center", backgroundColor: "#F8FAFC" },

@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import Svg, { Path } from "react-native-svg";
 
-import { AppLogo } from "../../features/common/AppLogo";
+
 import { Screen } from "../../features/common/Screen";
 import { loginUser } from "../../lib/api/endpoints";
 import { colors, radius } from "../../styles/tokens";
@@ -73,10 +73,7 @@ export default function LoginScreen() {
 
   return (
     <Screen>
-      <View style={styles.logoSection}>
-        <AppLogo compact />
-        <Text style={styles.tagline}>Zakorzen dobre nawyki</Text>
-      </View>
+      <View style={{ height: 24 }} />
 
       <View style={styles.tabRow}>
         <Pressable style={[styles.tab, styles.tabActive]}>

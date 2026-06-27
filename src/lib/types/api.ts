@@ -209,6 +209,7 @@ export type EcoActivity = {
   basePoints: number;
   active: boolean;
   createdAt: string;
+  completedToday?: boolean;
 };
 
 export type UserEcoActivityLog = {

@@ -43,15 +43,25 @@ export default function EkoScreen() {
     queryFn: fetchEcoActivities,
   });
 
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const submitMutation = useMutation({
     mutationFn: submitEcoActivity,
     onSuccess: (data) => {
       setSubmittingId(null);
-      setLastResult(data);
-      queryClient.invalidateQueries({ queryKey: ["eco-activities"] });
-      queryClient.invalidateQueries({ queryKey: ["root-status"] });
+      if (data.ok) {
+        setSubmitError(null);
+        setLastResult(data);
+        queryClient.invalidateQueries({ queryKey: ["eco-activities"] });
+        queryClient.invalidateQueries({ queryKey: ["root-status"] });
+      } else {
+        setSubmitError(data.message ?? "Nie udało się dodać aktywności.");
+      }
     },
-    onError: () => setSubmittingId(null),
+    onError: (err: Error) => {
+      setSubmittingId(null);
+      setSubmitError(err.message);
+    },
   });
 
   const transformMutation = useMutation({
@@ -63,7 +73,6 @@ export default function EkoScreen() {
 
   const handleSubmit = (id: string) => {
     setSubmittingId(id);
-    setLastResult(null);
     submitMutation.mutate(id);
   };
 
@@ -92,7 +101,7 @@ export default function EkoScreen() {
   if (rootError || activitiesError) {
     return (
       <Screen>
-        <Text style={styles.screenTitle}>🌱 Eko-rozwój</Text>
+        <Text style={styles.screenTitle}>Eko-rozwój</Text>
         <Text style={styles.emptyText}>
           Nie udało się załadować danych: {rootError?.message || activitiesError?.message}
         </Text>
@@ -102,7 +111,7 @@ export default function EkoScreen() {
 
   return (
     <Screen>
-      <Text style={styles.screenTitle}>🌱 Eko-rozwój</Text>
+      <Text style={styles.screenTitle}>Eko-rozwój</Text>
 
       {/* Root Evolution Card */}
       <View style={styles.rootCard}>
@@ -135,7 +144,12 @@ export default function EkoScreen() {
         )}
       </View>
 
-      {/* Last submission feedback */}
+      {/* Submission feedback */}
+      {submitError && (
+        <View style={[styles.toast, styles.toastError]}>
+          <Text style={styles.toastTitle}>{submitError}</Text>
+        </View>
+      )}
       {lastResult && (
         <View style={[styles.toast, lastResult.caps.diminishingMultiplier === 0 && styles.toastWarn]}>
           <Text style={styles.toastTitle}>
@@ -169,28 +183,31 @@ export default function EkoScreen() {
               <View style={[styles.catHeader, { backgroundColor: meta.bg }]}>
                 <Text style={[styles.catLabel, { color: meta.color }]}>{meta.label}</Text>
               </View>
-              {acts.map((act) => (
-                <View key={act.id} style={styles.actRow}>
-                  <View style={styles.actInfo}>
-                    <Text style={styles.actIcon}>{act.icon}</Text>
-                    <View style={styles.actTextWrap}>
-                      <Text style={styles.actName}>{act.name}</Text>
-                      <Text style={styles.actPoints}>{act.basePoints} pkt bazowych · EXP + ranking</Text>
+              {acts.map((act) => {
+                const done = act.completedToday ?? false;
+                return (
+                  <View key={act.id} style={[styles.actRow, done && styles.actRowDone]}>
+                    <View style={styles.actInfo}>
+                      <Text style={[styles.actIcon, done && styles.textMuted]}>{act.icon}</Text>
+                      <View style={styles.actTextWrap}>
+                        <Text style={[styles.actName, done && styles.textMuted]}>{act.name}</Text>
+                        <Text style={[styles.actPoints, done && styles.textMuted]}>{act.basePoints} pkt bazowych · EXP + ranking</Text>
+                      </View>
+                    </View>
+                    <View style={[styles.submitBtn, done && styles.submitBtnDone, submittingId === act.id && styles.submitBtnDisabled]}>
+                      {done ? (
+                        <Text style={styles.submitBtnDoneText}>✓</Text>
+                      ) : submittingId === act.id ? (
+                        <ActivityIndicator size="small" color={colors.white} />
+                      ) : (
+                        <Pressable onPress={() => handleSubmit(act.id)}>
+                          <Text style={styles.submitBtnText}>+</Text>
+                        </Pressable>
+                      )}
                     </View>
                   </View>
-                  <Pressable
-                    style={[styles.submitBtn, submittingId === act.id && styles.submitBtnDisabled]}
-                    onPress={() => handleSubmit(act.id)}
-                    disabled={submittingId === act.id}
-                  >
-                    {submittingId === act.id ? (
-                      <ActivityIndicator size="small" color={colors.white} />
-                    ) : (
-                      <Text style={styles.submitBtnText}>+</Text>
-                    )}
-                  </Pressable>
-                </View>
-              ))}
+                );
+              })}
             </View>
           );
         })
@@ -200,7 +217,7 @@ export default function EkoScreen() {
 }
 
 const styles = StyleSheet.create({
-  screenTitle: { fontSize: 22, fontWeight: "700", color: colors.slate900, marginBottom: spacing.x2s },
+  screenTitle: { fontSize: 22, fontWeight: "700", color: colors.slate900, marginBottom: spacing.sm },
   rootCard: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.lg, padding: spacing.sm, gap: spacing.x2s },
   rootHeader: { flexDirection: "row", alignItems: "center", gap: spacing.md },
   rootInfo: { flex: 1 },
@@ -234,5 +251,10 @@ const styles = StyleSheet.create({
   actPoints: { fontSize: 11, color: colors.slate500, marginTop: 1 },
   submitBtn: { width: 32, height: 32, borderRadius: radius.full, backgroundColor: colors.mossGreen, alignItems: "center", justifyContent: "center", marginLeft: spacing.x2s },
   submitBtnDisabled: { opacity: 0.6 },
+  submitBtnDone: { backgroundColor: colors.slate300 },
+  submitBtnDoneText: { color: colors.white, fontSize: 14, fontWeight: "700" },
   submitBtnText: { color: colors.white, fontSize: 18, fontWeight: "700", lineHeight: 20 },
+  actRowDone: { opacity: 0.55 },
+  textMuted: { opacity: 0.6 },
+  toastError: { backgroundColor: "#FEE2E2" },
 });
