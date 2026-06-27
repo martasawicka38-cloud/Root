@@ -35,6 +35,94 @@ export class AppService {
     return user;
   }
 
+  async adminDashboard() {
+    const users = await this.prisma.user.findMany();
+    const userCount = users.length;
+
+    const declarationCount = await this.prisma.declaration.count();
+    const activityCount = await this.prisma.activity.count();
+    const usersWithActivity = await this.prisma.user.count({
+      where: { activities: { some: {} } },
+    });
+
+    const totalEc =
+      users.reduce((sum, u) => sum + u.balance, 0);
+
+    const [earnedAgg, spentAgg] = await Promise.all([
+      this.prisma.transaction.aggregate({
+        where: { type: "earned" },
+        _sum: { points: true },
+      }),
+      this.prisma.transaction.aggregate({
+        where: { type: "spent" },
+        _sum: { points: true },
+      }),
+    ]);
+
+    const stepsAgg = await this.prisma.activity.aggregate({
+      _sum: { steps: true },
+    });
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const recentActivities = await this.prisma.activity.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      include: { user: { select: { name: true } } },
+    });
+
+    const weeklyActivities = await this.prisma.activity.findMany({
+      where: { createdAt: { gte: sevenDaysAgo } },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const dayMap: Record<string, number> = {};
+    for (const a of weeklyActivities) {
+      const day = a.createdAt.toISOString().slice(0, 10);
+      dayMap[day] = (dayMap[day] || 0) + a.steps;
+    }
+
+    const weeklySteps = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(sevenDaysAgo);
+      d.setDate(d.getDate() + i + 1);
+      const key = d.toISOString().slice(0, 10);
+      return { day: key, steps: dayMap[key] || 0 };
+    });
+
+    return {
+      users: {
+        total: userCount,
+        activeDeclarations: declarationCount,
+        participationRate:
+          userCount > 0
+            ? Math.round((usersWithActivity / userCount) * 100)
+            : 0,
+      },
+      economy: {
+        totalEcInCirculation: totalEc,
+        totalEarned: earnedAgg._sum.points ?? 0,
+        totalSpent: spentAgg._sum.points ?? 0,
+      },
+      activity: {
+        totalActivities: activityCount,
+        totalSteps: stepsAgg._sum.steps ?? 0,
+        avgStepsPerActivity:
+          activityCount > 0
+            ? Math.round((stepsAgg._sum.steps ?? 0) / activityCount)
+            : 0,
+        weeklySteps,
+      },
+      recentActivity: recentActivities.map((a) => ({
+        id: a.id,
+        userName: a.user.name,
+        type: a.type,
+        points: a.points,
+        createdAt: a.createdAt.toISOString(),
+      })),
+    };
+  }
+
   async wallet() {
     const user = await this.getUser();
     return { balance: user.balance };

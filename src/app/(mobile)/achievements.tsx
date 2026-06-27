@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { StyleSheet, Text, View } from "react-native";
 
+import { TrophyIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
 import { fetchAchievements } from "../../lib/api/endpoints";
-import { colors } from "../../styles/tokens";
+import { colors, radius } from "../../styles/tokens";
 
 const list = [
   { id: "first-step", title: "Pierwszy krok" },
@@ -25,17 +26,47 @@ export default function AchievementsScreen() {
       <Text style={styles.meta}>
         Zdobyte: {unlocked.length}/{list.length}
       </Text>
+
       {list.map((item) => {
         const isUnlocked = unlocked.includes(item.id);
         return (
           <View
             key={item.id}
-            style={[styles.item, isUnlocked && styles.itemOn]}
+            style={[styles.card, isUnlocked && styles.cardUnlocked]}
           >
-            <Text style={styles.name}>{item.title}</Text>
-            <Text style={styles.status}>
-              {isUnlocked ? "Odblokowane" : "Zablokowane"}
-            </Text>
+            <View
+              style={[
+                styles.iconWrap,
+                isUnlocked
+                  ? { backgroundColor: "#FEF3C7" }
+                  : { backgroundColor: colors.slate100 },
+              ]}
+            >
+              <TrophyIcon
+                size={24}
+                color={isUnlocked ? colors.warmGold : colors.slate400}
+              />
+            </View>
+            <View style={styles.cardContent}>
+              <Text
+                style={[styles.cardTitle, !isUnlocked && styles.cardTitleLocked]}
+              >
+                {item.title}
+              </Text>
+              <View style={styles.statusRow}>
+                <View
+                  style={[
+                    styles.statusDot,
+                    isUnlocked
+                      ? { backgroundColor: colors.mossGreen }
+                      : { backgroundColor: colors.slate300 },
+                  ]}
+                />
+                <Text style={styles.statusText}>
+                  {isUnlocked ? "Odblokowane" : "Zablokowane"}
+                </Text>
+              </View>
+            </View>
           </View>
         );
       })}
@@ -44,15 +75,62 @@ export default function AchievementsScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 24, fontWeight: "700", color: colors.deepForest },
-  meta: { color: colors.slate600 },
-  item: {
-    borderWidth: 1,
-    borderColor: colors.slate300,
-    borderRadius: 10,
-    padding: 12,
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: colors.deepForest,
   },
-  itemOn: { borderColor: colors.sage, backgroundColor: colors.mist },
-  name: { color: colors.slate900, fontWeight: "700" },
-  status: { marginTop: 4, color: colors.slate600 },
+  meta: {
+    fontSize: 14,
+    color: colors.slate500,
+    marginBottom: 12,
+  },
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    borderRadius: radius.md,
+    padding: 14,
+    backgroundColor: "#F8FAFC",
+  },
+  cardUnlocked: {
+    borderColor: "#E8D48B",
+    backgroundColor: "#FFFEF5",
+  },
+  iconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cardContent: {
+    flex: 1,
+    gap: 6,
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: colors.slate900,
+  },
+  cardTitleLocked: {
+    color: colors.slate400,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 999,
+  },
+  statusText: {
+    fontSize: 12,
+    color: colors.slate500,
+    fontWeight: "500",
+  },
 });

@@ -1,23 +1,91 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
+import { BikeIcon, RunningIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
 import {
   addActivity,
   deleteActivity,
   fetchActivities,
 } from "../../lib/api/endpoints";
-import { colors } from "../../styles/tokens";
+import { colors, radius } from "../../styles/tokens";
 
-const types = [
-  "walking",
-  "running",
-  "cycling",
-  "swimming",
-  "yoga",
-  "gym",
-] as const;
+function SwimIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M2 17c2-2 4-1 6 0s4 2 6 0 4-2 6 0"
+        stroke={colors.slate700}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M2 21c2-2 4-1 6 0s4 2 6 0 4-2 6 0"
+        stroke={colors.slate700}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M2 13l2-6 4 2 3-5 4 3 3-4"
+        stroke={colors.slate700}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function YogaIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 4a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
+        stroke={colors.slate700}
+        strokeWidth={1.5}
+      />
+      <Path
+        d="M7 22l3-6 2 3 4-6"
+        stroke={colors.slate700}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M5 14l3-2 4 2"
+        stroke={colors.slate700}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function GymIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M5 12h14" stroke={colors.slate700} strokeWidth={1.5} strokeLinecap="round" />
+      <Path d="M3 8v8" stroke={colors.slate700} strokeWidth={1.5} strokeLinecap="round" />
+      <Path d="M21 8v8" stroke={colors.slate700} strokeWidth={1.5} strokeLinecap="round" />
+      <Path d="M7 5l2 14" stroke={colors.slate700} strokeWidth={1.5} strokeLinecap="round" />
+      <Path d="M17 5l-2 14" stroke={colors.slate700} strokeWidth={1.5} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+const typeMeta: Record<string, { label: string; icon: typeof RunningIcon }> = {
+  walking: { label: "Spacer", icon: RunningIcon },
+  running: { label: "Bieganie", icon: RunningIcon },
+  cycling: { label: "Rower", icon: BikeIcon },
+  swimming: { label: "Plywanie", icon: SwimIcon },
+  yoga: { label: "Joga", icon: YogaIcon },
+  gym: { label: "Silownia", icon: GymIcon },
+};
+
+const types = ["walking", "running", "cycling", "swimming", "yoga", "gym"] as const;
 
 export default function ActivityScreen() {
   const queryClient = useQueryClient();
@@ -61,26 +129,49 @@ export default function ActivityScreen() {
   return (
     <Screen>
       <Text style={styles.title}>Dodaj aktywnosc</Text>
-      <View style={styles.rowWrap}>
-        {types.map((t) => (
-          <Pressable
-            key={t}
-            style={[styles.typeBtn, t === type && styles.typeBtnActive]}
-            onPress={() => setType(t)}
-          >
-            <Text style={styles.typeText}>{t}</Text>
-          </Pressable>
-        ))}
+
+      <Text style={styles.sectionLabel}>Wybierz typ aktywnosci</Text>
+      <View style={styles.typeGrid}>
+        {types.map((t) => {
+          const meta = typeMeta[t];
+          const isActive = t === type;
+          return (
+            <Pressable
+              key={t}
+              style={[styles.typeBtn, isActive && styles.typeBtnActive]}
+              onPress={() => setType(t)}
+            >
+              <meta.icon size={22} />
+              <Text style={[styles.typeText, isActive && styles.typeTextActive]}>
+                {meta.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
+
+      <Text style={styles.sectionLabel}>Czas trwania (minuty)</Text>
       <TextInput
         value={minutes}
         onChangeText={setMinutes}
         keyboardType="number-pad"
         style={styles.input}
+        placeholder="np. 30"
       />
-      <Text style={styles.meta}>
-        Szacowane kroki: {estimate.steps} | +{estimate.points} EC
-      </Text>
+
+      <View style={styles.estimateCard}>
+        <Text style={styles.estimateLabel}>Szacowane</Text>
+        <View style={styles.estimateRow}>
+          <Text style={styles.estimateValue}>
+            {estimate.steps.toLocaleString("pl-PL")}
+          </Text>
+          <Text style={styles.estimateUnit}>krokow</Text>
+        </View>
+        <View style={styles.estimateRow}>
+          <Text style={styles.estimatePoints}>+{estimate.points} EC</Text>
+        </View>
+      </View>
+
       <Pressable
         style={styles.button}
         onPress={() => {
@@ -90,13 +181,23 @@ export default function ActivityScreen() {
       >
         <Text style={styles.buttonText}>Dodaj aktywnosc</Text>
       </Pressable>
+
+      <Text style={styles.sectionLabel}>Twoje aktywnosci</Text>
+      {log.length === 0 && (
+        <Text style={styles.emptyText}>Brak aktywnosci</Text>
+      )}
       {log.map((item) => (
-        <View key={item.id} style={styles.item}>
-          <Text style={styles.itemText}>
-            {item.type} • {item.minutes} min • +{item.points} EC
-          </Text>
+        <View key={item.id} style={styles.logItem}>
+          <View style={styles.logItemLeft}>
+            <Text style={styles.logType}>
+              {typeMeta[item.type]?.label ?? item.type}
+            </Text>
+            <Text style={styles.logDetail}>
+              {item.minutes} min • +{item.points} EC
+            </Text>
+          </View>
           <Pressable onPress={() => deleteMutation.mutate(item.id)}>
-            <Text style={styles.del}>Usun</Text>
+            <Text style={styles.logDelete}>Usun</Text>
           </Pressable>
         </View>
       ))}
@@ -105,37 +206,136 @@ export default function ActivityScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 24, fontWeight: "700", color: colors.deepForest },
-  rowWrap: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: colors.deepForest,
+    marginBottom: 4,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.slate500,
+    marginTop: 12,
+    marginBottom: 6,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  typeGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
   typeBtn: {
     borderWidth: 1,
-    borderColor: colors.slate300,
-    borderRadius: 10,
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    borderColor: colors.slate200,
+    borderRadius: radius.md,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#F8FAFC",
   },
   typeBtnActive: {
     borderColor: colors.mossGreen,
     backgroundColor: colors.mist,
   },
-  typeText: { color: colors.slate900, fontWeight: "600" },
+  typeText: {
+    fontSize: 14,
+    color: colors.slate700,
+    fontWeight: "600",
+  },
+  typeTextActive: {
+    color: colors.mossGreen,
+  },
   input: {
     borderWidth: 1,
-    borderColor: colors.slate300,
-    borderRadius: 10,
-    padding: 12,
+    borderColor: colors.slate200,
+    borderRadius: radius.md,
+    padding: 14,
+    fontSize: 16,
+    color: colors.slate900,
+    backgroundColor: "#F8FAFC",
   },
-  meta: { color: colors.slate600 },
-  button: { backgroundColor: colors.mossGreen, borderRadius: 10, padding: 12 },
-  buttonText: { color: colors.white, fontWeight: "700", textAlign: "center" },
-  item: {
+  estimateCard: {
+    marginTop: 10,
+    backgroundColor: "#F8FAFC",
     borderWidth: 1,
-    borderColor: colors.slate300,
-    borderRadius: 10,
-    padding: 10,
+    borderColor: colors.slate200,
+    borderRadius: radius.md,
+    padding: 14,
+    gap: 8,
+  },
+  estimateLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.slate500,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  estimateRow: {
+    flexDirection: "row",
+    alignItems: "baseline",
+    gap: 6,
+  },
+  estimateValue: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: colors.deepForest,
+  },
+  estimateUnit: {
+    fontSize: 14,
+    color: colors.slate500,
+  },
+  estimatePoints: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: colors.warmGold,
+  },
+  button: {
+    marginTop: 12,
+    backgroundColor: colors.mossGreen,
+    borderRadius: radius.md,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  emptyText: {
+    color: colors.slate400,
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 10,
+  },
+  logItem: {
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    borderRadius: radius.md,
+    padding: 14,
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#F8FAFC",
   },
-  itemText: { color: colors.slate900 },
-  del: { color: colors.error, fontWeight: "700" },
+  logItemLeft: {
+    gap: 2,
+  },
+  logType: {
+    fontSize: 15,
+    color: colors.slate900,
+    fontWeight: "600",
+  },
+  logDetail: {
+    fontSize: 13,
+    color: colors.slate500,
+  },
+  logDelete: {
+    color: colors.error,
+    fontWeight: "600",
+    fontSize: 14,
+  },
 });

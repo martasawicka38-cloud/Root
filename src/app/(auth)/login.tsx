@@ -1,22 +1,43 @@
 import { Link, router } from "expo-router";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
 import { AppLogo } from "../../features/common/AppLogo";
 import { Screen } from "../../features/common/Screen";
-import { colors, radius, spacing, typography } from "../../styles/tokens";
+import { colors, radius } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
+
+function GoogleIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M22 12.2c0-.8 0-1.5-.2-2.2H12v4.4h5.7a5 5 0 0 1-2.2 3.3v2.7h3.5c2-1.9 3.2-4.6 3.2-8.2Z" fill="#4285F4" />
+      <Path d="M12 22c2.9 0 5.4-1 7.2-2.7l-3.5-2.7c-1 .7-2.2 1-3.7 1-2.8 0-5.2-1.9-6-4.5H2.3v2.8A10.7 10.7 0 0 0 12 22Z" fill="#34A853" />
+      <Path d="M6 12.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3V5.4H2.3A10.7 10.7 0 0 0 1 10.5c0 1.8.5 3.5 1.3 5l3-2.7Z" fill="#FBBC05" />
+      <Path d="M12 3.8c1.6 0 3 .6 4.1 1.7l3-3A10.6 10.6 0 0 0 12 1 10.7 10.7 0 0 0 2.3 5.4L6 8.2C6.8 5.7 9.2 3.8 12 3.8Z" fill="#EA4335" />
+    </Svg>
+  );
+}
+
+function AppleIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M17.5 12.3c0-1.6.8-3 2-3.9a5 5 0 0 0-3.5-1.7c-1.5 0-3 .9-3.8.9-.8 0-2-.9-3.3-.9A5.3 5.3 0 0 0 3.5 8.2C2 10.5 2.9 14 4.3 16c.7 1 1.5 2.2 2.5 2.2s1.5-.7 2.8-.7c1.3 0 1.7.7 2.8.7 1 0 1.7-1 2.4-2 .7-1 1-2 1-2.1-.1 0-2.3-.9-2.3-3.6Z" fill="#333" />
+      <Path d="M14.5 5.5c.6-.8 1-1.8 1-2.8 0-.1 0-.3-.1-.4-1 .1-2 .6-2.7 1.4-.5.7-1 1.7-1 2.7 0 .1 0 .3.1.4.1 0 .3.1.4.1.9 0 1.8-.5 2.3-1.4Z" fill="#333" />
+    </Svg>
+  );
+}
 
 export default function LoginScreen() {
   const login = useAppStore((s) => s.login);
 
   return (
     <Screen>
-      <View style={styles.logoRow}>
+      <View style={styles.logoSection}>
         <AppLogo compact />
+        <Text style={styles.tagline}>Zakorzen dobre nawyki</Text>
       </View>
-      <Text style={styles.tagline}>Zakorzen dobre nawyki</Text>
 
-      <View style={styles.segmentedTabs}>
+      <View style={styles.tabRow}>
         <View style={[styles.tab, styles.tabActive]}>
           <Text style={[styles.tabText, styles.tabTextActive]}>Zaloguj</Text>
         </View>
@@ -30,6 +51,7 @@ export default function LoginScreen() {
         style={styles.input}
         placeholder="jan@intel.com"
         defaultValue="jan@intel.com"
+        placeholderTextColor={colors.slate400}
       />
 
       <Text style={styles.label}>Haslo</Text>
@@ -38,53 +60,56 @@ export default function LoginScreen() {
         placeholder="Haslo"
         secureTextEntry
         defaultValue="haslo123"
+        placeholderTextColor={colors.slate400}
       />
 
       <Text style={styles.forgot}>Nie pamietam hasla</Text>
 
       <Pressable
-        style={styles.button}
+        style={styles.loginButton}
         onPress={() => {
           login();
           router.replace("/(auth)/onboarding");
         }}
       >
-        <Text style={styles.buttonText}>Zaloguj sie</Text>
+        <Text style={styles.loginButtonText}>Zaloguj sie</Text>
       </Pressable>
 
-      <View style={styles.dividerRow}>
+      <View style={styles.divider}>
         <View style={styles.dividerLine} />
         <Text style={styles.dividerText}>lub kontynuuj przez</Text>
         <View style={styles.dividerLine} />
       </View>
 
       <Pressable style={styles.socialButton}>
-        <Text style={styles.socialText}>G</Text>
+        <GoogleIcon size={20} />
+        <Text style={styles.socialText}>Google</Text>
       </Pressable>
       <Pressable style={styles.socialButton}>
-        <Text style={styles.socialText}></Text>
+        <AppleIcon size={20} />
+        <Text style={styles.socialText}>Apple</Text>
       </Pressable>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  logoRow: {
-    marginTop: spacing.x3s,
-    alignItems: "flex-start",
+  logoSection: {
+    marginTop: 12,
+    gap: 4,
   },
   tagline: {
-    ...typography.body,
-    color: colors.slate600,
-    marginBottom: spacing.x2s,
+    fontSize: 14,
+    color: colors.slate500,
   },
-  segmentedTabs: {
+  tabRow: {
     flexDirection: "row",
     borderWidth: 1,
     borderColor: colors.slate200,
     borderRadius: radius.md,
     padding: 4,
-    marginBottom: spacing.xs,
+    marginTop: 16,
+    marginBottom: 16,
   },
   tab: {
     flex: 1,
@@ -98,45 +123,54 @@ const styles = StyleSheet.create({
     borderColor: colors.slate200,
   },
   tabText: {
-    color: colors.slate600,
+    color: colors.slate500,
     fontWeight: "600",
+    fontSize: 14,
   },
   tabTextActive: {
     color: colors.slate900,
   },
   label: {
-    ...typography.h3,
-    color: colors.slate900,
-    fontWeight: "500",
-    marginTop: spacing.x4s,
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.slate500,
+    marginBottom: 6,
+    marginTop: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.slate300,
-    borderRadius: 12,
-    padding: 12,
-    backgroundColor: colors.white,
+    borderColor: colors.slate200,
+    borderRadius: radius.md,
+    padding: 14,
+    fontSize: 15,
+    color: colors.slate900,
+    backgroundColor: "#F8FAFC",
   },
   forgot: {
     alignSelf: "flex-end",
-    marginTop: spacing.x3s,
+    marginTop: 8,
     color: colors.mossGreen,
-    textDecorationLine: "underline",
+    fontSize: 13,
     fontWeight: "600",
   },
-  button: {
+  loginButton: {
     backgroundColor: colors.mossGreen,
-    padding: 14,
+    paddingVertical: 14,
     borderRadius: radius.md,
-    marginTop: spacing.xs,
+    marginTop: 16,
+    alignItems: "center",
   },
-  buttonText: { color: colors.white, textAlign: "center", fontWeight: "700" },
-  dividerRow: {
+  loginButtonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  divider: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.x3s,
-    marginTop: spacing.md,
-    marginBottom: spacing.x2s,
+    gap: 12,
+    marginTop: 16,
+    marginBottom: 12,
   },
   dividerLine: {
     flex: 1,
@@ -144,19 +178,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.slate200,
   },
   dividerText: {
-    color: colors.slate300,
+    fontSize: 12,
+    color: colors.slate400,
     fontWeight: "600",
   },
   socialButton: {
-    borderWidth: 1,
-    borderColor: colors.slate300,
-    borderRadius: radius.md,
-    paddingVertical: spacing.x2s,
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: spacing.x3s,
+    justifyContent: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    borderRadius: radius.md,
+    paddingVertical: 14,
+    marginBottom: 6,
   },
   socialText: {
-    ...typography.h3,
-    color: colors.slate900,
+    fontSize: 15,
+    color: colors.slate700,
+    fontWeight: "600",
   },
 });

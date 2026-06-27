@@ -1,13 +1,14 @@
 import { Link, Stack, usePathname } from "expo-router";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
+import { HomeIcon, MarketIcon, RankingIcon, ProfileIcon } from "../../components/icons";
 import { colors } from "../../styles/tokens";
 
 const tabs = [
-  { href: "/(mobile)/home", label: "Dom", icon: "🏠" },
-  { href: "/(mobile)/market", label: "Rynek", icon: "🏪" },
-  { href: "/(mobile)/ranking", label: "Ranking", icon: "🏆" },
-  { href: "/(mobile)/profile", label: "Profil", icon: "👤" },
+  { href: "/(mobile)/home", label: "Dom", icon: HomeIcon },
+  { href: "/(mobile)/market", label: "Rynek", icon: MarketIcon },
+  { href: "/(mobile)/ranking", label: "Ranking", icon: RankingIcon },
+  { href: "/(mobile)/profile", label: "Profil", icon: ProfileIcon },
 ] as const;
 
 export default function MobileLayout() {
@@ -21,14 +22,14 @@ export default function MobileLayout() {
       <View style={styles.tabBar}>
         {tabs.map((tab) => {
           const isActive = pathname === tab.href;
+          const Icon = tab.icon;
           return (
             <Link key={tab.href} href={tab.href} asChild>
               <Pressable style={styles.tabBtn}>
-                <Text
-                  style={[styles.tabIcon, isActive && styles.tabTextActive]}
-                >
-                  {tab.icon}
-                </Text>
+                <Icon
+                  size={22}
+                  color={isActive ? colors.mossGreen : colors.slate400}
+                />
                 <Text
                   style={[styles.tabText, isActive && styles.tabTextActive]}
                 >
@@ -70,10 +71,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 2,
   },
-  tabIcon: {
-    fontSize: 22,
-    color: colors.slate400,
-  },
+
   tabText: {
     color: colors.slate400,
     fontSize: 10,

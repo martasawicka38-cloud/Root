@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, TextInput } from "react-native";
 
 import { Screen } from "../../features/common/Screen";
 import { fetchMe, patchProfile } from "../../lib/api/endpoints";
-import { colors } from "../../styles/tokens";
+import { colors, radius } from "../../styles/tokens";
 
 export default function EditProfileScreen() {
   const queryClient = useQueryClient();
@@ -22,12 +22,16 @@ export default function EditProfileScreen() {
   return (
     <Screen>
       <Text style={styles.title}>Edytuj profil</Text>
+
+      <Text style={styles.label}>Imie i nazwisko</Text>
       <TextInput
         value={name}
         onChangeText={setName}
         style={styles.input}
         placeholder="Imie i nazwisko"
       />
+
+      <Text style={styles.label}>Dzienny cel krokow</Text>
       <TextInput
         value={goal}
         onChangeText={setGoal}
@@ -35,6 +39,7 @@ export default function EditProfileScreen() {
         keyboardType="number-pad"
         placeholder="Cel krokow"
       />
+
       <Pressable
         style={styles.button}
         onPress={() =>
@@ -52,13 +57,38 @@ export default function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  title: { fontSize: 24, fontWeight: "700", color: colors.deepForest },
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: colors.deepForest,
+    marginBottom: 6,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.slate500,
+    marginBottom: 6,
+    marginTop: 10,
+  },
   input: {
     borderWidth: 1,
-    borderColor: colors.slate300,
-    borderRadius: 10,
-    padding: 12,
+    borderColor: colors.slate200,
+    borderRadius: radius.md,
+    padding: 14,
+    fontSize: 15,
+    color: colors.slate900,
+    backgroundColor: "#F8FAFC",
   },
-  button: { backgroundColor: colors.mossGreen, borderRadius: 10, padding: 12 },
-  buttonText: { color: colors.white, textAlign: "center", fontWeight: "700" },
+  button: {
+    marginTop: 16,
+    backgroundColor: colors.mossGreen,
+    borderRadius: radius.md,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: "700",
+  },
 });

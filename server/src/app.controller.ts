@@ -26,6 +26,11 @@ export class AppController {
     return this.appService.wallet();
   }
 
+  @Get("admin/dashboard")
+  adminDashboard() {
+    return this.appService.adminDashboard();
+  }
+
   @Get("history")
   history(@Query("type") type?: TxType | "all") {
     return this.appService.history(type);

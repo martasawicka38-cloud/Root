@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
 import { colors, radius, shadows, spacing } from "../../styles/tokens";
 
@@ -6,6 +7,27 @@ type AppLogoProps = {
   subtitle?: string;
   compact?: boolean;
 };
+
+function LeafSVG({ size = 26 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 2C8 2 4 6 4 10c0 4 2 7 5 9l3-3 3 3c3-2 5-5 5-9 0-4-4-8-8-8Z"
+        fill={colors.sage}
+        stroke={colors.mossGreen}
+        strokeWidth={1.2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M12 11l-2-2"
+        stroke={colors.mossGreen}
+        strokeWidth={1.2}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
 
 export function AppLogo({ subtitle, compact = false }: AppLogoProps) {
   if (compact) {
@@ -18,8 +40,8 @@ export function AppLogo({ subtitle, compact = false }: AppLogoProps) {
         </View>
         <View style={styles.wordmarkRow}>
           <Text style={[styles.wordmark, styles.wordmarkCompact]}>R</Text>
-          <Text style={styles.leaf}>🍃</Text>
-          <Text style={styles.leaf}>🍃</Text>
+          <LeafSVG size={22} />
+          <LeafSVG size={22} />
           <Text style={[styles.wordmark, styles.wordmarkCompact]}>t</Text>
         </View>
       </View>
@@ -35,8 +57,8 @@ export function AppLogo({ subtitle, compact = false }: AppLogoProps) {
       </View>
       <View style={styles.wordmarkRow}>
         <Text style={styles.wordmark}>R</Text>
-        <Text style={styles.leaf}>🍃</Text>
-        <Text style={styles.leaf}>🍃</Text>
+        <LeafSVG size={26} />
+        <LeafSVG size={26} />
         <Text style={styles.wordmark}>t</Text>
       </View>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
@@ -119,10 +141,7 @@ const styles = StyleSheet.create({
     fontSize: 38,
     lineHeight: 40,
   },
-  leaf: {
-    fontSize: 26,
-    marginTop: 3,
-  },
+
   subtitle: {
     color: colors.slate600,
     textAlign: "center",

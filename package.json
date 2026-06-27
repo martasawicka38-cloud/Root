@@ -17,11 +17,14 @@
     "react-native": "0.85.3",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "4.25.2",
+    "react-native-svg": "15.15.4",
     "react-native-web": "^0.21.2",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~56.0.4",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -33,7 +36,8 @@
     "server:build": "npm --prefix server run build",
     "server:prisma:generate": "npm --prefix server run prisma:generate",
     "server:prisma:migrate": "npm --prefix server run prisma:migrate",
-    "server:prisma:seed": "npm --prefix server run prisma:seed"
+    "server:prisma:seed": "npm --prefix server run prisma:seed",
+    "lint": "expo lint"
   },
   "private": true,
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"

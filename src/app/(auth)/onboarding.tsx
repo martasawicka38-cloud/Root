@@ -2,25 +2,26 @@ import { useState } from "react";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { CheckIcon, DropIcon, RunningIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
-import { colors, radius, spacing, typography } from "../../styles/tokens";
+import { colors, radius } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
 
 const steps = [
   {
-    title: "Witaj w Root! 🌱",
+    title: "Witaj w Root!",
     desc: "Kazdy krok, kazda eko-deklaracja i kazda aktywnosc fizyczna przybliza Cie do lepszej wersji siebie i zdrowszej planety.",
-    icon: "💧",
+    icon: DropIcon,
   },
   {
     title: "Zgoda na przetwarzanie danych",
     desc: "Abys mogl w pelni korzystac z Root, potrzebujemy Twojej zgody na przetwarzanie danych osobowych i danych dotyczacych aktywnosci fizycznej.",
-    icon: "☑️",
+    icon: CheckIcon,
   },
   {
     title: "Twoj pierwszy cel",
     desc: "Zrob dzis 8 000 krokow - to zaledwie godzina spaceru! Zbierzesz pierwsze Eco-Coins i odblokujesz osiagniecie Pierwszy krok.",
-    icon: "🏃",
+    icon: RunningIcon,
   },
 ];
 
@@ -38,26 +39,28 @@ export default function OnboardingScreen() {
 
   return (
     <Screen>
-      <View style={styles.badgeRow}>
+      <View style={styles.dots}>
         {steps.map((_, i) => (
           <View key={i} style={[styles.dot, i === step && styles.dotActive]} />
         ))}
       </View>
 
-      <View style={styles.iconCircle}>
-        <Text style={styles.iconText}>{item.icon}</Text>
+      <View style={styles.iconWrap}>
+        <item.icon size={48} color={colors.mossGreen} />
       </View>
 
       <Text style={styles.title}>{item.title}</Text>
       <Text style={styles.desc}>{item.desc}</Text>
 
-      {consentStep ? (
-        <View style={styles.consentsWrap}>
+      {consentStep && (
+        <View style={styles.consents}>
           <Pressable
             style={styles.consentRow}
             onPress={() => setConsentOne((v) => !v)}
           >
-            <Text style={styles.checkbox}>{consentOne ? "☑" : "☐"}</Text>
+            <View style={[styles.checkbox, consentOne && styles.checkboxChecked]}>
+              {consentOne && <CheckIcon size={12} color={colors.white} />}
+            </View>
             <Text style={styles.consentText}>
               Zgadzam sie na przetwarzanie moich danych osobowych zgodnie z
               polityka prywatnosci.
@@ -67,14 +70,16 @@ export default function OnboardingScreen() {
             style={styles.consentRow}
             onPress={() => setConsentTwo((v) => !v)}
           >
-            <Text style={styles.checkbox}>{consentTwo ? "☑" : "☐"}</Text>
+            <View style={[styles.checkbox, consentTwo && styles.checkboxChecked]}>
+              {consentTwo && <CheckIcon size={12} color={colors.white} />}
+            </View>
             <Text style={styles.consentText}>
               Wyrazam zgode na przetwarzanie danych dotyczacych mojej aktywnosci
               fizycznej.
             </Text>
           </Pressable>
         </View>
-      ) : null}
+      )}
 
       <Pressable
         style={[
@@ -86,9 +91,9 @@ export default function OnboardingScreen() {
           if (isLast) {
             finish();
             router.replace("/(mobile)/home");
-            return;
+          } else {
+            next();
           }
-          next();
         }}
       >
         <Text style={styles.buttonText}>
@@ -109,11 +114,11 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  badgeRow: {
+  dots: {
     flexDirection: "row",
     gap: 8,
     justifyContent: "center",
-    marginTop: 8,
+    marginTop: 12,
   },
   dot: {
     width: 8,
@@ -121,70 +126,87 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: colors.slate300,
   },
-  dotActive: { width: 24, backgroundColor: colors.mossGreen, borderRadius: 10 },
-  iconCircle: {
-    marginTop: spacing.x3l,
-    width: 120,
-    height: 120,
+  dotActive: {
+    width: 28,
+    backgroundColor: colors.mossGreen,
+    borderRadius: 10,
+  },
+  iconWrap: {
+    marginTop: 24,
+    width: 96,
+    height: 96,
     borderRadius: radius.full,
     backgroundColor: "#BDEBCB",
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
   },
-  iconText: {
-    fontSize: 42,
-  },
   title: {
-    marginTop: 28,
-    fontSize: 42,
+    marginTop: 16,
+    fontSize: 24,
     fontWeight: "700",
     color: colors.deepForest,
     textAlign: "center",
-    lineHeight: 50,
+    lineHeight: 32,
   },
   desc: {
-    marginTop: spacing.x3s,
+    marginTop: 10,
+    fontSize: 15,
     color: colors.slate600,
     textAlign: "center",
-    lineHeight: 36,
-    fontSize: 32,
-    fontWeight: "500",
+    lineHeight: 22,
   },
-  consentsWrap: {
-    marginTop: spacing.xs,
-    gap: spacing.x2s,
+  consents: {
+    marginTop: 16,
+    gap: 10,
   },
   consentRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: spacing.x3s,
+    gap: 12,
   },
   checkbox: {
-    fontSize: 20,
-    color: colors.slate600,
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: colors.slate300,
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 2,
+    backgroundColor: colors.white,
+  },
+  checkboxChecked: {
+    backgroundColor: colors.mossGreen,
+    borderColor: colors.mossGreen,
   },
   consentText: {
     flex: 1,
-    ...typography.body,
-    color: colors.slate900,
+    fontSize: 14,
+    color: colors.slate700,
+    lineHeight: 20,
   },
   button: {
-    marginTop: 20,
+    marginTop: 16,
     backgroundColor: colors.mossGreen,
     borderRadius: radius.md,
-    padding: 14,
+    paddingVertical: 14,
+    alignItems: "center",
   },
   buttonDisabled: {
     backgroundColor: colors.slate300,
   },
-  buttonText: { textAlign: "center", color: colors.white, fontWeight: "700" },
+  buttonText: {
+    fontSize: 16,
+    color: colors.white,
+    fontWeight: "700",
+  },
   skip: {
     marginTop: "auto",
-    marginBottom: spacing.x2l,
+    marginBottom: 32,
     textAlign: "center",
-    color: colors.slate600,
+    color: colors.slate500,
     fontWeight: "600",
+    fontSize: 14,
   },
 });

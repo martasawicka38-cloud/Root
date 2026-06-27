@@ -1,10 +1,38 @@
 import { useQuery } from "@tanstack/react-query";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Svg, { Path, Circle } from "react-native-svg";
 
 import { Screen } from "../../features/common/Screen";
 import { fetchRanking } from "../../lib/api/endpoints";
-import { colors, radius, spacing, typography } from "../../styles/tokens";
+import { colors, radius } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
+
+function GoldMedal({ size = 24 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={14} r={6} fill="#E8C44C" stroke="#D4A020" strokeWidth={1.5} />
+      <Path d="M12 8l2-6h-4l2 6Z" fill="#E8C44C" stroke="#D4A020" strokeWidth={1} />
+    </Svg>
+  );
+}
+
+function SilverMedal({ size = 24 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={14} r={6} fill="#D0D5E0" stroke="#A0A8B8" strokeWidth={1.5} />
+      <Path d="M12 8l2-6h-4l2 6Z" fill="#D0D5E0" stroke="#A0A8B8" strokeWidth={1} />
+    </Svg>
+  );
+}
+
+function BronzeMedal({ size = 24 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={14} r={6} fill="#E79D70" stroke="#D08050" strokeWidth={1.5} />
+      <Path d="M12 8l2-6h-4l2 6Z" fill="#E79D70" stroke="#D08050" strokeWidth={1} />
+    </Svg>
+  );
+}
 
 export default function RankingScreen() {
   const mode = useAppStore((s) => s.rankMode);
@@ -12,14 +40,16 @@ export default function RankingScreen() {
   const { data } = useQuery({ queryKey: ["ranking"], queryFn: fetchRanking });
   const rows = mode === "team" ? (data?.team ?? []) : (data?.individual ?? []);
   const podium = rows.slice(0, 3);
-  const listRows = rows.slice(3, 6);
+  const listRows = rows.slice(3, 8);
+
+  const medals = [SilverMedal, GoldMedal, BronzeMedal];
 
   return (
     <Screen>
-      <View style={styles.headerRow}>
-        <Text style={styles.back}>‹</Text>
-        <Text style={styles.title}>Ranking</Text>
-        <Text style={styles.back}> </Text>
+      <View style={styles.header}>
+        <Text style={styles.headerBack}>‹</Text>
+        <Text style={styles.headerTitle}>Ranking</Text>
+        <View style={styles.headerBack} />
       </View>
 
       <View style={styles.tabs}>
@@ -27,9 +57,7 @@ export default function RankingScreen() {
           style={[styles.tab, mode === "team" && styles.tabActive]}
           onPress={() => setMode("team")}
         >
-          <Text
-            style={[styles.tabText, mode === "team" && styles.tabTextActive]}
-          >
+          <Text style={[styles.tabText, mode === "team" && styles.tabTextActive]}>
             Druzynowy
           </Text>
         </Pressable>
@@ -37,83 +65,88 @@ export default function RankingScreen() {
           style={[styles.tab, mode === "individual" && styles.tabActive]}
           onPress={() => setMode("individual")}
         >
-          <Text
-            style={[
-              styles.tabText,
-              mode === "individual" && styles.tabTextActive,
-            ]}
-          >
+          <Text style={[styles.tabText, mode === "individual" && styles.tabTextActive]}>
             Indywidualny
           </Text>
         </Pressable>
       </View>
 
-      <View style={styles.podiumRow}>
-        {podium.map((row, idx) => (
+      <View style={styles.podium}>
+        {podium.map((row, idx) => {
+          const Medal = medals[idx];
+          return (
+            <View
+              key={`${row.name}-${idx}`}
+              style={[
+                styles.podiumCard,
+                idx === 0 && styles.podiumFirst,
+                idx === 1 && styles.podiumSecond,
+                idx === 2 && styles.podiumThird,
+              ]}
+            >
+              <Medal size={32} />
+              <Text style={styles.podiumName}>
+                {mode === "team"
+                  ? `Zespol ${String.fromCharCode(65 + idx)}`
+                  : row.name}
+              </Text>
+              <Text style={styles.podiumPoints}>
+                {row.points.toLocaleString("pl-PL")}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+
+      <View style={styles.list}>
+        {listRows.map((row, index) => (
           <View
-            style={[
-              styles.podiumCard,
-              idx === 1 && styles.podiumCenter,
-              idx === 0 && styles.podiumLeft,
-              idx === 2 && styles.podiumRight,
-            ]}
-            key={`${row.name}-${idx}`}
+            key={`${row.name}-${index}`}
+            style={[styles.listCard, index === 1 && styles.listCardHighlight]}
           >
-            <Text style={styles.podiumMedal}>
-              {idx === 0 ? "🥈" : idx === 1 ? "🥇" : "🥉"}
-            </Text>
-            <Text style={styles.podiumName}>
-              Zespol {String.fromCharCode(65 + idx)}
-            </Text>
-            <Text style={styles.podiumPoints}>
+            <Text style={styles.listRank}>{index + 4}</Text>
+            <View style={styles.listAvatar}>
+              <Text style={styles.listAvatarText}>{row.name.slice(0, 1)}</Text>
+            </View>
+            <View style={styles.listInfo}>
+              <Text style={styles.listName}>{row.name}</Text>
+              <Text style={styles.listMeta}>
+                {Math.round(row.points * 0.84).toLocaleString("pl-PL")} krokow
+              </Text>
+            </View>
+            <Text style={styles.listPoints}>
               {row.points.toLocaleString("pl-PL")}
             </Text>
           </View>
         ))}
       </View>
-
-      {listRows.map((row, index) => (
-        <View
-          style={[styles.rowCard, index === 2 && styles.rowCardActive]}
-          key={`${row.name}-${index}`}
-        >
-          <Text style={styles.rowIndex}>{index + 4}</Text>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{row.name.slice(0, 1)}</Text>
-          </View>
-          <View style={styles.rowInfo}>
-            <Text style={styles.rowName}>{row.name}</Text>
-            <Text style={styles.rowMeta}>
-              {Math.round(row.points * 0.84).toLocaleString("pl-PL")} krokow
-            </Text>
-          </View>
-          <Text style={styles.rowPoints}>
-            {row.points.toLocaleString("pl-PL")}
-          </Text>
-        </View>
-      ))}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  back: {
+  headerBack: {
     width: 24,
     fontSize: 22,
     color: colors.slate900,
   },
-  title: {
-    ...typography.h1,
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
     color: colors.deepForest,
     textAlign: "center",
     flex: 1,
   },
-  tabs: { flexDirection: "row", gap: 8, marginTop: spacing.xs },
+  tabs: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+  },
   tab: {
     flex: 1,
     paddingVertical: 10,
@@ -121,100 +154,111 @@ const styles = StyleSheet.create({
     borderColor: colors.slate200,
     borderRadius: radius.sm,
     alignItems: "center",
-    backgroundColor: "#EEF2F5",
+    backgroundColor: "#F8FAFC",
   },
-  tabActive: { backgroundColor: colors.white, borderColor: colors.slate300 },
+  tabActive: {
+    backgroundColor: colors.mossGreen,
+    borderColor: colors.mossGreen,
+  },
   tabText: {
-    ...typography.body,
+    fontSize: 14,
     color: colors.slate600,
-    fontWeight: "700",
+    fontWeight: "600",
   },
   tabTextActive: {
-    color: colors.slate900,
+    color: colors.white,
   },
-  podiumRow: {
-    marginTop: spacing.xs,
+  podium: {
+    marginTop: 16,
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: spacing.x3s,
+    gap: 8,
   },
   podiumCard: {
     flex: 1,
-    backgroundColor: "#D6DAE5",
-    borderRadius: radius.sm,
+    borderRadius: radius.md,
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: spacing.x2s,
+    paddingVertical: 14,
+    gap: 6,
+  },
+  podiumFirst: {
+    height: 140,
+    backgroundColor: "#FEF3C7",
+  },
+  podiumSecond: {
+    height: 112,
+    backgroundColor: "#F1F5F9",
+  },
+  podiumThird: {
     height: 96,
-  },
-  podiumLeft: {
-    backgroundColor: "#D0D5E0",
-  },
-  podiumCenter: {
-    height: 128,
-    backgroundColor: "#E8C44C",
-  },
-  podiumRight: {
-    backgroundColor: "#E79D70",
-  },
-  podiumMedal: {
-    fontSize: 18,
+    backgroundColor: "#FFF7ED",
   },
   podiumName: {
-    ...typography.h3,
-    color: colors.slate900,
-  },
-  podiumPoints: {
-    ...typography.bodySmall,
-    color: colors.slate600,
-  },
-  rowCard: {
-    marginTop: spacing.x3s,
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors.slate200,
-    borderRadius: radius.sm,
-    padding: 12,
-    backgroundColor: colors.white,
-  },
-  rowCardActive: {
-    backgroundColor: "#D8EEE3",
-    borderColor: "#80D1AD",
-  },
-  rowIndex: {
-    width: 22,
-    ...typography.h3,
-    color: colors.slate600,
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.slate700,
     textAlign: "center",
   },
-  avatar: {
+  podiumPoints: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: colors.deepForest,
+  },
+  list: {
+    marginTop: 12,
+    gap: 8,
+  },
+  listCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    borderRadius: radius.md,
+    padding: 14,
+    backgroundColor: "#F8FAFC",
+  },
+  listCardHighlight: {
+    backgroundColor: colors.mist,
+    borderColor: colors.sage,
+  },
+  listRank: {
+    width: 24,
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.slate400,
+    textAlign: "center",
+  },
+  listAvatar: {
     width: 36,
     height: 36,
     borderRadius: radius.full,
     backgroundColor: "#AF28E3",
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: spacing.x3s,
   },
-  avatarText: {
+  listAvatarText: {
     color: colors.white,
     fontWeight: "700",
+    fontSize: 14,
   },
-  rowInfo: {
+  listInfo: {
     flex: 1,
+    gap: 2,
   },
-  rowName: {
-    ...typography.h3,
+  listName: {
+    fontSize: 15,
+    fontWeight: "600",
     color: colors.slate900,
   },
-  rowMeta: {
-    ...typography.bodySmall,
-    color: colors.slate600,
+  listMeta: {
+    fontSize: 12,
+    color: colors.slate500,
   },
-  rowPoints: {
-    ...typography.h3,
-    color: colors.deepForest,
+  listPoints: {
+    fontSize: 16,
     fontWeight: "800",
+    color: colors.deepForest,
   },
 });

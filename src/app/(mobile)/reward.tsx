@@ -2,19 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { CoinIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
 import {
   fetchMarket,
   fetchWallet,
   redeemReward,
 } from "../../lib/api/endpoints";
-import {
-  colors,
-  radius,
-  shadows,
-  spacing,
-  typography,
-} from "../../styles/tokens";
+import { colors, radius } from "../../styles/tokens";
 
 export default function RewardScreen() {
   const { rewardId } = useLocalSearchParams<{ rewardId?: string }>();
@@ -43,137 +38,216 @@ export default function RewardScreen() {
   if (!reward) {
     return (
       <Screen>
-        <Text style={styles.empty}>Brak wybranej nagrody.</Text>
+        <Text style={styles.emptyText}>Nie znaleziono nagrody.</Text>
       </Screen>
     );
   }
 
   return (
     <Screen>
-      <Text style={styles.pageTitle}>Szczegoly nagrody</Text>
+      <Text style={styles.title}>Szczegoly nagrody</Text>
 
       <View style={styles.card}>
-        <Text style={styles.title}>
-          {reward.icon} {reward.title}
-        </Text>
-        <Text style={styles.meta}>{reward.merchant}</Text>
-        <Text style={styles.cost}>{reward.cost} EC</Text>
-        <Text style={styles.desc}>{reward.description}</Text>
-        <Text style={styles.balance}>Saldo: {balance} EC</Text>
+        <View style={styles.imageWrap}>
+          <Text style={styles.imageEmoji}>{reward.icon}</Text>
+        </View>
+
+        <Text style={styles.cardTitle}>{reward.title}</Text>
+        <Text style={styles.cardMerchant}>{reward.merchant}</Text>
+        <Text style={styles.cardDesc}>{reward.description}</Text>
+
+        <View style={styles.priceRow}>
+          <View style={styles.priceIconWrap}>
+            <CoinIcon size={20} color={colors.warmGold} />
+          </View>
+          <Text style={styles.priceText}>{reward.cost} EC</Text>
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.balanceRow}>
+          <Text style={styles.balanceLabel}>Twoje saldo</Text>
+          <Text style={styles.balanceValue}>{balance} EC</Text>
+        </View>
 
         {!code ? (
-          <Pressable
-            style={styles.button}
-            onPress={() => redeem.mutate(reward.id)}
-          >
-            <Text style={styles.buttonText}>Wymien za {reward.cost} EC</Text>
-          </Pressable>
+          <>
+            {balance < reward.cost && (
+              <View style={styles.missingBadge}>
+                <Text style={styles.missingText}>
+                  Brakuje {reward.cost - balance} EC
+                </Text>
+              </View>
+            )}
+            <Pressable
+              style={[
+                styles.button,
+                balance < reward.cost && styles.buttonDisabled,
+              ]}
+              disabled={balance < reward.cost}
+              onPress={() => redeem.mutate(reward.id)}
+            >
+              <CoinIcon size={18} color={colors.white} />
+              <Text style={styles.buttonText}>
+                Wymien za {reward.cost} EC
+              </Text>
+            </Pressable>
+          </>
         ) : (
-          <View style={styles.codeWrap}>
-            <Text style={styles.ok}>Nagroda wymieniona</Text>
-            <Text style={styles.code}>{code}</Text>
-            <Text style={styles.qrHint}>Pokaz ten kod przy odbiorze</Text>
+          <View style={styles.codeSection}>
+            <Text style={styles.codeLabel}>Kod odbioru</Text>
+            <Text style={styles.codeValue}>{code}</Text>
+            <Text style={styles.codeHint}>
+              Pokaz ten kod przy odbiorze nagrody
+            </Text>
           </View>
         )}
       </View>
-
-      {!code && balance < reward.cost && (
-        <View style={styles.missingWrap}>
-          <Text style={styles.missingText}>
-            Brakuje {reward.cost - balance} EC
-          </Text>
-        </View>
-      )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  pageTitle: {
-    ...typography.h2,
+  title: {
+    fontSize: 22,
+    fontWeight: "700",
     color: colors.deepForest,
+    marginBottom: 6,
+  },
+  emptyText: {
+    color: colors.slate500,
+    fontSize: 15,
+    textAlign: "center",
+    marginTop: 24,
   },
   card: {
-    backgroundColor: colors.white,
-    borderRadius: radius.md,
+    backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: colors.slate200,
-    padding: spacing.xs,
-    ...shadows.md,
+    borderRadius: radius.lg,
+    padding: 14,
+    gap: 10,
   },
-  title: {
+  imageWrap: {
+    width: 96,
+    height: 96,
+    borderRadius: radius.md,
+    backgroundColor: "#DDE6F6",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+  },
+  imageEmoji: {
+    fontSize: 42,
+  },
+  cardTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: colors.deepForest,
+    textAlign: "center",
+  },
+  cardMerchant: {
+    fontSize: 14,
+    color: colors.slate500,
+    textAlign: "center",
+  },
+  cardDesc: {
+    fontSize: 14,
+    color: colors.slate600,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  priceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  priceIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
+    backgroundColor: "#FEF3C7",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  priceText: {
     fontSize: 24,
+    fontWeight: "800",
+    color: colors.warmGold,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.slate200,
+  },
+  balanceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  balanceLabel: {
+    fontSize: 14,
+    color: colors.slate500,
+  },
+  balanceValue: {
+    fontSize: 16,
     fontWeight: "700",
     color: colors.deepForest,
   },
-  meta: {
-    ...typography.bodySmall,
-    color: colors.slate600,
+  missingBadge: {
+    backgroundColor: "#FEE2E2",
+    borderRadius: radius.full,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    alignSelf: "center",
   },
-  cost: {
-    color: colors.warmGold,
-    fontWeight: "800",
-    fontSize: 20,
-    marginTop: spacing.x3s,
-  },
-  desc: {
-    ...typography.body,
-    color: colors.slate600,
-  },
-  balance: {
-    ...typography.h3,
-    color: colors.deepForest,
-    marginTop: spacing.x3s,
+  missingText: {
+    fontSize: 13,
+    color: colors.error,
+    fontWeight: "600",
   },
   button: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
     backgroundColor: colors.mossGreen,
     borderRadius: radius.md,
-    padding: 14,
-    marginTop: spacing.x2s,
+    paddingVertical: 12,
+  },
+  buttonDisabled: {
+    backgroundColor: colors.slate300,
   },
   buttonText: {
     color: colors.white,
-    textAlign: "center",
+    fontSize: 16,
     fontWeight: "700",
   },
-  codeWrap: {
+  codeSection: {
     backgroundColor: colors.mist,
     borderRadius: radius.md,
-    padding: spacing.x2s,
-    gap: spacing.x3s,
-    marginTop: spacing.x2s,
+    padding: 14,
+    alignItems: "center",
+    gap: 8,
     borderWidth: 1,
     borderColor: colors.sage,
   },
-  ok: {
-    color: colors.success,
-    fontWeight: "700",
-  },
-  code: {
-    color: colors.deepForest,
-    fontSize: 24,
-    fontWeight: "800",
+  codeLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.mossGreen,
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
-  qrHint: {
-    color: colors.slate600,
-    ...typography.bodySmall,
+  codeValue: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: colors.deepForest,
+    letterSpacing: 1,
   },
-  missingWrap: {
-    alignSelf: "flex-start",
-    paddingHorizontal: spacing.x2s,
-    paddingVertical: spacing.x3s,
-    backgroundColor: colors.slate100,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.slate200,
-  },
-  missingText: {
-    color: colors.slate600,
-    fontWeight: "600",
-  },
-  empty: {
-    color: colors.slate600,
-    fontSize: 16,
+  codeHint: {
+    fontSize: 12,
+    color: colors.slate500,
+    textAlign: "center",
   },
 });

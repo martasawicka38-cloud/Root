@@ -2,6 +2,7 @@ import { api } from "./client";
 import type {
   AchievementItem,
   Activity,
+  AdminDashboard,
   ChallengePayload,
   Declaration,
   NotificationItem,
@@ -103,5 +104,10 @@ export async function patchProfile(input: {
   partner: string;
 }) {
   const { data } = await api.patch<UserProfile>("/profile", input);
+  return data;
+}
+
+export async function fetchAdminDashboard() {
+  const { data } = await api.get<AdminDashboard>("/admin/dashboard");
   return data;
 }

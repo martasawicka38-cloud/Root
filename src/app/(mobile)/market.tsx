@@ -2,13 +2,21 @@ import { Link } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
+import { CoinIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
-import { fetchMarket } from "../../lib/api/endpoints";
-import { colors, radius, spacing, typography } from "../../styles/tokens";
+import { fetchMarket, fetchWallet } from "../../lib/api/endpoints";
+import { colors, radius } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
-import { fetchWallet } from "../../lib/api/endpoints";
 
 const filters = ["all", "food", "wellness", "sport", "eco"] as const;
+
+const filterLabels: Record<string, string> = {
+  all: "Wszystko",
+  food: "Jedzenie",
+  wellness: "Wellness",
+  sport: "Sport",
+  eco: "Eko",
+};
 
 export default function MarketScreen() {
   const filter = useAppStore((s) => s.marketFilter);
@@ -29,20 +37,25 @@ export default function MarketScreen() {
 
   return (
     <Screen>
-      <View style={styles.headerRow}>
-        <Text style={styles.back}>‹</Text>
-        <Text style={styles.title}>Rynek nagrod</Text>
-        <Text style={styles.back}> </Text>
+      <View style={styles.header}>
+        <Text style={styles.headerBack}>‹</Text>
+        <Text style={styles.headerTitle}>Rynek nagrod</Text>
+        <View style={styles.headerBack} />
       </View>
 
-      <Text style={styles.balanceLabel}>Saldo: {balance} EC</Text>
+      <View style={styles.balanceRow}>
+        <View style={styles.balanceIconWrap}>
+          <CoinIcon size={18} color={colors.warmGold} />
+        </View>
+        <Text style={styles.balanceLabel}>Saldo: {balance} EC</Text>
+      </View>
 
       <View style={styles.filters}>
         {filters.map((f) => (
           <Pressable
             key={f}
             onPress={() => setFilter(f)}
-            style={[styles.filter, filter === f && styles.filterActive]}
+            style={[styles.filterChip, filter === f && styles.filterChipActive]}
           >
             <Text
               style={[
@@ -50,7 +63,7 @@ export default function MarketScreen() {
                 filter === f && styles.filterTextActive,
               ]}
             >
-              {f === "all" ? "Wszystko" : f[0].toUpperCase() + f.slice(1)}
+              {filterLabels[f]}
             </Text>
           </Pressable>
         ))}
@@ -64,14 +77,21 @@ export default function MarketScreen() {
               pathname: "/(mobile)/reward",
               params: { rewardId: reward.id },
             }}
-            style={styles.item}
+            style={styles.card}
           >
-            <View style={styles.cardIconWrap}>
-              <Text style={styles.cardIcon}>{reward.icon}</Text>
+            <View style={styles.cardImage}>
+              <Text style={styles.cardEmoji}>{reward.icon}</Text>
             </View>
-            <Text style={styles.cardTitle}>{reward.title}</Text>
-            <Text style={styles.cardMerchant}>{reward.merchant}</Text>
-            <Text style={styles.cardCost}>{reward.cost} EC</Text>
+            <View style={styles.cardInfo}>
+              <Text style={styles.cardTitle} numberOfLines={2}>
+                {reward.title}
+              </Text>
+              <Text style={styles.cardMerchant}>{reward.merchant}</Text>
+              <View style={styles.cardPrice}>
+                <CoinIcon size={12} color={colors.warmGold} />
+                <Text style={styles.cardPriceText}>{reward.cost} EC</Text>
+              </View>
+            </View>
           </Link>
         ))}
       </View>
@@ -80,88 +100,112 @@ export default function MarketScreen() {
 }
 
 const styles = StyleSheet.create({
-  headerRow: {
+  header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.x3s,
+    marginBottom: 6,
   },
-  back: {
+  headerBack: {
+    width: 24,
     fontSize: 22,
     color: colors.slate900,
-    width: 24,
   },
-  title: {
-    ...typography.h2,
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "700",
     color: colors.deepForest,
     textAlign: "center",
     flex: 1,
   },
+  balanceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 10,
+  },
+  balanceIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    backgroundColor: "#FEF3C7",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   balanceLabel: {
-    ...typography.bodySmall,
-    color: colors.slate400,
-    marginBottom: spacing.x2s,
+    fontSize: 14,
+    color: colors.slate600,
+    fontWeight: "600",
   },
   filters: {
     flexDirection: "row",
-    flexWrap: "nowrap",
-    gap: spacing.x3s,
-    marginBottom: spacing.x3s,
+    gap: 6,
+    marginBottom: 12,
   },
-  filter: {
+  filterChip: {
     borderWidth: 1,
-    borderColor: colors.slate300,
+    borderColor: colors.slate200,
     borderRadius: radius.full,
-    paddingVertical: spacing.x3s,
-    paddingHorizontal: spacing.xs,
-    backgroundColor: colors.white,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    backgroundColor: "#F8FAFC",
   },
-  filterActive: {
+  filterChipActive: {
     backgroundColor: colors.mossGreen,
     borderColor: colors.mossGreen,
   },
   filterText: {
-    ...typography.bodySmall,
-    color: colors.slate600,
+    fontSize: 13,
+    color: colors.slate500,
     fontWeight: "600",
   },
-  filterTextActive: { color: colors.white },
+  filterTextActive: {
+    color: colors.white,
+  },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: spacing.x3s,
+    gap: 10,
   },
-  item: {
-    width: "48%",
+  card: {
+    width: "47%",
+    backgroundColor: "#F8FAFC",
     borderWidth: 1,
     borderColor: colors.slate200,
     borderRadius: radius.md,
-    padding: spacing.xs,
-    backgroundColor: "#EEF2F5",
+    overflow: "hidden",
   },
-  cardIconWrap: {
-    borderRadius: radius.sm,
+  cardImage: {
+    height: 100,
     backgroundColor: "#DDE6F6",
-    height: 80,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: spacing.x2s,
   },
-  cardIcon: {
-    fontSize: 32,
+  cardEmoji: {
+    fontSize: 36,
+  },
+  cardInfo: {
+    padding: 12,
+    gap: 4,
   },
   cardTitle: {
-    ...typography.h3,
+    fontSize: 14,
+    fontWeight: "600",
     color: colors.slate900,
+    lineHeight: 18,
   },
   cardMerchant: {
-    ...typography.bodySmall,
-    color: colors.slate600,
-    marginTop: 2,
+    fontSize: 12,
+    color: colors.slate500,
   },
-  cardCost: {
-    ...typography.h3,
-    marginTop: spacing.x3s,
+  cardPrice: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
+  cardPriceText: {
+    fontSize: 13,
     color: colors.warmGold,
     fontWeight: "700",
   },

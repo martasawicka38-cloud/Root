@@ -61,8 +61,8 @@ export type AchievementItem = {
 };
 
 export type RankingPayload = {
-  team: Array<{ name: string; points: number }>;
-  individual: Array<{ name: string; points: number }>;
+  team: { name: string; points: number }[];
+  individual: { name: string; points: number }[];
 };
 
 export type ChallengePayload = {
@@ -72,4 +72,30 @@ export type ChallengePayload = {
   daysDone: number;
   daysTotal: number;
   reward: number;
+};
+
+export type AdminDashboard = {
+  users: {
+    total: number;
+    activeDeclarations: number;
+    participationRate: number;
+  };
+  economy: {
+    totalEcInCirculation: number;
+    totalEarned: number;
+    totalSpent: number;
+  };
+  activity: {
+    totalActivities: number;
+    totalSteps: number;
+    avgStepsPerActivity: number;
+    weeklySteps: { day: string; steps: number }[];
+  };
+  recentActivity: {
+    id: string;
+    userName: string;
+    type: string;
+    points: number;
+    createdAt: string;
+  }[];
 };
