@@ -140,6 +140,45 @@ export type CompanyToken = {
   token: string;
   used: boolean;
   usedAt: string | null;
+  usedBy: string | null;
+  createdAt: string;
+};
+
+export type ChallengeItem = {
+  id: string;
+  title: string;
+  description: string | null;
+  points: number;
+  scope: "company" | "global";
+  companyId: string | null;
+  createdByUserId: string | null;
+  grantedById: string | null;
+  active: boolean;
+  startsAt: string | null;
+  endsAt: string | null;
+  createdAt: string;
+  company?: { id: string; name: string; slug: string } | null;
+  _count?: { participations: number };
+  participations?: { id: string; progress: number; completed: boolean }[];
+};
+
+export type ChallengeParticipationItem = {
+  id: string;
+  challengeId: string;
+  userId: string;
+  progress: number;
+  completed: boolean;
+  completedAt: string | null;
+  createdAt: string;
+  challenge: ChallengeItem;
+};
+
+export type CompanyGlobalPermissionItem = {
+  id: string;
+  companyId: string;
+  company: { id: string; name: string; slug: string };
+  used: boolean;
+  usedAt: string | null;
   createdAt: string;
 };
 

@@ -12,6 +12,8 @@ import { AuthController } from "./auth/auth.controller";
 import { AuthService } from "./auth/auth.service";
 import { JwtStrategy } from "./common/jwt.strategy";
 import { PrismaService } from "./prisma.service";
+import { ChallengeController } from "./challenge/challenge.controller";
+import { ChallengeService } from "./challenge/challenge.service";
 import { CompanyController } from "./company/company.controller";
 import { CompanyService } from "./company/company.service";
 
@@ -28,7 +30,7 @@ if (!jwtSecret) {
       signOptions: { expiresIn: "7d", algorithm: "HS256" },
     }),
   ],
-  controllers: [AppController, AuthController, AdminController, CompanyController],
-  providers: [AppService, AuthService, AdminService, CompanyService, PrismaService, JwtStrategy],
+  controllers: [AppController, AuthController, AdminController, CompanyController, ChallengeController],
+  providers: [AppService, AuthService, AdminService, CompanyService, ChallengeService, PrismaService, JwtStrategy],
 })
 export class AppModule {}

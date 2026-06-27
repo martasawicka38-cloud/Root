@@ -5,8 +5,11 @@ import type {
   AdminDashboard,
   AdminUser,
   AuthUser,
+  ChallengeItem,
+  ChallengeParticipationItem,
   ChallengePayload,
   Company,
+  CompanyGlobalPermissionItem,
   CompanyToken,
   Declaration,
   LoginResponse,
@@ -283,5 +286,92 @@ export async function companyEditEmployee(slug: string, id: string, input: { nam
 
 export async function companyRemoveEmployee(slug: string, id: string) {
   const { data } = await api.delete(`/company/${slug}/employees/${id}`);
+  return data;
+}
+
+// Challenge endpoints
+export async function fetchChallenges() {
+  type ChallengesResponse =
+    | { company: ChallengeItem[]; canCreateGlobal: boolean }
+    | { global: ChallengeItem[] }
+    | { available: (ChallengeItem & { participations?: { id: string; progress: number; completed: boolean }[] })[]; joined: ChallengeParticipationItem[] };
+  const { data } = await api.get<ChallengesResponse>("/challenges");
+  return data;
+}
+
+export async function createChallenge(input: {
+  title: string;
+  description?: string;
+  points: number;
+  scope: "company" | "global";
+  startsAt?: string;
+  endsAt?: string;
+}) {
+  const { data } = await api.post<ChallengeItem>("/challenges", input);
+  return data;
+}
+
+export async function updateChallenge(id: string, input: {
+  title?: string;
+  description?: string;
+  points?: number;
+  active?: boolean;
+  startsAt?: string;
+  endsAt?: string;
+}) {
+  const { data } = await api.patch<ChallengeItem>(`/challenges/${id}`, input);
+  return data;
+}
+
+export async function deleteChallenge(id: string) {
+  const { data } = await api.delete<{ ok: boolean }>(`/challenges/${id}`);
+  return data;
+}
+
+export async function joinChallenge(id: string) {
+  const { data } = await api.post<ChallengeParticipationItem>(`/challenges/${id}/join`);
+  return data;
+}
+
+export async function updateChallengeProgress(id: string, progress: number) {
+  const { data } = await api.post<ChallengeParticipationItem>(`/challenges/${id}/progress`, { progress });
+  return data;
+}
+
+export async function fetchChallengeParticipants(id: string) {
+  const { data } = await api.get<{ id: string; user: { id: string; name: string; email: string }; progress: number; completed: boolean }[]>(`/challenges/${id}/participants`);
+  return data;
+}
+
+// Admin challenge endpoints
+export async function fetchAdminChallenges() {
+  const { data } = await api.get<(ChallengeItem & { company: { id: string; name: string; slug: string } | null; _count: { participations: number } })[]>("/admin/challenges");
+  return data;
+}
+
+export async function adminCreateChallenge(input: {
+  title: string;
+  description?: string;
+  points: number;
+  startsAt?: string;
+  endsAt?: string;
+}) {
+  const { data } = await api.post<ChallengeItem>("/admin/challenges", input);
+  return data;
+}
+
+// Global permission endpoints
+export async function fetchGlobalPermissions() {
+  const { data } = await api.get<CompanyGlobalPermissionItem[]>("/admin/global-permissions");
+  return data;
+}
+
+export async function grantGlobalPermission(companyId: string) {
+  const { data } = await api.post<CompanyGlobalPermissionItem>("/admin/global-permissions", { companyId });
+  return data;
+}
+
+export async function revokeGlobalPermission(id: string) {
+  const { data } = await api.delete<{ ok: boolean }>(`/admin/global-permissions/${id}`);
   return data;
 }

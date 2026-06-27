@@ -206,6 +206,80 @@ export class AdminService {
     return { ok: true };
   }
 
+  async listAllChallenges(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== "superadmin") throw new Error("Not authorized");
+
+    return this.prisma.challenge.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        company: { select: { id: true, name: true, slug: true } },
+        _count: { select: { participations: true } },
+      },
+    });
+  }
+
+  async createGlobalChallenge(
+    dto: { title: string; description?: string; points: number; startsAt?: string; endsAt?: string },
+    userId: string,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== "superadmin") throw new Error("Not authorized");
+
+    return this.prisma.challenge.create({
+      data: {
+        title: dto.title,
+        description: dto.description ?? null,
+        points: dto.points,
+        scope: "global",
+        createdByUserId: userId,
+        startsAt: dto.startsAt ? new Date(dto.startsAt) : null,
+        endsAt: dto.endsAt ? new Date(dto.endsAt) : null,
+      },
+    });
+  }
+
+  async listGlobalPermissions(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== "superadmin") throw new Error("Not authorized");
+
+    return this.prisma.companyGlobalPermission.findMany({
+      include: {
+        company: { select: { id: true, name: true, slug: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  async grantGlobalPermission(companyId: string, userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== "superadmin") throw new Error("Not authorized");
+
+    const company = await this.prisma.company.findUnique({ where: { id: companyId } });
+    if (!company) throw new Error("Company not found");
+
+    const existing = await this.prisma.companyGlobalPermission.findUnique({
+      where: { companyId },
+    });
+    if (existing) throw new Error("Company already has a permission");
+
+    return this.prisma.companyGlobalPermission.create({
+      data: { companyId, grantedById: userId },
+      include: { company: { select: { id: true, name: true, slug: true } } },
+    });
+  }
+
+  async revokeGlobalPermission(id: string, userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== "superadmin") throw new Error("Not authorized");
+
+    const permission = await this.prisma.companyGlobalPermission.findUnique({ where: { id } });
+    if (!permission) throw new Error("Permission not found");
+
+    await this.prisma.companyGlobalPermission.delete({ where: { id } });
+    return { ok: true };
+  }
+
   async listCompanyUsers(companyId: string) {
     const company = await this.prisma.company.findUnique({
       where: { id: companyId },

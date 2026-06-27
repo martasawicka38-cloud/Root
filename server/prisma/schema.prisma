@@ -40,38 +40,42 @@ enum TokenType {
 }
 
 model User {
-  id                String         @id @default(cuid())
-  email             String         @unique
+  id                String   @id @default(cuid())
+  email             String   @unique
   name              String
   passwordHash      String
-  role              UserRole       @default(user)
-  isActive          Boolean        @default(true)
-  partner           String         @default("intel")
-  stepGoal          Int            @default(8000)
-  balance           Int            @default(450)
-  declarationsToday Int            @default(0)
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  role              UserRole @default(user)
+  isActive          Boolean  @default(true)
+  partner           String   @default("intel")
+  stepGoal          Int      @default(8000)
+  balance           Int      @default(450)
+  declarationsToday Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  companyId         String?
-  company           Company?       @relation("UserCompany", fields: [companyId], references: [id])
-  usedTokenId       String?        @unique
-  usedToken         CompanyToken?  @relation("TokenUsage", fields: [usedTokenId], references: [id])
+  companyId   String?
+  company     Company?      @relation("UserCompany", fields: [companyId], references: [id])
+  usedTokenId String?       @unique
+  usedToken   CompanyToken? @relation("TokenUsage", fields: [usedTokenId], references: [id])
 
-  activities        Activity[]
-  declarations      Declaration[]
-  transactions      Transaction[]
-  notifications     Notification[]
-  achievements      Achievement[]
+  activities              Activity[]
+  declarations            Declaration[]
+  transactions            Transaction[]
+  notifications           Notification[]
+  achievements            Achievement[]
+  challengeParticipations ChallengeParticipation[]
+  challenges              Challenge[]
 }
 
 model Company {
-  id        String         @id @default(cuid())
-  name      String         @unique
-  slug      String         @unique
-  createdAt DateTime       @default(now())
-  users     User[]         @relation("UserCompany")
-  tokens    CompanyToken[]
+  id               String                   @id @default(cuid())
+  name             String                   @unique
+  slug             String                   @unique
+  createdAt        DateTime                 @default(now())
+  users            User[]                   @relation("UserCompany")
+  tokens           CompanyToken[]
+  challenges       Challenge[]
+  globalPermission CompanyGlobalPermission?
 }
 
 model CompanyToken {
@@ -140,10 +144,53 @@ model Notification {
 }
 
 model Achievement {
-  id          String   @id @default(cuid())
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key        String
+  title      String
+  unlockedAt DateTime @default(now())
+}
+
+model Challenge {
+  id              String                   @id @default(cuid())
+  title           String
+  description     String?
+  points          Int
+  scope           String                   @default("company")
+  companyId       String?
+  company         Company?                 @relation(fields: [companyId], references: [id])
+  createdByUserId String?
+  createdByUser   User?                    @relation(fields: [createdByUserId], references: [id])
+  grantedById     String?
+  active          Boolean                  @default(true)
+  startsAt        DateTime?
+  endsAt          DateTime?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+  participations  ChallengeParticipation[]
+}
+
+model ChallengeParticipation {
+  id          String    @id @default(cuid())
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  key         String
-  title       String
-  unlockedAt  DateTime @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  progress    Int       @default(0)
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@unique([challengeId, userId])
+}
+
+model CompanyGlobalPermission {
+  id          String    @id @default(cuid())
+  companyId   String    @unique
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  grantedById String
+  used        Boolean   @default(false)
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
 }

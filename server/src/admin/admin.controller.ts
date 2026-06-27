@@ -1,8 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
 
 import { AdminService } from "./admin.service";
 import { CreateCompanyDto } from "./dto/create-company.dto";
 import { AssignCompanyDto } from "./dto/assign-company.dto";
+import { JwtAuthGuard } from "../common/jwt-auth.guard";
+import { CurrentUser } from "../common/current-user.decorator";
 
 @Controller("api/admin")
 export class AdminController {
@@ -84,5 +86,41 @@ export class AdminController {
   @Delete("users/:id")
   deleteUser(@Param("id") id: string) {
     return this.adminService.deleteUser(id);
+  }
+
+  @Get("challenges")
+  @UseGuards(JwtAuthGuard)
+  listAdminChallenges(@CurrentUser() user: { userId: string }) {
+    return this.adminService.listAllChallenges(user.userId);
+  }
+
+  @Post("challenges")
+  @UseGuards(JwtAuthGuard)
+  createAdminChallenge(
+    @Body() dto: { title: string; description?: string; points: number; startsAt?: string; endsAt?: string },
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.adminService.createGlobalChallenge(dto, user.userId);
+  }
+
+  @Get("global-permissions")
+  @UseGuards(JwtAuthGuard)
+  listPermissions(@CurrentUser() user: { userId: string }) {
+    return this.adminService.listGlobalPermissions(user.userId);
+  }
+
+  @Post("global-permissions")
+  @UseGuards(JwtAuthGuard)
+  grantPermission(
+    @Body() dto: { companyId: string },
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.adminService.grantGlobalPermission(dto.companyId, user.userId);
+  }
+
+  @Delete("global-permissions/:id")
+  @UseGuards(JwtAuthGuard)
+  revokePermission(@Param("id") id: string, @CurrentUser() user: { userId: string }) {
+    return this.adminService.revokeGlobalPermission(id, user.userId);
   }
 }

@@ -27,11 +27,16 @@ import {
   toggleUserActive,
   assignUserToCompany,
   removeUserFromCompany,
+  fetchAdminChallenges,
+  adminCreateChallenge,
+  fetchGlobalPermissions,
+  grantGlobalPermission,
+  revokeGlobalPermission,
 } from "../../lib/api/endpoints";
-import type { AdminUser, Company, CompanyToken } from "../../lib/types/api";
+import type { AdminUser, ChallengeItem, Company, CompanyGlobalPermissionItem, CompanyToken } from "../../lib/types/api";
 import { colors, radius } from "../../styles/tokens";
 
-type Tab = "dashboard" | "users" | "companies" | "tokens";
+type Tab = "dashboard" | "users" | "companies" | "tokens" | "challenges";
 
 function Badge({ label, color, bg }: { label: string; color: string; bg: string }) {
   return (
@@ -202,6 +207,7 @@ export default function AdminScreen() {
           { key: "dashboard" as Tab, label: "Dashboard" },
           { key: "users" as Tab, label: "Uzytkownicy" },
           { key: "companies" as Tab, label: "Firmy" },
+          { key: "challenges" as Tab, label: "Nagrody" },
           { key: "tokens" as Tab, label: "Tokeny firmowe" },
         ].map((t) => (
           <Pressable
@@ -868,3 +874,174 @@ const styles = StyleSheet.create({
   roleTabText: { fontSize: 14, fontWeight: "600", color: colors.slate500 },
   roleTabTextActive: { color: colors.slate900 },
 });
+
+function ChallengesTab({
+  challengesQuery, companiesQuery, permissionsQuery,
+  onCreateChallenge, creatingChallenge,
+  onGrantPermission, grantingPermission,
+  onRevokePermission, revokingPermission,
+}: {
+  challengesQuery: { data?: (ChallengeItem & { company: { id: string; name: string; slug: string } | null; _count: { participations: number } })[]; isPending: boolean; error: Error | null };
+  companiesQuery: { data?: Company[]; isPending: boolean };
+  permissionsQuery: { data?: CompanyGlobalPermissionItem[]; isPending: boolean; error: Error | null };
+  onCreateChallenge: (input: { title: string; description?: string; points: number; startsAt?: string; endsAt?: string }) => void;
+  creatingChallenge: boolean;
+  onGrantPermission: (companyId: string) => void;
+  grantingPermission: boolean;
+  onRevokePermission: (id: string) => void;
+  revokingPermission: boolean;
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [points, setPoints] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState("");
+  const [showPermForm, setShowPermForm] = useState(false);
+
+  if (challengesQuery.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
+  if (challengesQuery.error) return (
+    <View style={styles.errorCard}>
+      <Text style={styles.errorText}>Nie udalo sie zaladowac nagrod.</Text>
+      <Text style={styles.errorDetail}>{challengesQuery.error.message}</Text>
+    </View>
+  );
+
+  const challenges = challengesQuery.data ?? [];
+
+  const handleCreate = () => {
+    if (!title || !points) return;
+    onCreateChallenge({
+      title,
+      description: description || undefined,
+      points: parseInt(points, 10),
+    });
+    setTitle("");
+    setDescription("");
+    setPoints("");
+    setShowForm(false);
+  };
+
+  return (
+    <>
+      <Text style={styles.pageTitle}>Zarzadzanie nagrodami globalnymi</Text>
+
+      <View style={styles.createCard}>
+        <Pressable onPress={() => setShowForm(!showForm)} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <Text style={styles.createTitle}>Dodaj nagrode globalna</Text>
+          <Text style={{ fontSize: 18, color: colors.slate500 }}>{showForm ? "▲" : "▼"}</Text>
+        </Pressable>
+        {showForm && (
+          <View style={{ gap: 10 }}>
+            <TextInput style={styles.input} placeholder="Tytul" value={title} onChangeText={setTitle} placeholderTextColor="#94A3B8" />
+            <TextInput style={styles.input} placeholder="Opis (opcjonalny)" value={description} onChangeText={setDescription} placeholderTextColor="#94A3B8" />
+            <TextInput style={styles.input} placeholder="Punkty EC" value={points} onChangeText={setPoints} placeholderTextColor="#94A3B8" keyboardType="numeric" />
+            <Pressable
+              style={[styles.createBtn, (!title || !points || creatingChallenge) && { opacity: 0.5 }]}
+              onPress={handleCreate}
+              disabled={!title || !points || creatingChallenge}
+            >
+              <Text style={styles.createBtnText}>{creatingChallenge ? "Tworzenie..." : "Utworz nagrode"}</Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+
+      <Text style={styles.sectionTitle}>Wszystkie nagrody globalne</Text>
+      {challenges.length === 0 ? (
+        <Text style={styles.emptyText}>Brak nagrod globalnych.</Text>
+      ) : (
+        <View style={{ gap: 4 }}>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Tytul</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Punkty</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Uczestnicy</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Status</Text>
+          </View>
+          {challenges.map((c) => (
+            <View key={c.id} style={styles.tableRow}>
+              <View style={{ flex: 2 }}>
+                <Text style={[styles.tableCell, { fontWeight: "600" }]}>{c.title}</Text>
+                {c.description && <Text style={{ fontSize: 12, color: colors.slate500 }}>{c.description}</Text>}
+                {c.company && <Text style={{ fontSize: 11, color: colors.mossGreen }}>Firma: {c.company.name}</Text>}
+              </View>
+              <Text style={[styles.tableCell, { flex: 1 }]}>{c.points} EC</Text>
+              <Text style={[styles.tableCell, { flex: 1 }]}>{c._count?.participations ?? 0}</Text>
+              <View style={{ flex: 1 }}>
+                <View style={[badgeStyles.badge, { backgroundColor: c.active ? "#D8F3DC" : "#FFE5E5" }]}>
+                  <Text style={[badgeStyles.text, { color: c.active ? "#40916C" : "#D62828" }]}>
+                    {c.active ? "Aktywny" : "Nieaktywny"}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+
+      <Text style={[styles.sectionTitle, { marginTop: 32 }]}>Uprawnienia firm do nagrod globalnych</Text>
+
+      <View style={styles.createCard}>
+        <Pressable onPress={() => setShowPermForm(!showPermForm)} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+          <Text style={styles.createTitle}>Dodaj uprawnienie</Text>
+          <Text style={{ fontSize: 18, color: colors.slate500 }}>{showPermForm ? "▲" : "▼"}</Text>
+        </Pressable>
+        {showPermForm && (
+          <View style={{ gap: 10 }}>
+            <TextInput
+              style={styles.input}
+              placeholder="ID firmy"
+              value={selectedCompany}
+              onChangeText={setSelectedCompany}
+              placeholderTextColor="#94A3B8"
+            />
+            <Pressable
+              style={[styles.createBtn, (!selectedCompany || grantingPermission) && { opacity: 0.5 }]}
+              onPress={() => { onGrantPermission(selectedCompany); setSelectedCompany(""); setShowPermForm(false); }}
+              disabled={!selectedCompany || grantingPermission}
+            >
+              <Text style={styles.createBtnText}>{grantingPermission ? "Dodawanie..." : "Dodaj uprawnienie"}</Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
+
+      {permissionsQuery.isPending ? (
+        <ActivityIndicator size="small" color={colors.mossGreen} style={{ marginTop: 16 }} />
+      ) : permissionsQuery.error ? (
+        <Text style={styles.emptyText}>Blad ladowania uprawnien.</Text>
+      ) : !permissionsQuery.data?.length ? (
+        <Text style={styles.emptyText}>Brak uprawnien.</Text>
+      ) : (
+        <View style={{ gap: 4 }}>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Firma</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Status</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 0.7 }]}>Akcje</Text>
+          </View>
+          {permissionsQuery.data.map((p) => (
+            <View key={p.id} style={styles.tableRow}>
+              <Text style={[styles.tableCell, { flex: 2 }]}>{p.company.name}</Text>
+              <View style={{ flex: 1 }}>
+                <View style={[badgeStyles.badge, { backgroundColor: p.used ? "#FFE5E5" : "#D8F3DC" }]}>
+                  <Text style={[badgeStyles.text, { color: p.used ? "#D62828" : "#40916C" }]}>
+                    {p.used ? "Uzyte" : "Dostepne"}
+                  </Text>
+                </View>
+              </View>
+              <View style={{ flex: 0.7 }}>
+                <Pressable
+                  style={[styles.actionBtn, { borderColor: "#FECACA", backgroundColor: "#FEF2F2" }, revokingPermission && { opacity: 0.5 }]}
+                  onPress={() => onRevokePermission(p.id)}
+                  disabled={revokingPermission}
+                >
+                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>Usun</Text>
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+    </>
+  );
+}
+

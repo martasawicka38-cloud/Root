@@ -21,10 +21,12 @@ import {
   toggleUserActive,
 } from "../../../lib/api/endpoints";
 import { companyEditEmployee, companyRemoveEmployee } from "../../../lib/api/endpoints";
+import { createChallenge, fetchChallenges, deleteChallenge } from "../../../lib/api/endpoints";
+import type { CompanyToken } from "../../../lib/types/api";
 import { colors, radius } from "../../../styles/tokens";
 import { useAppStore } from "../../../store/useAppStore";
 
-type Tab = "employees" | "analytics" | "tokens";
+type Tab = "employees" | "analytics" | "tokens" | "challenges";
 
 export default function CompanyPanelScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -102,6 +104,27 @@ export default function CompanyPanelScreen() {
     },
   });
 
+  const challengesQuery = useQuery({
+    queryKey: ["company", slug, "challenges"],
+    queryFn: () => fetchChallenges(),
+    enabled: !!slug,
+  });
+
+  const createChallengeMutation = useMutation({
+    mutationFn: (input: { title: string; description?: string; points: number; scope: "company" | "global"; startsAt?: string; endsAt?: string }) =>
+      createChallenge(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company", slug, "challenges"] });
+    },
+  });
+
+  const deleteChallengeMutation = useMutation({
+    mutationFn: (id: string) => deleteChallenge(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company", slug, "challenges"] });
+    },
+  });
+
   if (userRole !== "company" && userRole !== "superadmin") {
     return (
       <View style={styles.fallbackRoot}>
@@ -129,6 +152,7 @@ export default function CompanyPanelScreen() {
           { key: "employees" as Tab, label: "Pracownicy" },
           { key: "analytics" as Tab, label: "Analityka" },
           { key: "tokens" as Tab, label: "Tokeny" },
+          { key: "challenges" as Tab, label: "Nagrody" },
         ].map((t) => (
           <Pressable
             key={t.key}
@@ -183,6 +207,16 @@ export default function CompanyPanelScreen() {
               query={tokensQuery}
               onGenerate={() => generateTokenMutation.mutate()}
               generating={generateTokenMutation.isPending}
+            />
+          )}
+          {tab === "challenges" && (
+            <ChallengesTab
+              query={challengesQuery}
+              companySlug={slug!}
+              onCreate={(input) => createChallengeMutation.mutate(input)}
+              creating={createChallengeMutation.isPending}
+              onDelete={(id) => deleteChallengeMutation.mutate(id)}
+              deleting={deleteChallengeMutation.isPending}
             />
           )}
         </View>
@@ -387,8 +421,125 @@ function AnalyticsTab({ query }: {
   );
 }
 
+function ChallengesTab({
+  query, companySlug, onCreate, creating, onDelete, deleting,
+}: {
+  query: { data?: { company: any[]; canCreateGlobal: boolean } | { global: any[] } | { available: any[]; joined: any[] } | undefined; isPending: boolean; error: Error | null };
+  companySlug: string;
+  onCreate: (input: { title: string; description?: string; points: number; scope: "company" | "global"; startsAt?: string; endsAt?: string }) => void;
+  creating: boolean;
+  onDelete: (id: string) => void;
+  deleting: boolean;
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [points, setPoints] = useState("");
+  const [scope, setScope] = useState<"company" | "global">("company");
+
+  if (query.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
+  if (query.error) return (
+    <View style={styles.errorCard}>
+      <Text style={styles.errorText}>Nie udalo sie zaladowac nagrod.</Text>
+      <Text style={styles.errorDetail}>{query.error.message}</Text>
+    </View>
+  );
+
+  const data = query.data as any;
+  const challenges: any[] = data?.company ?? data?.global ?? data?.available ?? [];
+  const canCreateGlobal = data?.canCreateGlobal ?? false;
+
+  const handleCreate = () => {
+    if (!title || !points) return;
+    onCreate({
+      title,
+      description: description || undefined,
+      points: parseInt(points, 10),
+      scope,
+    });
+    setTitle("");
+    setDescription("");
+    setPoints("");
+    setShowForm(false);
+  };
+
+  return (
+    <>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <Text style={styles.pageTitle}>Nagrody ({challenges.length})</Text>
+        <Pressable style={[styles.genBigBtn, showForm && { opacity: 0.7 }]} onPress={() => setShowForm(!showForm)}>
+          <Text style={styles.genBigBtnText}>{showForm ? "Anuluj" : "Dodaj nagrode"}</Text>
+        </Pressable>
+      </View>
+
+      {showForm && (
+        <View style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 16, gap: 10, marginBottom: 16 }}>
+          <TextInput style={styles.inputSmall} placeholder="Tytul" value={title} onChangeText={setTitle} placeholderTextColor="#94A3B8" />
+          <TextInput style={styles.inputSmall} placeholder="Opis (opcjonalny)" value={description} onChangeText={setDescription} placeholderTextColor="#94A3B8" />
+          <TextInput style={styles.inputSmall} placeholder="Punkty EC" value={points} onChangeText={setPoints} placeholderTextColor="#94A3B8" keyboardType="numeric" />
+          {canCreateGlobal && (
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              <Pressable style={[{ paddingVertical: 10, borderRadius: radius.sm, alignItems: "center", backgroundColor: scope === "company" ? "#F8FAFC" : colors.slate100 }, scope === "company" && { backgroundColor: colors.white, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 2 }, { flex: 1 }]} onPress={() => setScope("company")}>
+                <Text style={[{ fontSize: 14, fontWeight: "600", color: scope === "company" ? colors.slate900 : colors.slate500 }]}>Firmowa</Text>
+              </Pressable>
+              <Pressable style={[{ paddingVertical: 10, borderRadius: radius.sm, alignItems: "center", backgroundColor: scope === "global" ? "#F8FAFC" : colors.slate100 }, scope === "global" && { backgroundColor: colors.white, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 2 }, { flex: 1 }]} onPress={() => setScope("global")}>
+                <Text style={[{ fontSize: 14, fontWeight: "600", color: scope === "global" ? colors.slate900 : colors.slate500 }]}>Globalna</Text>
+              </Pressable>
+            </View>
+          )}
+          <Pressable
+            style={[styles.genBigBtn, (!title || !points || creating) && { opacity: 0.5 }]}
+            onPress={handleCreate}
+            disabled={!title || !points || creating}
+          >
+            <Text style={styles.genBigBtnText}>{creating ? "Tworzenie..." : "Utworz nagrode"}</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {challenges.length === 0 ? (
+        <Text style={styles.emptyText}>Brak nagrod. Kliknij "Dodaj nagrode", aby utworzyc pierwsza.</Text>
+      ) : (
+        <View style={{ gap: 4 }}>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Tytul</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Punkty</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Status</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 0.7 }]}>Akcje</Text>
+          </View>
+          {challenges.map((c: any) => (
+            <View key={c.id} style={styles.tableRow}>
+              <View style={{ flex: 2 }}>
+                <Text style={[styles.tableCell, { fontWeight: "600" }]}>{c.title}</Text>
+                {c.description && <Text style={{ fontSize: 12, color: colors.slate500 }}>{c.description}</Text>}
+              </View>
+              <Text style={[styles.tableCell, { flex: 1 }]}>{c.points} EC</Text>
+              <View style={{ flex: 1 }}>
+                <View style={[styles.badge, { backgroundColor: c.active ? "#D8F3DC" : "#FFE5E5" }]}>
+                  <Text style={[styles.badgeText, { color: c.active ? "#40916C" : "#D62828" }]}>
+                    {c.active ? "Aktywny" : "Nieaktywny"}
+                  </Text>
+                </View>
+              </View>
+              <View style={{ flex: 0.7 }}>
+                <Pressable
+                  style={[styles.actionBtn, { borderColor: "#FECACA", backgroundColor: "#FEF2F2" }, deleting && { opacity: 0.5 }]}
+                  onPress={() => onDelete(c.id)}
+                  disabled={deleting}
+                >
+                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>Usun</Text>
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+    </>
+  );
+}
+
 function TokensTab({ query, onGenerate, generating }: {
-  query: { data?: { id: string; code: string; used: boolean; usedBy?: string; createdAt: string; usedAt?: string }[] | undefined; isPending: boolean; error: Error | null };
+  query: { data?: CompanyToken[]; isPending: boolean; error: Error | null };
   onGenerate: () => void;
   generating: boolean;
 }) {
@@ -427,7 +578,7 @@ function TokensTab({ query, onGenerate, generating }: {
           </View>
           {tokens.map((t) => (
             <View key={t.id} style={styles.tokenTableRow}>
-              <Text style={[styles.tokenCell, { flex: 2, fontFamily: "monospace", fontWeight: "700" }]}>{t.code}</Text>
+              <Text style={[styles.tokenCell, { flex: 2, fontFamily: "monospace", fontWeight: "700" }]}>{t.token}</Text>
               <View style={{ flex: 1 }}>
                 <View style={[styles.badge, { backgroundColor: t.used ? "#FFE5E5" : "#D8F3DC" }]}>
                   <Text style={[styles.badgeText, { color: t.used ? "#D62828" : "#40916C" }]}>{t.used ? "Uzyty" : "Aktywny"}</Text>
@@ -446,11 +597,11 @@ function TokensTab({ query, onGenerate, generating }: {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
   },
   fallbackRoot: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
     justifyContent: "center",
     alignItems: "center",
     padding: 24,
