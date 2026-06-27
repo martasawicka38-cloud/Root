@@ -1,82 +1,64 @@
 import { useQuery } from "@tanstack/react-query";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import Svg, { Path, Circle } from "react-native-svg";
+import { useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Screen } from "../../features/common/Screen";
-import { fetchRanking } from "../../lib/api/endpoints";
-import { colors, radius } from "../../styles/tokens";
-import { useAppStore } from "../../store/useAppStore";
+import {
+  fetchCompanyLeaderboard,
+  fetchLeaderboard,
+  fetchMyRank,
+} from "../../lib/api/endpoints";
+import type { CompanyLeaderboardEntry, LeaderboardEntry, LeaderboardPeriod } from "../../lib/types/api";
+import { colors, radius, spacing } from "../../styles/tokens";
 
-function GoldMedal({ size = 24 }: { size?: number }) {
+const PERIODS: { key: LeaderboardPeriod; label: string }[] = [
+  { key: "daily", label: "Dzień" },
+  { key: "weekly", label: "Tydzień" },
+  { key: "monthly", label: "Miesiąc" },
+  { key: "quarterly", label: "Kwartał" },
+  { key: "yearly", label: "Rok" },
+];
+
+type Scope = "individual" | "company";
+
+function PodiumIcon({ rank }: { rank: number }) {
+  const colorsMap = ["#E8C44C", "#D0D5E0", "#E79D70"];
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Circle cx={12} cy={14} r={6} fill="#E8C44C" stroke="#D4A020" strokeWidth={1.5} />
-      <Path d="M12 8l2-6h-4l2 6Z" fill="#E8C44C" stroke="#D4A020" strokeWidth={1} />
-    </Svg>
+    <View style={[styles.podiumIcon, { backgroundColor: colorsMap[rank - 1] ?? colors.slate300 }]}>
+      <Text style={styles.podiumIconText}>{rank}</Text>
+    </View>
   );
 }
 
-function SilverMedal({ size = 24 }: { size?: number }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Circle cx={12} cy={14} r={6} fill="#D0D5E0" stroke="#A0A8B8" strokeWidth={1.5} />
-      <Path d="M12 8l2-6h-4l2 6Z" fill="#D0D5E0" stroke="#A0A8B8" strokeWidth={1} />
-    </Svg>
-  );
-}
+function IndividualRanking({ period }: { period: LeaderboardPeriod }) {
+  const { data: leaderboard, isLoading, error } = useQuery({
+    queryKey: ["leaderboard", period, "individual"],
+    queryFn: () => fetchLeaderboard(period),
+  });
 
-function BronzeMedal({ size = 24 }: { size?: number }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Circle cx={12} cy={14} r={6} fill="#E79D70" stroke="#D08050" strokeWidth={1.5} />
-      <Path d="M12 8l2-6h-4l2 6Z" fill="#E79D70" stroke="#D08050" strokeWidth={1} />
-    </Svg>
-  );
-}
+  const { data: myRank } = useQuery({
+    queryKey: ["my-rank", period],
+    queryFn: () => fetchMyRank(period),
+  });
 
-export default function RankingScreen() {
-  const mode = useAppStore((s) => s.rankMode);
-  const setMode = useAppStore((s) => s.setRankMode);
-  const { data } = useQuery({ queryKey: ["ranking"], queryFn: fetchRanking });
-  const rows = mode === "team" ? (data?.team ?? []) : (data?.individual ?? []);
+  if (isLoading) return <ActivityIndicator style={{ padding: 40 }} />;
+  if (error) return <Text style={styles.emptyText}>Błąd rankingu: {error.message}</Text>;
+
+  const rows = leaderboard ?? [];
   const podium = rows.slice(0, 3);
-  const listRows = rows.slice(3, 8);
+  const listRows = rows.slice(3, 20);
 
-  const medals = [SilverMedal, GoldMedal, BronzeMedal];
+  if (rows.length === 0) {
+    return <Text style={styles.emptyText}>Brak aktywności w tym okresie.</Text>;
+  }
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Text style={styles.headerBack}>‹</Text>
-        <Text style={styles.headerTitle}>Ranking</Text>
-        <View style={styles.headerBack} />
-      </View>
-
-      <View style={styles.tabs}>
-        <Pressable
-          style={[styles.tab, mode === "team" && styles.tabActive]}
-          onPress={() => setMode("team")}
-        >
-          <Text style={[styles.tabText, mode === "team" && styles.tabTextActive]}>
-            Druzynowy
-          </Text>
-        </Pressable>
-        <Pressable
-          style={[styles.tab, mode === "individual" && styles.tabActive]}
-          onPress={() => setMode("individual")}
-        >
-          <Text style={[styles.tabText, mode === "individual" && styles.tabTextActive]}>
-            Indywidualny
-          </Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.podium}>
-        {podium.map((row, idx) => {
-          const Medal = medals[idx];
-          return (
+    <>
+      {podium.length > 0 && (
+        <View style={styles.podium}>
+          {podium.map((entry: LeaderboardEntry, idx: number) => (
             <View
-              key={`${row.name}-${idx}`}
+              key={entry.userId}
               style={[
                 styles.podiumCard,
                 idx === 0 && styles.podiumFirst,
@@ -84,181 +66,193 @@ export default function RankingScreen() {
                 idx === 2 && styles.podiumThird,
               ]}
             >
-              <Medal size={32} />
-              <Text style={styles.podiumName}>
-                {mode === "team"
-                  ? `Zespol ${String.fromCharCode(65 + idx)}`
-                  : row.name}
-              </Text>
-              <Text style={styles.podiumPoints}>
-                {row.points.toLocaleString("pl-PL")}
-              </Text>
+              <PodiumIcon rank={entry.rank} />
+              <Text style={styles.podiumName} numberOfLines={1}>{entry.name}</Text>
+              <Text style={styles.podiumPoints}>{entry.points}</Text>
             </View>
-          );
-        })}
-      </View>
+          ))}
+        </View>
+      )}
 
       <View style={styles.list}>
-        {listRows.map((row, index) => (
-          <View
-            key={`${row.name}-${index}`}
-            style={[styles.listCard, index === 1 && styles.listCardHighlight]}
-          >
-            <Text style={styles.listRank}>{index + 4}</Text>
+        {listRows.map((entry: LeaderboardEntry) => (
+          <View key={entry.userId} style={styles.listRow}>
+            <Text style={styles.listRank}>{entry.rank}</Text>
             <View style={styles.listAvatar}>
-              <Text style={styles.listAvatarText}>{row.name.slice(0, 1)}</Text>
+              <Text style={styles.listAvatarText}>{entry.name.slice(0, 1)}</Text>
             </View>
-            <View style={styles.listInfo}>
-              <Text style={styles.listName}>{row.name}</Text>
-              <Text style={styles.listMeta}>
-                {Math.round(row.points * 0.84).toLocaleString("pl-PL")} krokow
-              </Text>
-            </View>
-            <Text style={styles.listPoints}>
-              {row.points.toLocaleString("pl-PL")}
-            </Text>
+            <Text style={styles.listName} numberOfLines={1}>{entry.name}</Text>
+            {entry.rootStage && (
+              <View style={styles.stageBadge}>
+                <Text style={styles.stageBadgeText}>Lv.{entry.rootStage.level}</Text>
+              </View>
+            )}
+            <Text style={styles.listPoints}>{entry.points}</Text>
           </View>
         ))}
       </View>
+
+      {myRank && myRank.rank && (
+        <View style={styles.myRank}>
+          <Text style={styles.myRankText}>
+            #{myRank.rank} / {myRank.totalParticipants} · {myRank.points} pkt
+          </Text>
+        </View>
+      )}
+    </>
+  );
+}
+
+function CompanyRanking({ period }: { period: LeaderboardPeriod }) {
+  const { data: companies, isLoading, error } = useQuery({
+    queryKey: ["leaderboard", period, "company"],
+    queryFn: () => fetchCompanyLeaderboard(period),
+  });
+
+  if (isLoading) return <ActivityIndicator style={{ padding: 40 }} />;
+  if (error) return <Text style={styles.emptyText}>Błąd rankingu firm: {error.message}</Text>;
+
+  const rows = companies ?? [];
+  const podium = rows.slice(0, 3);
+  const listRows = rows.slice(3);
+
+  if (rows.length === 0) {
+    return <Text style={styles.emptyText}>Brak aktywności w tym okresie.</Text>;
+  }
+
+  return (
+    <>
+      {podium.length > 0 && (
+        <View style={styles.podium}>
+          {podium.map((entry: CompanyLeaderboardEntry, idx: number) => (
+            <View
+              key={entry.slug}
+              style={[
+                styles.podiumCard,
+                idx === 0 && styles.podiumFirst,
+                idx === 1 && styles.podiumSecond,
+                idx === 2 && styles.podiumThird,
+              ]}
+            >
+              <PodiumIcon rank={entry.rank} />
+              <Text style={styles.podiumName} numberOfLines={1}>{entry.name}</Text>
+              <Text style={styles.podiumPoints}>{entry.points}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      <View style={styles.list}>
+        {listRows.map((entry: CompanyLeaderboardEntry) => (
+          <View key={entry.slug} style={styles.listRow}>
+            <Text style={styles.listRank}>{entry.rank}</Text>
+            <View style={[styles.listAvatar, styles.companyAvatar]}>
+              <Text style={styles.listAvatarText}>{entry.name.slice(0, 1)}</Text>
+            </View>
+            <View style={styles.listNameWrap}>
+              <Text style={styles.listName} numberOfLines={1}>{entry.name}</Text>
+              <Text style={styles.listMemberCount}>{entry.memberCount} członków</Text>
+            </View>
+            <Text style={styles.listPoints}>{entry.points}</Text>
+          </View>
+        ))}
+      </View>
+    </>
+  );
+}
+
+export default function RankingScreen() {
+  const [selectedPeriod, setSelectedPeriod] = useState<LeaderboardPeriod>("weekly");
+  const [scope, setScope] = useState<Scope>("individual");
+
+  return (
+    <Screen>
+      <Text style={styles.screenTitle}>Ranking</Text>
+
+      {/* Scope tabs */}
+      <View style={styles.scopeRow}>
+        <Pressable
+          style={[styles.scopeTab, scope === "individual" && styles.scopeTabActive]}
+          onPress={() => setScope("individual")}
+        >
+          <Text style={[styles.scopeText, scope === "individual" && styles.scopeTextActive]}>
+            Indywidualny
+          </Text>
+        </Pressable>
+        <Pressable
+          style={[styles.scopeTab, scope === "company" && styles.scopeTabActive]}
+          onPress={() => setScope("company")}
+        >
+          <Text style={[styles.scopeText, scope === "company" && styles.scopeTextActive]}>
+            Firmowy
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* Period selector */}
+      <View style={styles.periodRow}>
+        {PERIODS.map((p) => (
+          <Pressable
+            key={p.key}
+            style={[styles.periodBtn, selectedPeriod === p.key && styles.periodBtnActive]}
+            onPress={() => setSelectedPeriod(p.key)}
+          >
+            <Text style={[styles.periodText, selectedPeriod === p.key && styles.periodTextActive]}>
+              {p.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {scope === "individual" ? (
+        <IndividualRanking period={selectedPeriod} />
+      ) : (
+        <CompanyRanking period={selectedPeriod} />
+      )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  headerBack: {
-    width: 24,
-    fontSize: 22,
-    color: colors.slate900,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.deepForest,
-    textAlign: "center",
-    flex: 1,
-  },
-  tabs: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 12,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: colors.slate200,
-    borderRadius: radius.sm,
-    alignItems: "center",
-    backgroundColor: "#F8FAFC",
-  },
-  tabActive: {
-    backgroundColor: colors.mossGreen,
-    borderColor: colors.mossGreen,
-  },
-  tabText: {
-    fontSize: 14,
-    color: colors.slate600,
-    fontWeight: "600",
-  },
-  tabTextActive: {
-    color: colors.white,
-  },
-  podium: {
-    marginTop: 16,
-    flexDirection: "row",
-    alignItems: "flex-end",
-    gap: 8,
-  },
-  podiumCard: {
-    flex: 1,
-    borderRadius: radius.md,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    gap: 6,
-  },
-  podiumFirst: {
-    height: 140,
-    backgroundColor: "#FEF3C7",
-  },
-  podiumSecond: {
-    height: 112,
-    backgroundColor: "#F1F5F9",
-  },
-  podiumThird: {
-    height: 96,
-    backgroundColor: "#FFF7ED",
-  },
-  podiumName: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: colors.slate700,
-    textAlign: "center",
-  },
-  podiumPoints: {
-    fontSize: 14,
-    fontWeight: "800",
-    color: colors.deepForest,
-  },
-  list: {
-    marginTop: 12,
-    gap: 8,
-  },
-  listCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    borderWidth: 1,
-    borderColor: colors.slate200,
-    borderRadius: radius.md,
-    padding: 14,
-    backgroundColor: "#F8FAFC",
-  },
-  listCardHighlight: {
-    backgroundColor: colors.mist,
-    borderColor: colors.sage,
-  },
-  listRank: {
-    width: 24,
-    fontSize: 15,
-    fontWeight: "700",
-    color: colors.slate400,
-    textAlign: "center",
-  },
-  listAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: radius.full,
-    backgroundColor: "#AF28E3",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  listAvatarText: {
-    color: colors.white,
-    fontWeight: "700",
-    fontSize: 14,
-  },
-  listInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  listName: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: colors.slate900,
-  },
-  listMeta: {
-    fontSize: 12,
-    color: colors.slate500,
-  },
-  listPoints: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: colors.deepForest,
-  },
+  screenTitle: { fontSize: 22, fontWeight: "700", color: colors.slate900, marginBottom: spacing.x2s },
+
+  scopeRow: { flexDirection: "row", gap: 8, marginBottom: spacing.xs },
+  scopeTab: { flex: 1, paddingVertical: 10, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, alignItems: "center", backgroundColor: "#F8FAFC" },
+  scopeTabActive: { backgroundColor: colors.mossGreen, borderColor: colors.mossGreen },
+  scopeText: { fontSize: 14, fontWeight: "600", color: colors.slate600 },
+  scopeTextActive: { color: colors.white },
+
+  periodRow: { flexDirection: "row", gap: 6, flexWrap: "wrap", marginBottom: spacing.sm },
+  periodBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.full, backgroundColor: colors.slate100 },
+  periodBtnActive: { backgroundColor: colors.deepForest },
+  periodText: { fontSize: 13, fontWeight: "600", color: colors.slate600 },
+  periodTextActive: { color: colors.white },
+
+  emptyText: { textAlign: "center", padding: 40, color: colors.slate400, fontSize: 14 },
+
+  podium: { flexDirection: "row", alignItems: "flex-end", gap: 8, marginBottom: spacing.sm },
+  podiumCard: { flex: 1, borderRadius: radius.md, alignItems: "center", justifyContent: "center", paddingVertical: 14, gap: 6 },
+  podiumFirst: { height: 140, backgroundColor: "#FEF3C7" },
+  podiumSecond: { height: 112, backgroundColor: "#F1F5F9" },
+  podiumThird: { height: 96, backgroundColor: "#FFF7ED" },
+  podiumIcon: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  podiumIconText: { fontSize: 14, fontWeight: "800", color: colors.white },
+  podiumName: { fontSize: 13, fontWeight: "600", color: colors.slate700, textAlign: "center", maxWidth: "90%" },
+  podiumPoints: { fontSize: 16, fontWeight: "800", color: colors.deepForest },
+
+  list: { gap: 6, marginBottom: spacing.sm },
+  listRow: { flexDirection: "row", alignItems: "center", gap: 10, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 12, backgroundColor: "#F8FAFC" },
+  listRank: { width: 24, fontSize: 14, fontWeight: "700", color: colors.slate400, textAlign: "center" },
+  listAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: "#AF28E3", alignItems: "center", justifyContent: "center" },
+  companyAvatar: { backgroundColor: colors.deepForest },
+  listAvatarText: { color: colors.white, fontWeight: "700", fontSize: 13 },
+  listName: { flex: 1, fontSize: 14, fontWeight: "600", color: colors.slate900 },
+  listNameWrap: { flex: 1 },
+  listMemberCount: { fontSize: 11, color: colors.slate500, marginTop: 1 },
+  stageBadge: { backgroundColor: colors.mossGreen, borderRadius: radius.full, paddingHorizontal: 8, paddingVertical: 2 },
+  stageBadgeText: { color: colors.white, fontSize: 11, fontWeight: "700" },
+  listPoints: { fontSize: 15, fontWeight: "800", color: colors.deepForest },
+
+  myRank: { padding: spacing.xs, backgroundColor: colors.mist, borderRadius: radius.md, alignItems: "center" },
+  myRankText: { fontSize: 13, fontWeight: "600", color: colors.deepForest },
 });

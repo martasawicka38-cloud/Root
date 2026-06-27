@@ -10,6 +10,7 @@ import type {
   ChallengePayload,
   Company,
   CompanyGlobalPermissionItem,
+  CompanyLeaderboardEntry,
   CompanyToken,
   Declaration,
   LoginResponse,
@@ -19,7 +20,14 @@ import type {
   TxItem,
   TxType,
   UserProfile,
-  UserRole,
+  EcoActivity,
+  UserEcoActivityLog,
+  SubmitActivityResponse,
+  RootStatus,
+  TransformResponse,
+  LeaderboardEntry,
+  UserRank,
+  LeaderboardPeriod,
 } from "../types/api";
 
 export async function fetchMe() {
@@ -75,7 +83,7 @@ export async function fetchDeclarations() {
 }
 
 export async function addDeclaration(input: { name: string; points: number }) {
-  const { data } = await api.post<{ ok: boolean; message?: string }>(
+  const { data } = await api.post<{ ok: boolean; message?: string; exp?: number; canTransform?: boolean }>(
     "/declarations",
     input,
   );
@@ -373,5 +381,49 @@ export async function grantGlobalPermission(companyId: string) {
 
 export async function revokeGlobalPermission(id: string) {
   const { data } = await api.delete<{ ok: boolean }>(`/admin/global-permissions/${id}`);
+  return data;
+}
+
+// --- Gamification API ---
+
+export async function fetchEcoActivities() {
+  const { data } = await api.get<EcoActivity[]>("/eco-activities");
+  return data;
+}
+
+export async function submitEcoActivity(ecoActivityId: string) {
+  const { data } = await api.post<SubmitActivityResponse>("/eco-activities/submit", { ecoActivityId });
+  return data;
+}
+
+export async function fetchEcoActivityLogs() {
+  const { data } = await api.get<UserEcoActivityLog[]>("/eco-activities/my-logs");
+  return data;
+}
+
+export async function fetchLeaderboard(period: LeaderboardPeriod) {
+  const { data } = await api.get<LeaderboardEntry[]>(`/leaderboard/${period}`);
+  return data;
+}
+
+export async function fetchMyRank(period: LeaderboardPeriod) {
+  const { data } = await api.get<UserRank>(`/leaderboard/me/${period}`);
+  return data;
+}
+
+export async function fetchCompanyLeaderboard(period: LeaderboardPeriod) {
+  const { data } = await api.get<CompanyLeaderboardEntry[]>(`/leaderboard/${period}`, {
+    params: { scope: "company" },
+  });
+  return data;
+}
+
+export async function fetchRootStatus() {
+  const { data } = await api.get<RootStatus>("/root/status");
+  return data;
+}
+
+export async function transformRoot() {
+  const { data } = await api.post<TransformResponse>("/root/transform");
   return data;
 }

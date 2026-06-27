@@ -1,6 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { ActivityType, TxType } from "@prisma/client";
 
+import { ACTIVITY_CONFIG } from "./activity/activity.config";
+import { ActivityService } from "./activity/activity.service";
+import { LeaderboardService } from "./leaderboard.service";
 import { PrismaService } from "./prisma.service";
 
 const activityRates: Record<ActivityType, number> = {
@@ -14,7 +17,11 @@ const activityRates: Record<ActivityType, number> = {
 
 @Injectable()
 export class AppService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly activityService: ActivityService,
+    private readonly leaderboardService: LeaderboardService,
+  ) {}
 
   private async getUser(userId?: string) {
     if (userId) {
@@ -36,8 +43,12 @@ export class AppService {
   }
 
   async me(userId: string) {
-    const user = await this.getUser(userId);
-    return user;
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { rootStage: true },
+    });
+    if (user) return user;
+    return this.getUser(userId);
   }
 
   async adminDashboard() {
@@ -242,22 +253,30 @@ export class AppService {
 
   async addDeclaration(userId: string, name: string, points: number) {
     const user = await this.getUser(userId);
-    if (user.declarationsToday >= 3) {
+    if (user.declarationsToday >= ACTIVITY_CONFIG.DECLARATIONS_DAILY_LIMIT) {
       return { ok: false, message: "Limit deklaracji wyczerpany." };
     }
-    await this.prisma.$transaction([
-      this.prisma.declaration.create({
+
+    const expResult = await this.prisma.$transaction(async (tx) => {
+      await tx.declaration.create({
         data: { userId: user.id, name, points },
-      }),
-      this.prisma.user.update({
+      });
+      await tx.user.update({
         where: { id: user.id },
         data: { declarationsToday: { increment: 1 }, balance: { increment: points } },
-      }),
-      this.prisma.transaction.create({
+      });
+      await tx.transaction.create({
         data: { userId: user.id, name, points, type: "earned" },
-      }),
-    ]);
-    return { ok: true };
+      });
+
+      return this.activityService.addExpFromDeclaration(user.id, tx);
+    });
+
+    return {
+      ok: true,
+      exp: expResult?.expPoints ?? 0,
+      canTransform: expResult?.canTransform ?? false,
+    };
   }
 
   async notifications(userId: string) {
@@ -287,20 +306,9 @@ export class AppService {
     return this.prisma.achievement.findMany({ where: { userId: user.id }, orderBy: { unlockedAt: "desc" } });
   }
 
+  /** @deprecated Use GET /api/leaderboard/:period instead */
   async ranking() {
-    const users = await this.prisma.user.findMany({
-      orderBy: { balance: "desc" },
-      select: { name: true, balance: true, partner: true },
-    });
-    const individual = users.slice(0, 10).map((u) => ({ name: u.name, points: u.balance }));
-    const teamMap: Record<string, number> = {};
-    for (const u of users) {
-      teamMap[u.partner] = (teamMap[u.partner] ?? 0) + u.balance;
-    }
-    const team = Object.entries(teamMap)
-      .map(([name, points]) => ({ name, points: Math.round(points / 10) }))
-      .sort((a, b) => b.points - a.points);
-    return { team, individual };
+    return this.leaderboardService.getLeaderboard("weekly");
   }
 
   async companies() {

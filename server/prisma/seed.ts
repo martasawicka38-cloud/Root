@@ -54,6 +54,8 @@ async function main() {
     update: {
       passwordHash: hash,
       name: "Jan Kowalski",
+      companyId: intel.id,
+      partner: "intel",
     },
     create: {
       email: "jan@intel.com",
@@ -61,6 +63,7 @@ async function main() {
       passwordHash: hash,
       role: "user",
       partner: "intel",
+      companyId: intel.id,
       balance: 450,
       declarationsToday: 0,
       stepGoal: 8000,
@@ -68,33 +71,27 @@ async function main() {
   });
 
   // Seed a company_registration token for testing
-  const existingCompanyToken = await prisma.companyToken.findFirst({
-    where: { type: "company_registration", used: false },
+  await prisma.companyToken.upsert({
+    where: { token: "ECO-PULSE-COMPANY-001" },
+    update: { used: false },
+    create: {
+      token: "ECO-PULSE-COMPANY-001",
+      type: "company_registration",
+    },
   });
-  if (!existingCompanyToken) {
-    await prisma.companyToken.create({
-      data: {
-        token: "ECO-PULSE-COMPANY-001",
-        type: "company_registration",
-      },
-    });
-    console.log("Company token: ECO-PULSE-COMPANY-001");
-  }
+  console.log("Company token: ECO-PULSE-COMPANY-001");
 
   // Seed an employer_registration token for Intel
-  const existingEmployerToken = await prisma.companyToken.findFirst({
-    where: { companyId: intel.id, type: "employer_registration", used: false },
+  await prisma.companyToken.upsert({
+    where: { token: "INTEL-EMPLOYEE-001" },
+    update: { companyId: intel.id, used: false },
+    create: {
+      companyId: intel.id,
+      token: "INTEL-EMPLOYEE-001",
+      type: "employer_registration",
+    },
   });
-  if (!existingEmployerToken) {
-    await prisma.companyToken.create({
-      data: {
-        companyId: intel.id,
-        token: "INTEL-EMPLOYEE-001",
-        type: "employer_registration",
-      },
-    });
-    console.log("Intel employer token: INTEL-EMPLOYEE-001");
-  }
+  console.log("Intel employer token: INTEL-EMPLOYEE-001");
 
   // Seed rewards
   const rewards = [
@@ -177,6 +174,70 @@ async function main() {
         { userId: user.id, key: "first-step", title: "Pierwszy krok" },
         { userId: user.id, key: "streak-3", title: "Passa 3 dni" },
       ],
+    });
+  }
+
+  // Seed Root stages
+  const rootStages = [
+    { name: "Ziarenko", level: 1, expRequired: 0, description: "Początek drogi – małe ziarenko pełne potencjału." },
+    { name: "Pęd", level: 2, expRequired: 1000, description: "Pierwszy zielony pęd wybija się ku słońcu." },
+    { name: "Sadzonka", level: 3, expRequired: 2500, description: "Młoda sadzonka zapuszcza korzenie coraz głębiej." },
+    { name: "Drzewo", level: 4, expRequired: 5000, description: "Silne drzewo dające cień i tlen." },
+    { name: "Ekosystem", level: 5, expRequired: 10000, description: "Pełen ekosystem – inspiracja dla innych." },
+  ];
+
+  const ziarenkoId: string[] = [];
+
+  for (const stage of rootStages) {
+    const created = await prisma.rootStage.upsert({
+      where: { level: stage.level },
+      update: stage,
+      create: stage,
+    });
+    if (stage.level === 1) ziarenkoId.push(created.id);
+  }
+
+  // Assign Ziarenko to test user if they don't have a stage
+  const firstUser = await prisma.user.findUnique({ where: { id: user.id } });
+  if (firstUser && !firstUser.rootStageId && ziarenkoId.length > 0) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { rootStageId: ziarenkoId[0] },
+    });
+  }
+
+  // Seed Eco-activities
+  const ecoActivities = [
+    // MOBILITY
+    { name: "Rower zamiast samochodu", description: "Dojazd do pracy rowerem zamiast auta.", icon: "🚲", category: "MOBILITY" as const, basePoints: 30 },
+    { name: "Korzystanie z komunikacji miejskiej", description: "Przejazd autobusem/tramwajem zamiast samochodu.", icon: "🚌", category: "MOBILITY" as const, basePoints: 20 },
+    { name: "Miesiąc bez auta (dzień)", description: "Codzienna aktywność w ramach wyzwania 'Miesiąc bez auta'.", icon: "🚶", category: "MOBILITY" as const, basePoints: 40 },
+    { name: "Car-sharing / ride-sharing", description: "Wspólny przejazd z innymi osobami.", icon: "🚗", category: "MOBILITY" as const, basePoints: 25 },
+    // CIRCULARITY
+    { name: "Bookcrossing", description: "Uwolnij książkę – zostaw ją w publicznym miejscu.", icon: "📚", category: "CIRCULARITY" as const, basePoints: 20 },
+    { name: "Segregacja odpadów", description: "Prawidłowe segregowanie śmieci.", icon: "♻️", category: "CIRCULARITY" as const, basePoints: 15 },
+    { name: "Naprawa zamiast wyrzucania", description: "Naprawa zepsutego przedmiotu zamiast kupna nowego.", icon: "🔧", category: "CIRCULARITY" as const, basePoints: 35 },
+    { name: "Oddanie ubrań do second-handu", description: "Przekazanie nieużywanych ubrań do ponownego obiegu.", icon: "👕", category: "CIRCULARITY" as const, basePoints: 25 },
+    { name: "Kompostowanie", description: "Kompostowanie odpadków organicznych.", icon: "🌱", category: "CIRCULARITY" as const, basePoints: 30 },
+    // LOCAL_CONSUMPTION
+    { name: "Zakupy na targu", description: "Zakupy na lokalnym targu zamiast w supermarkecie.", icon: "🛍️", category: "LOCAL_CONSUMPTION" as const, basePoints: 30 },
+    { name: "Korzystanie z wielorazowych opakowań", description: "Zakupy z własną torbą i pojemnikami.", icon: "👜", category: "LOCAL_CONSUMPTION" as const, basePoints: 20 },
+    { name: "Kupno lokalnych produktów", description: "Wybór produktów od lokalnych dostawców.", icon: "🧀", category: "LOCAL_CONSUMPTION" as const, basePoints: 25 },
+    { name: "Domowy posiłek zamiast jedzenia na wynos", description: "Przygotowanie posiłku w domu z lokalnych składników.", icon: "🍳", category: "LOCAL_CONSUMPTION" as const, basePoints: 20 },
+    // NATURE_ACTIVITY
+    { name: "Eko-wycieczka", description: "Spacer/wycieczka po lesie lub parku.", icon: "🌲", category: "NATURE_ACTIVITY" as const, basePoints: 50 },
+    { name: "Sprzątanie lasu/plaży", description: "Wolontariat sprzątania dzikich wysypisk.", icon: "🧹", category: "NATURE_ACTIVITY" as const, basePoints: 60 },
+    { name: "Sadzenie drzew", description: "Udział w akcji sadzenia drzew.", icon: "🌳", category: "NATURE_ACTIVITY" as const, basePoints: 80 },
+    { name: "Obserwacja ptaków", description: "Spacer z lornetką i identyfikacja gatunków.", icon: "🐦", category: "NATURE_ACTIVITY" as const, basePoints: 25 },
+    { name: "Joga na świeżym powietrzu", description: "Sesja jogi w plenerze.", icon: "🧘", category: "NATURE_ACTIVITY" as const, basePoints: 35 },
+    { name: "Bieganie w terenie", description: "Bieg po leśnych ścieżkach zamiast po mieście.", icon: "🏃", category: "NATURE_ACTIVITY" as const, basePoints: 40 },
+  ];
+
+  for (const activity of ecoActivities) {
+    await prisma.ecoActivity.upsert({
+      where: { name: activity.name },
+      update: activity,
+      create: activity,
     });
   }
 

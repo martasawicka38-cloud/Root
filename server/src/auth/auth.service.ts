@@ -123,12 +123,17 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
+    const seedStage = await this.prisma.rootStage.findUnique({
+      where: { level: 1 },
+    });
+
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         name: dto.name,
         passwordHash,
         role: "user",
+        rootStageId: seedStage?.id,
       },
     });
 
@@ -175,8 +180,12 @@ export class AuthService {
         stepGoal: true,
         balance: true,
         declarationsToday: true,
+        totalExp: true,
+        canTransform: true,
+        rootStageId: true,
         companyId: true,
         createdAt: true,
+        rootStage: true,
       },
     });
 

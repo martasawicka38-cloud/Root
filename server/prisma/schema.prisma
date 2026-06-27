@@ -20,6 +20,13 @@ enum ActivityType {
   gym
 }
 
+enum EcoCategory {
+  MOBILITY
+  CIRCULARITY
+  LOCAL_CONSUMPTION
+  NATURE_ACTIVITY
+}
+
 enum RewardCategory {
   food
   wellness
@@ -50,6 +57,9 @@ model User {
   stepGoal          Int      @default(8000)
   balance           Int      @default(450)
   declarationsToday Int      @default(0)
+  totalExp          Int      @default(0)
+  canTransform      Boolean  @default(false)
+  rootStageId       String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -65,6 +75,8 @@ model User {
   achievements            Achievement[]
   challengeParticipations ChallengeParticipation[]
   challenges              Challenge[]
+  ecoActivityLogs         UserEcoActivityLog[]
+  rootStage               RootStage?                    @relation(fields: [rootStageId], references: [id])
 }
 
 model Company {
@@ -193,4 +205,44 @@ model CompanyGlobalPermission {
   used        Boolean   @default(false)
   usedAt      DateTime?
   createdAt   DateTime  @default(now())
+}
+
+model RootStage {
+  id          String  @id @default(cuid())
+  name        String
+  level       Int     @unique
+  expRequired Int
+  description String?
+
+  users User[]
+}
+
+model EcoActivity {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  description String?
+  icon        String      @default("🌱")
+  category    EcoCategory
+  basePoints  Int         @default(10)
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+
+  logs UserEcoActivityLog[]
+}
+
+model UserEcoActivityLog {
+  id             String      @id @default(cuid())
+  userId         String
+  ecoActivityId  String
+  basePoints     Int
+  multiplier     Float       @default(1.0)
+  leaderboardPts Int         @default(0)
+  expPoints      Int         @default(0)
+  createdAt      DateTime    @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ecoActivity EcoActivity @relation(fields: [ecoActivityId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([ecoActivityId, userId, createdAt])
 }

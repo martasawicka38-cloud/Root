@@ -1,12 +1,13 @@
 import { Link, Stack, usePathname } from "expo-router";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { HomeIcon, MarketIcon, RankingIcon, ProfileIcon } from "../../components/icons";
+import { HomeIcon, MarketIcon, RankingIcon, ProfileIcon, SproutIcon } from "../../components/icons";
 import { colors } from "../../styles/tokens";
 
 const tabs = [
   { href: "/(mobile)/home", label: "Dom", icon: HomeIcon },
   { href: "/(mobile)/market", label: "Rynek", icon: MarketIcon },
+  { href: "/(mobile)/eko", label: "Eko", icon: SproutIcon },
   { href: "/(mobile)/ranking", label: "Ranking", icon: RankingIcon },
   { href: "/(mobile)/profile", label: "Profil", icon: ProfileIcon },
 ] as const;

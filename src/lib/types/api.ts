@@ -9,6 +9,10 @@ export type UserProfile = {
   stepGoal: number;
   balance: number;
   declarationsToday: number;
+  totalExp: number;
+  canTransform: boolean;
+  rootStageId: string | null;
+  rootStage: RootStage | null;
 };
 
 export type Reward = {
@@ -61,10 +65,7 @@ export type AchievementItem = {
   unlockedAt: string;
 };
 
-export type RankingPayload = {
-  team: { name: string; points: number }[];
-  individual: { name: string; points: number }[];
-};
+export type RankingPayload = LeaderboardEntry[];
 
 export type ChallengePayload = {
   title: string;
@@ -194,3 +195,97 @@ export type AdminUser = {
   companyId: string | null;
   company: { id: string; name: string } | null;
 };
+
+// --- Gamification Types ---
+
+export type EcoCategory = "MOBILITY" | "CIRCULARITY" | "LOCAL_CONSUMPTION" | "NATURE_ACTIVITY";
+
+export type EcoActivity = {
+  id: string;
+  name: string;
+  description: string | null;
+  icon: string;
+  category: EcoCategory;
+  basePoints: number;
+  active: boolean;
+  createdAt: string;
+};
+
+export type UserEcoActivityLog = {
+  id: string;
+  userId: string;
+  ecoActivityId: string;
+  basePoints: number;
+  multiplier: number;
+  leaderboardPts: number;
+  expPoints: number;
+  createdAt: string;
+  ecoActivity: {
+    name: string;
+    icon: string;
+    category: EcoCategory;
+    basePoints: number;
+  };
+};
+
+export type SubmitActivityResponse = {
+  ok: boolean;
+  log: UserEcoActivityLog;
+  canTransform: boolean;
+  nextStage: RootStage | null;
+  points: { exp: number; leaderboard: number };
+  caps: {
+    categoryRemaining: number;
+    globalRemaining: number;
+    diminishingMultiplier: number;
+    firstTimeBonus: boolean;
+    synergyBonus: boolean;
+  };
+  message: string;
+};
+
+export type RootStage = {
+  id: string;
+  name: string;
+  level: number;
+  expRequired: number;
+  description: string | null;
+};
+
+export type RootStatus = {
+  totalExp: number;
+  currentStage: RootStage | null;
+  nextStage: RootStage | null;
+  canTransform: boolean;
+};
+
+export type TransformResponse = {
+  ok: boolean;
+  stage?: RootStage;
+  message?: string;
+};
+
+export type LeaderboardEntry = {
+  rank: number;
+  userId: string;
+  name: string;
+  points: number;
+  rootStage: { name: string; level: number } | null;
+};
+
+export type CompanyLeaderboardEntry = {
+  rank: number;
+  slug: string;
+  name: string;
+  points: number;
+  memberCount: number;
+};
+
+export type UserRank = {
+  userId: string;
+  points: number;
+  rank: number | null;
+  totalParticipants: number;
+};
+
+export type LeaderboardPeriod = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";

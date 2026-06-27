@@ -16,6 +16,12 @@ import { ChallengeController } from "./challenge/challenge.controller";
 import { ChallengeService } from "./challenge/challenge.service";
 import { CompanyController } from "./company/company.controller";
 import { CompanyService } from "./company/company.service";
+import { ActivityController } from "./activity/activity.controller";
+import { ActivityService } from "./activity/activity.service";
+import { LeaderboardController } from "./leaderboard.controller";
+import { LeaderboardService } from "./leaderboard.service";
+import { RootController } from "./root.controller";
+import { RootService } from "./root.service";
 
 const jwtSecret = process.env.JWT_SECRET;
 if (!jwtSecret) {
@@ -30,7 +36,7 @@ if (!jwtSecret) {
       signOptions: { expiresIn: "7d", algorithm: "HS256" },
     }),
   ],
-  controllers: [AppController, AuthController, AdminController, CompanyController, ChallengeController],
-  providers: [AppService, AuthService, AdminService, CompanyService, ChallengeService, PrismaService, JwtStrategy],
+  controllers: [AppController, AuthController, AdminController, CompanyController, ChallengeController, ActivityController, LeaderboardController, RootController],
+  providers: [AppService, AuthService, AdminService, CompanyService, ChallengeService, ActivityService, LeaderboardService, RootService, PrismaService, JwtStrategy],
 })
 export class AppModule {}

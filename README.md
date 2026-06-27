@@ -123,3 +123,30 @@ Backend build:
 
 - Upewnij sie, ze docker compose up -d jest uruchomione
 - Powtorz: generate -> migrate -> seed
+
+Widoki:
+
+Login | register_employer | register_user | register_company | onboarding | home | market | ranking | profile | superadmin | companyAdminPanel
+
+Problem firmy:
+
+1. Firma potrzebuje poświęcic czas na wygenerowanie materiałów marketingowych budujących dobry employer branding
+   Rozwiązanie: generowanie postów na linkedina + certyfikatów w pdf
+
+The best value: Vouchery za aktywność
+
+- zintegrować dane z garmina - stravy
+- workday - aplikacja HR'owas
+
+2. Bayer nie zaproponuje wartości jako swojego produktu bo produkuje leki - ale potrzebuje ubezpeiczenia
+3. Dać na prezkę w pipeline agenta
+
+- flow,
+- podział ról,
+- korporacyjne zadanie
+
+- zastanowić sie, czy nie wywalić zwykłego usera
+
+```me
+
+```

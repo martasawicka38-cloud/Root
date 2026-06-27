@@ -19,9 +19,12 @@ import {
   fetchCompanyTokensBySlug,
   generateEmployerTokenBySlug,
   toggleUserActive,
+  companyEditEmployee,
+  companyRemoveEmployee,
+  createChallenge,
+  fetchChallenges,
+  deleteChallenge,
 } from "../../../lib/api/endpoints";
-import { companyEditEmployee, companyRemoveEmployee } from "../../../lib/api/endpoints";
-import { createChallenge, fetchChallenges, deleteChallenge } from "../../../lib/api/endpoints";
 import type { CompanyToken } from "../../../lib/types/api";
 import { colors, radius } from "../../../styles/tokens";
 import { useAppStore } from "../../../store/useAppStore";
@@ -81,18 +84,27 @@ export default function CompanyPanelScreen() {
   const toggleActiveMutation = useMutation({
     mutationFn: toggleUserActive,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["company", slug, "employees"] });
+      queryClient.invalidateQueries({
+        queryKey: ["company", slug, "employees"],
+      });
     },
   });
 
   const editEmployeeMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { name?: string; email?: string } }) =>
-      companyEditEmployee(slug!, id, data),
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { name?: string; email?: string };
+    }) => companyEditEmployee(slug!, id, data),
     onSuccess: () => {
       setEditEmployeeId(null);
       setEditEmployeeName("");
       setEditEmployeeEmail("");
-      queryClient.invalidateQueries({ queryKey: ["company", slug, "employees"] });
+      queryClient.invalidateQueries({
+        queryKey: ["company", slug, "employees"],
+      });
     },
   });
 
@@ -100,7 +112,9 @@ export default function CompanyPanelScreen() {
     mutationFn: (id: string) => companyRemoveEmployee(slug!, id),
     onSuccess: () => {
       setDeleteEmployeeId(null);
-      queryClient.invalidateQueries({ queryKey: ["company", slug, "employees"] });
+      queryClient.invalidateQueries({
+        queryKey: ["company", slug, "employees"],
+      });
     },
   });
 
@@ -111,17 +125,27 @@ export default function CompanyPanelScreen() {
   });
 
   const createChallengeMutation = useMutation({
-    mutationFn: (input: { title: string; description?: string; points: number; scope: "company" | "global"; startsAt?: string; endsAt?: string }) =>
-      createChallenge(input),
+    mutationFn: (input: {
+      title: string;
+      description?: string;
+      points: number;
+      scope: "company" | "global";
+      startsAt?: string;
+      endsAt?: string;
+    }) => createChallenge(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["company", slug, "challenges"] });
+      queryClient.invalidateQueries({
+        queryKey: ["company", slug, "challenges"],
+      });
     },
   });
 
   const deleteChallengeMutation = useMutation({
     mutationFn: (id: string) => deleteChallenge(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["company", slug, "challenges"] });
+      queryClient.invalidateQueries({
+        queryKey: ["company", slug, "challenges"],
+      });
     },
   });
 
@@ -129,7 +153,9 @@ export default function CompanyPanelScreen() {
     return (
       <View style={styles.fallbackRoot}>
         <Text style={styles.fallbackTitle}>Brak dostepu</Text>
-        <Text style={styles.fallbackText}>Tylko konto firmowe ma dostep do tego panelu.</Text>
+        <Text style={styles.fallbackText}>
+          Tylko konto firmowe ma dostep do tego panelu.
+        </Text>
       </View>
     );
   }
@@ -159,7 +185,12 @@ export default function CompanyPanelScreen() {
             style={[styles.navTab, tab === t.key && styles.navTabActive]}
             onPress={() => setTab(t.key)}
           >
-            <Text style={[styles.navTabText, tab === t.key && styles.navTabTextActive]}>
+            <Text
+              style={[
+                styles.navTabText,
+                tab === t.key && styles.navTabTextActive,
+              ]}
+            >
               {t.label}
             </Text>
           </Pressable>
@@ -176,7 +207,11 @@ export default function CompanyPanelScreen() {
             <EmployeesTab
               query={employeesQuery}
               onToggleActive={(id) => toggleActiveMutation.mutate(id)}
-              togglingId={toggleActiveMutation.isPending ? toggleActiveMutation.variables : null}
+              togglingId={
+                toggleActiveMutation.isPending
+                  ? toggleActiveMutation.variables
+                  : null
+              }
               editEmployeeId={editEmployeeId}
               editEmployeeName={editEmployeeName}
               editEmployeeEmail={editEmployeeEmail}
@@ -192,12 +227,19 @@ export default function CompanyPanelScreen() {
               }}
               onEditNameChange={setEditEmployeeName}
               onEditEmailChange={setEditEmployeeEmail}
-              onEditSave={() => editEmployeeMutation.mutate({ id: editEmployeeId!, data: { name: editEmployeeName, email: editEmployeeEmail } })}
+              onEditSave={() =>
+                editEmployeeMutation.mutate({
+                  id: editEmployeeId!,
+                  data: { name: editEmployeeName, email: editEmployeeEmail },
+                })
+              }
               editingEmployee={editEmployeeMutation.isPending}
               deleteEmployeeId={deleteEmployeeId}
               onDeleteStart={setDeleteEmployeeId}
               onDeleteCancel={() => setDeleteEmployeeId(null)}
-              onDeleteConfirm={() => removeEmployeeMutation.mutate(deleteEmployeeId!)}
+              onDeleteConfirm={() =>
+                removeEmployeeMutation.mutate(deleteEmployeeId!)
+              }
               deletingEmployee={removeEmployeeMutation.isPending}
             />
           )}
@@ -226,12 +268,35 @@ export default function CompanyPanelScreen() {
 }
 
 function EmployeesTab({
-  query, onToggleActive, togglingId,
-  editEmployeeId, editEmployeeName, editEmployeeEmail,
-  onEditStart, onEditCancel, onEditNameChange, onEditEmailChange, onEditSave, editingEmployee,
-  deleteEmployeeId, onDeleteStart, onDeleteCancel, onDeleteConfirm, deletingEmployee,
+  query,
+  onToggleActive,
+  togglingId,
+  editEmployeeId,
+  editEmployeeName,
+  editEmployeeEmail,
+  onEditStart,
+  onEditCancel,
+  onEditNameChange,
+  onEditEmailChange,
+  onEditSave,
+  editingEmployee,
+  deleteEmployeeId,
+  onDeleteStart,
+  onDeleteCancel,
+  onDeleteConfirm,
+  deletingEmployee,
 }: {
-  query: { data?: { id: string; name: string; email: string; isActive: boolean; balance: number }[]; isPending: boolean; error: Error | null };
+  query: {
+    data?: {
+      id: string;
+      name: string;
+      email: string;
+      isActive: boolean;
+      balance: number;
+    }[];
+    isPending: boolean;
+    error: Error | null;
+  };
   onToggleActive: (id: string) => void;
   togglingId: string | null;
   editEmployeeId: string | null;
@@ -249,13 +314,23 @@ function EmployeesTab({
   onDeleteConfirm: () => void;
   deletingEmployee: boolean;
 }) {
-  if (query.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
-  if (query.error) return (
-    <View style={styles.errorCard}>
-      <Text style={styles.errorText}>Nie udalo sie zaladowac pracownikow.</Text>
-      <Text style={styles.errorDetail}>{query.error.message}</Text>
-    </View>
-  );
+  if (query.isPending)
+    return (
+      <ActivityIndicator
+        size="large"
+        color={colors.mossGreen}
+        style={{ marginTop: 48 }}
+      />
+    );
+  if (query.error)
+    return (
+      <View style={styles.errorCard}>
+        <Text style={styles.errorText}>
+          Nie udalo sie zaladowac pracownikow.
+        </Text>
+        <Text style={styles.errorDetail}>{query.error.message}</Text>
+      </View>
+    );
 
   if (!query.data?.length) {
     return <Text style={styles.emptyText}>Brak pracownikow w tej firmie.</Text>;
@@ -275,13 +350,34 @@ function EmployeesTab({
         <View key={e.id} style={styles.tableRow}>
           {editEmployeeId === e.id ? (
             <>
-              <TextInput style={[styles.inputSmall, { flex: 2 }]} value={editEmployeeName} onChangeText={onEditNameChange} placeholderTextColor="#94A3B8" />
-              <TextInput style={[styles.inputSmall, { flex: 2 }]} value={editEmployeeEmail} onChangeText={onEditEmailChange} placeholderTextColor="#94A3B8" autoCapitalize="none" />
+              <TextInput
+                style={[styles.inputSmall, { flex: 2 }]}
+                value={editEmployeeName}
+                onChangeText={onEditNameChange}
+                placeholderTextColor="#94A3B8"
+              />
+              <TextInput
+                style={[styles.inputSmall, { flex: 2 }]}
+                value={editEmployeeEmail}
+                onChangeText={onEditEmailChange}
+                placeholderTextColor="#94A3B8"
+                autoCapitalize="none"
+              />
               <Text style={[styles.tableCell, { flex: 1 }]}>{e.balance}</Text>
               <View style={{ flex: 1 }} />
               <View style={{ flex: 1, gap: 4, flexDirection: "row" }}>
-                <Pressable style={[styles.actionBtn, styles.actionBtnSuccess, (editingEmployee || !editEmployeeName) && { opacity: 0.5 }]} onPress={onEditSave} disabled={editingEmployee || !editEmployeeName}>
-                  <Text style={[styles.actionBtnText, { color: "#40916C" }]}>Zapisz</Text>
+                <Pressable
+                  style={[
+                    styles.actionBtn,
+                    styles.actionBtnSuccess,
+                    (editingEmployee || !editEmployeeName) && { opacity: 0.5 },
+                  ]}
+                  onPress={onEditSave}
+                  disabled={editingEmployee || !editEmployeeName}
+                >
+                  <Text style={[styles.actionBtnText, { color: "#40916C" }]}>
+                    Zapisz
+                  </Text>
                 </Pressable>
                 <Pressable style={styles.actionBtn} onPress={onEditCancel}>
                   <Text style={styles.actionBtnText}>Anuluj</Text>
@@ -295,9 +391,28 @@ function EmployeesTab({
               <Text style={[styles.tableCell, { flex: 1 }]}>{e.balance}</Text>
               <View style={{ flex: 1 }} />
               <View style={{ flex: 1, gap: 4, flexDirection: "row" }}>
-                <Text style={{ fontSize: 13, color: "#991B1B", fontWeight: "600", alignSelf: "center" }}>Usunac?</Text>
-                <Pressable style={[styles.actionBtn, styles.actionBtnWarn, deletingEmployee && { opacity: 0.5 }]} onPress={onDeleteConfirm} disabled={deletingEmployee}>
-                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>{deletingEmployee ? "Usuwanie..." : "Tak"}</Text>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: "#991B1B",
+                    fontWeight: "600",
+                    alignSelf: "center",
+                  }}
+                >
+                  Usunac?
+                </Text>
+                <Pressable
+                  style={[
+                    styles.actionBtn,
+                    styles.actionBtnWarn,
+                    deletingEmployee && { opacity: 0.5 },
+                  ]}
+                  onPress={onDeleteConfirm}
+                  disabled={deletingEmployee}
+                >
+                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>
+                    {deletingEmployee ? "Usuwanie..." : "Tak"}
+                  </Text>
                 </Pressable>
                 <Pressable style={styles.actionBtn} onPress={onDeleteCancel}>
                   <Text style={styles.actionBtnText}>Nie</Text>
@@ -310,27 +425,67 @@ function EmployeesTab({
               <Text style={[styles.tableCell, { flex: 2 }]}>{e.email}</Text>
               <Text style={[styles.tableCell, { flex: 1 }]}>{e.balance}</Text>
               <View style={{ flex: 1 }}>
-                <View style={[styles.badge, { backgroundColor: e.isActive ? "#D8F3DC" : "#FFE5E5" }]}>
-                  <Text style={[styles.badgeText, { color: e.isActive ? "#40916C" : "#D62828" }]}>
+                <View
+                  style={[
+                    styles.badge,
+                    { backgroundColor: e.isActive ? "#D8F3DC" : "#FFE5E5" },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      { color: e.isActive ? "#40916C" : "#D62828" },
+                    ]}
+                  >
                     {e.isActive ? "Aktywny" : "Nieaktywny"}
                   </Text>
                 </View>
               </View>
               <View style={{ flex: 1, gap: 4, flexDirection: "row" }}>
-                <Pressable style={[styles.actionBtn, { borderColor: "#CBD5E1", backgroundColor: "#F8FAFC" }]} onPress={() => onEditStart(e.id, e.name, e.email)}>
-                  <Text style={[styles.actionBtnText, { color: colors.slate600 }]}>Edytuj</Text>
+                <Pressable
+                  style={[
+                    styles.actionBtn,
+                    { borderColor: "#CBD5E1", backgroundColor: "#F8FAFC" },
+                  ]}
+                  onPress={() => onEditStart(e.id, e.name, e.email)}
+                >
+                  <Text
+                    style={[styles.actionBtnText, { color: colors.slate600 }]}
+                  >
+                    Edytuj
+                  </Text>
                 </Pressable>
                 <Pressable
-                  style={[styles.actionBtn, { borderColor: e.isActive ? "#FECACA" : "#BBF7D0", backgroundColor: e.isActive ? "#FEF2F2" : "#F0FDF4" }, togglingId === e.id && { opacity: 0.5 }]}
+                  style={[
+                    styles.actionBtn,
+                    {
+                      borderColor: e.isActive ? "#FECACA" : "#BBF7D0",
+                      backgroundColor: e.isActive ? "#FEF2F2" : "#F0FDF4",
+                    },
+                    togglingId === e.id && { opacity: 0.5 },
+                  ]}
                   onPress={() => onToggleActive(e.id)}
                   disabled={togglingId === e.id}
                 >
-                  <Text style={[styles.actionBtnText, { color: e.isActive ? "#D62828" : "#40916C" }]}>
+                  <Text
+                    style={[
+                      styles.actionBtnText,
+                      { color: e.isActive ? "#D62828" : "#40916C" },
+                    ]}
+                  >
                     {e.isActive ? "Dezaktywuj" : "Aktywuj"}
                   </Text>
                 </Pressable>
-                <Pressable style={[styles.actionBtn, { borderColor: "#FECACA", backgroundColor: "#FEF2F2" }]} onPress={() => onDeleteStart(e.id)}>
-                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>Usun</Text>
+                <Pressable
+                  style={[
+                    styles.actionBtn,
+                    { borderColor: "#FECACA", backgroundColor: "#FEF2F2" },
+                  ]}
+                  onPress={() => onDeleteStart(e.id)}
+                >
+                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>
+                    Usun
+                  </Text>
                 </Pressable>
               </View>
             </>
@@ -341,25 +496,47 @@ function EmployeesTab({
   );
 }
 
-function AnalyticsTab({ query }: {
-  query: { data?: {
-    employees: { id: string; name: string; points: number }[];
-    totalActivities: number;
-    totalSteps: number;
-    totalDeclarations: number;
-    totalEarned: number;
-    totalPoints: number;
-    weeklySteps: { day: string; steps: number }[];
-    recentActivity: { id: string; userName: string; type: string; points: number; createdAt: string }[];
-  } | undefined; isPending: boolean; error: Error | null };
+function AnalyticsTab({
+  query,
+}: {
+  query: {
+    data?:
+      | {
+          employees: { id: string; name: string; points: number }[];
+          totalActivities: number;
+          totalSteps: number;
+          totalDeclarations: number;
+          totalEarned: number;
+          totalPoints: number;
+          weeklySteps: { day: string; steps: number }[];
+          recentActivity: {
+            id: string;
+            userName: string;
+            type: string;
+            points: number;
+            createdAt: string;
+          }[];
+        }
+      | undefined;
+    isPending: boolean;
+    error: Error | null;
+  };
 }) {
-  if (query.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
-  if (query.error) return (
-    <View style={styles.errorCard}>
-      <Text style={styles.errorText}>Nie udalo sie zaladowac analityki.</Text>
-      <Text style={styles.errorDetail}>{query.error.message}</Text>
-    </View>
-  );
+  if (query.isPending)
+    return (
+      <ActivityIndicator
+        size="large"
+        color={colors.mossGreen}
+        style={{ marginTop: 48 }}
+      />
+    );
+  if (query.error)
+    return (
+      <View style={styles.errorCard}>
+        <Text style={styles.errorText}>Nie udalo sie zaladowac analityki.</Text>
+        <Text style={styles.errorDetail}>{query.error.message}</Text>
+      </View>
+    );
 
   const d = query.data;
   if (!d) return null;
@@ -368,7 +545,14 @@ function AnalyticsTab({ query }: {
     <>
       <Text style={styles.pageTitle}>Analityka</Text>
 
-      <View style={{ flexDirection: "row", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+      <View
+        style={{
+          flexDirection: "row",
+          gap: 8,
+          marginBottom: 16,
+          flexWrap: "wrap",
+        }}
+      >
         <View style={styles.statCard}>
           <Text style={styles.statValue}>{d.totalActivities}</Text>
           <Text style={styles.statLabel}>Aktywnosci</Text>
@@ -392,12 +576,20 @@ function AnalyticsTab({ query }: {
           <Text style={styles.sectionTitle}>Ranking pracownikow</Text>
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderCell, { flex: 3 }]}>Pracownik</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 1, textAlign: "right" }]}>PKT</Text>
+            <Text
+              style={[styles.tableHeaderCell, { flex: 1, textAlign: "right" }]}
+            >
+              PKT
+            </Text>
           </View>
           {d.employees.map((emp, i) => (
             <View key={emp.id} style={styles.tableRow}>
-              <Text style={[styles.tableCell, { flex: 3 }]}>{i + 1}. {emp.name}</Text>
-              <Text style={[styles.tableCell, { flex: 1, textAlign: "right" }]}>{emp.points}</Text>
+              <Text style={[styles.tableCell, { flex: 3 }]}>
+                {i + 1}. {emp.name}
+              </Text>
+              <Text style={[styles.tableCell, { flex: 1, textAlign: "right" }]}>
+                {emp.points}
+              </Text>
             </View>
           ))}
         </>
@@ -409,10 +601,28 @@ function AnalyticsTab({ query }: {
           {d.recentActivity.map((a) => (
             <View key={a.id} style={styles.tableRow}>
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: "600", color: colors.slate900 }}>{a.userName}</Text>
-                <Text style={{ fontSize: 12, color: colors.slate500 }}>{a.type} · {new Date(a.createdAt).toLocaleDateString()}</Text>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "600",
+                    color: colors.slate900,
+                  }}
+                >
+                  {a.userName}
+                </Text>
+                <Text style={{ fontSize: 12, color: colors.slate500 }}>
+                  {a.type} · {new Date(a.createdAt).toLocaleDateString()}
+                </Text>
               </View>
-              <Text style={{ fontSize: 14, fontWeight: "700", color: colors.mossGreen }}>+{a.points}</Text>
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "700",
+                  color: colors.mossGreen,
+                }}
+              >
+                +{a.points}
+              </Text>
             </View>
           ))}
         </>
@@ -422,11 +632,31 @@ function AnalyticsTab({ query }: {
 }
 
 function ChallengesTab({
-  query, companySlug, onCreate, creating, onDelete, deleting,
+  query,
+  companySlug,
+  onCreate,
+  creating,
+  onDelete,
+  deleting,
 }: {
-  query: { data?: { company: any[]; canCreateGlobal: boolean } | { global: any[] } | { available: any[]; joined: any[] } | undefined; isPending: boolean; error: Error | null };
+  query: {
+    data?:
+      | { company: any[]; canCreateGlobal: boolean }
+      | { global: any[] }
+      | { available: any[]; joined: any[] }
+      | undefined;
+    isPending: boolean;
+    error: Error | null;
+  };
   companySlug: string;
-  onCreate: (input: { title: string; description?: string; points: number; scope: "company" | "global"; startsAt?: string; endsAt?: string }) => void;
+  onCreate: (input: {
+    title: string;
+    description?: string;
+    points: number;
+    scope: "company" | "global";
+    startsAt?: string;
+    endsAt?: string;
+  }) => void;
   creating: boolean;
   onDelete: (id: string) => void;
   deleting: boolean;
@@ -437,16 +667,25 @@ function ChallengesTab({
   const [points, setPoints] = useState("");
   const [scope, setScope] = useState<"company" | "global">("company");
 
-  if (query.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
-  if (query.error) return (
-    <View style={styles.errorCard}>
-      <Text style={styles.errorText}>Nie udalo sie zaladowac nagrod.</Text>
-      <Text style={styles.errorDetail}>{query.error.message}</Text>
-    </View>
-  );
+  if (query.isPending)
+    return (
+      <ActivityIndicator
+        size="large"
+        color={colors.mossGreen}
+        style={{ marginTop: 48 }}
+      />
+    );
+  if (query.error)
+    return (
+      <View style={styles.errorCard}>
+        <Text style={styles.errorText}>Nie udalo sie zaladowac nagrod.</Text>
+        <Text style={styles.errorDetail}>{query.error.message}</Text>
+      </View>
+    );
 
   const data = query.data as any;
-  const challenges: any[] = data?.company ?? data?.global ?? data?.available ?? [];
+  const challenges: any[] =
+    data?.company ?? data?.global ?? data?.available ?? [];
   const canCreateGlobal = data?.canCreateGlobal ?? false;
 
   const handleCreate = () => {
@@ -465,40 +704,150 @@ function ChallengesTab({
 
   return (
     <>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
         <Text style={styles.pageTitle}>Nagrody ({challenges.length})</Text>
-        <Pressable style={[styles.genBigBtn, showForm && { opacity: 0.7 }]} onPress={() => setShowForm(!showForm)}>
-          <Text style={styles.genBigBtnText}>{showForm ? "Anuluj" : "Dodaj nagrode"}</Text>
+        <Pressable
+          style={[styles.genBigBtn, showForm && { opacity: 0.7 }]}
+          onPress={() => setShowForm(!showForm)}
+        >
+          <Text style={styles.genBigBtnText}>
+            {showForm ? "Anuluj" : "Dodaj nagrode"}
+          </Text>
         </Pressable>
       </View>
 
       {showForm && (
-        <View style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 16, gap: 10, marginBottom: 16 }}>
-          <TextInput style={styles.inputSmall} placeholder="Tytul" value={title} onChangeText={setTitle} placeholderTextColor="#94A3B8" />
-          <TextInput style={styles.inputSmall} placeholder="Opis (opcjonalny)" value={description} onChangeText={setDescription} placeholderTextColor="#94A3B8" />
-          <TextInput style={styles.inputSmall} placeholder="Punkty EC" value={points} onChangeText={setPoints} placeholderTextColor="#94A3B8" keyboardType="numeric" />
+        <View
+          style={{
+            backgroundColor: colors.white,
+            borderWidth: 1,
+            borderColor: colors.slate200,
+            borderRadius: radius.md,
+            padding: 16,
+            gap: 10,
+            marginBottom: 16,
+          }}
+        >
+          <TextInput
+            style={styles.inputSmall}
+            placeholder="Tytul"
+            value={title}
+            onChangeText={setTitle}
+            placeholderTextColor="#94A3B8"
+          />
+          <TextInput
+            style={styles.inputSmall}
+            placeholder="Opis (opcjonalny)"
+            value={description}
+            onChangeText={setDescription}
+            placeholderTextColor="#94A3B8"
+          />
+          <TextInput
+            style={styles.inputSmall}
+            placeholder="Punkty EC"
+            value={points}
+            onChangeText={setPoints}
+            placeholderTextColor="#94A3B8"
+            keyboardType="numeric"
+          />
           {canCreateGlobal && (
             <View style={{ flexDirection: "row", gap: 8 }}>
-              <Pressable style={[{ paddingVertical: 10, borderRadius: radius.sm, alignItems: "center", backgroundColor: scope === "company" ? "#F8FAFC" : colors.slate100 }, scope === "company" && { backgroundColor: colors.white, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 2 }, { flex: 1 }]} onPress={() => setScope("company")}>
-                <Text style={[{ fontSize: 14, fontWeight: "600", color: scope === "company" ? colors.slate900 : colors.slate500 }]}>Firmowa</Text>
+              <Pressable
+                style={[
+                  {
+                    paddingVertical: 10,
+                    borderRadius: radius.sm,
+                    alignItems: "center",
+                    backgroundColor:
+                      scope === "company" ? "#F8FAFC" : colors.slate100,
+                  },
+                  scope === "company" && {
+                    backgroundColor: colors.white,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 3,
+                    elevation: 2,
+                  },
+                  { flex: 1 },
+                ]}
+                onPress={() => setScope("company")}
+              >
+                <Text
+                  style={[
+                    {
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color:
+                        scope === "company" ? colors.slate900 : colors.slate500,
+                    },
+                  ]}
+                >
+                  Firmowa
+                </Text>
               </Pressable>
-              <Pressable style={[{ paddingVertical: 10, borderRadius: radius.sm, alignItems: "center", backgroundColor: scope === "global" ? "#F8FAFC" : colors.slate100 }, scope === "global" && { backgroundColor: colors.white, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 3, elevation: 2 }, { flex: 1 }]} onPress={() => setScope("global")}>
-                <Text style={[{ fontSize: 14, fontWeight: "600", color: scope === "global" ? colors.slate900 : colors.slate500 }]}>Globalna</Text>
+              <Pressable
+                style={[
+                  {
+                    paddingVertical: 10,
+                    borderRadius: radius.sm,
+                    alignItems: "center",
+                    backgroundColor:
+                      scope === "global" ? "#F8FAFC" : colors.slate100,
+                  },
+                  scope === "global" && {
+                    backgroundColor: colors.white,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 3,
+                    elevation: 2,
+                  },
+                  { flex: 1 },
+                ]}
+                onPress={() => setScope("global")}
+              >
+                <Text
+                  style={[
+                    {
+                      fontSize: 14,
+                      fontWeight: "600",
+                      color:
+                        scope === "global" ? colors.slate900 : colors.slate500,
+                    },
+                  ]}
+                >
+                  Globalna
+                </Text>
               </Pressable>
             </View>
           )}
           <Pressable
-            style={[styles.genBigBtn, (!title || !points || creating) && { opacity: 0.5 }]}
+            style={[
+              styles.genBigBtn,
+              (!title || !points || creating) && { opacity: 0.5 },
+            ]}
             onPress={handleCreate}
             disabled={!title || !points || creating}
           >
-            <Text style={styles.genBigBtnText}>{creating ? "Tworzenie..." : "Utworz nagrode"}</Text>
+            <Text style={styles.genBigBtnText}>
+              {creating ? "Tworzenie..." : "Utworz nagrode"}
+            </Text>
           </Pressable>
         </View>
       )}
 
       {challenges.length === 0 ? (
-        <Text style={styles.emptyText}>Brak nagrod. Kliknij "Dodaj nagrode", aby utworzyc pierwsza.</Text>
+        <Text style={styles.emptyText}>
+          Brak nagrod. Kliknij Dodaj nagrodę, aby utworzyc pierwsza.
+        </Text>
       ) : (
         <View style={{ gap: 4 }}>
           <View style={styles.tableHeader}>
@@ -510,24 +859,46 @@ function ChallengesTab({
           {challenges.map((c: any) => (
             <View key={c.id} style={styles.tableRow}>
               <View style={{ flex: 2 }}>
-                <Text style={[styles.tableCell, { fontWeight: "600" }]}>{c.title}</Text>
-                {c.description && <Text style={{ fontSize: 12, color: colors.slate500 }}>{c.description}</Text>}
+                <Text style={[styles.tableCell, { fontWeight: "600" }]}>
+                  {c.title}
+                </Text>
+                {c.description && (
+                  <Text style={{ fontSize: 12, color: colors.slate500 }}>
+                    {c.description}
+                  </Text>
+                )}
               </View>
               <Text style={[styles.tableCell, { flex: 1 }]}>{c.points} EC</Text>
               <View style={{ flex: 1 }}>
-                <View style={[styles.badge, { backgroundColor: c.active ? "#D8F3DC" : "#FFE5E5" }]}>
-                  <Text style={[styles.badgeText, { color: c.active ? "#40916C" : "#D62828" }]}>
+                <View
+                  style={[
+                    styles.badge,
+                    { backgroundColor: c.active ? "#D8F3DC" : "#FFE5E5" },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      { color: c.active ? "#40916C" : "#D62828" },
+                    ]}
+                  >
                     {c.active ? "Aktywny" : "Nieaktywny"}
                   </Text>
                 </View>
               </View>
               <View style={{ flex: 0.7 }}>
                 <Pressable
-                  style={[styles.actionBtn, { borderColor: "#FECACA", backgroundColor: "#FEF2F2" }, deleting && { opacity: 0.5 }]}
+                  style={[
+                    styles.actionBtn,
+                    { borderColor: "#FECACA", backgroundColor: "#FEF2F2" },
+                    deleting && { opacity: 0.5 },
+                  ]}
                   onPress={() => onDelete(c.id)}
                   disabled={deleting}
                 >
-                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>Usun</Text>
+                  <Text style={[styles.actionBtnText, { color: "#D62828" }]}>
+                    Usun
+                  </Text>
                 </Pressable>
               </View>
             </View>
@@ -538,54 +909,104 @@ function ChallengesTab({
   );
 }
 
-function TokensTab({ query, onGenerate, generating }: {
+function TokensTab({
+  query,
+  onGenerate,
+  generating,
+}: {
   query: { data?: CompanyToken[]; isPending: boolean; error: Error | null };
   onGenerate: () => void;
   generating: boolean;
 }) {
-  if (query.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
-  if (query.error) return (
-    <View style={styles.errorCard}>
-      <Text style={styles.errorText}>Nie udalo sie zaladowac tokenow.</Text>
-      <Text style={styles.errorDetail}>{query.error.message}</Text>
-    </View>
-  );
+  if (query.isPending)
+    return (
+      <ActivityIndicator
+        size="large"
+        color={colors.mossGreen}
+        style={{ marginTop: 48 }}
+      />
+    );
+  if (query.error)
+    return (
+      <View style={styles.errorCard}>
+        <Text style={styles.errorText}>Nie udalo sie zaladowac tokenow.</Text>
+        <Text style={styles.errorDetail}>{query.error.message}</Text>
+      </View>
+    );
 
   const tokens = query.data ?? [];
 
   return (
     <>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
         <Text style={styles.pageTitle}>Tokeny ({tokens.length})</Text>
         <Pressable
           style={[styles.genBigBtn, generating && { opacity: 0.5 }]}
           onPress={onGenerate}
           disabled={generating}
         >
-          <Text style={styles.genBigBtnText}>{generating ? "Generowanie..." : "Generuj token"}</Text>
+          <Text style={styles.genBigBtnText}>
+            {generating ? "Generowanie..." : "Generuj token"}
+          </Text>
         </Pressable>
       </View>
 
       {tokens.length === 0 ? (
-        <Text style={styles.emptyText}>Brak tokenow. Kliknij "Generuj token", aby utworzyc pierwszy.</Text>
+        <Text style={styles.emptyText}>
+          Brak tokenow. Kliknij Generuj token, aby utworzyc pierwszy.
+        </Text>
       ) : (
         <View style={styles.tokenListFull}>
           <View style={styles.tokenTableHeader}>
             <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Kod</Text>
             <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Status</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Utworzono</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Uzyty przez</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>
+              Utworzono
+            </Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>
+              Uzyty przez
+            </Text>
           </View>
           {tokens.map((t) => (
             <View key={t.id} style={styles.tokenTableRow}>
-              <Text style={[styles.tokenCell, { flex: 2, fontFamily: "monospace", fontWeight: "700" }]}>{t.token}</Text>
+              <Text
+                style={[
+                  styles.tokenCell,
+                  { flex: 2, fontFamily: "monospace", fontWeight: "700" },
+                ]}
+              >
+                {t.token}
+              </Text>
               <View style={{ flex: 1 }}>
-                <View style={[styles.badge, { backgroundColor: t.used ? "#FFE5E5" : "#D8F3DC" }]}>
-                  <Text style={[styles.badgeText, { color: t.used ? "#D62828" : "#40916C" }]}>{t.used ? "Uzyty" : "Aktywny"}</Text>
+                <View
+                  style={[
+                    styles.badge,
+                    { backgroundColor: t.used ? "#FFE5E5" : "#D8F3DC" },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      { color: t.used ? "#D62828" : "#40916C" },
+                    ]}
+                  >
+                    {t.used ? "Uzyty" : "Aktywny"}
+                  </Text>
                 </View>
               </View>
-              <Text style={[styles.tokenCell, { flex: 1.5 }]}>{new Date(t.createdAt).toLocaleString()}</Text>
-              <Text style={[styles.tokenCell, { flex: 1 }]}>{t.usedBy ?? "-"}</Text>
+              <Text style={[styles.tokenCell, { flex: 1.5 }]}>
+                {new Date(t.createdAt).toLocaleString()}
+              </Text>
+              <Text style={[styles.tokenCell, { flex: 1 }]}>
+                {t.usedBy ?? "-"}
+              </Text>
             </View>
           ))}
         </View>

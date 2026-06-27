@@ -60,7 +60,6 @@ type AppState = {
   achievedIds: string[];
   marketFilter: "all" | "food" | "wellness" | "sport" | "eco";
   historyFilter: "all" | TxType;
-  rankMode: "team" | "individual";
   profileName: string;
   profileEmail: string;
   stepGoal: number;
@@ -78,7 +77,6 @@ type AppState = {
   redeemReward: () => { ok: boolean; message: string };
   setMarketFilter: (filter: AppState["marketFilter"]) => void;
   setHistoryFilter: (filter: AppState["historyFilter"]) => void;
-  setRankMode: (mode: AppState["rankMode"]) => void;
   readAllNotifications: () => void;
   saveProfile: (name: string, stepGoal: number) => void;
 };
@@ -180,7 +178,6 @@ export const useAppStore = create<AppState>()(
       achievedIds: ["first-step", "streak-3"],
       marketFilter: "all",
       historyFilter: "all",
-      rankMode: "team",
       profileName: "Jan Kowalski",
       profileEmail: "jan@intel.com",
       stepGoal: 8000,
@@ -322,7 +319,6 @@ export const useAppStore = create<AppState>()(
       },
       setMarketFilter: (filter) => set({ marketFilter: filter }),
       setHistoryFilter: (filter) => set({ historyFilter: filter }),
-      setRankMode: (mode) => set({ rankMode: mode }),
       readAllNotifications: () => set({ unreadNotifications: 0 }),
       saveProfile: (name, stepGoal) => set({ profileName: name, stepGoal }),
     }),
