@@ -111,21 +111,19 @@ export default function MarketScreen() {
               <Link
                 key={reward.id}
                 href={{ pathname: "/(mobile)/reward", params: { rewardId: reward.id } }}
-                style={styles.rewardLink}
+                asChild
               >
-                <View style={styles.rewardCard}>
-                  <View style={styles.rewardImage}>
-                    <EcoIcon name={reward.icon} size={32} />
-                  </View>
+                <Pressable style={styles.rewardCard}>
+                  <EcoIcon name={reward.icon} size={28} />
                   <View style={styles.rewardBody}>
-                    <Text style={styles.rewardTitle}>{reward.title}</Text>
+                    <Text style={styles.rewardTitle} numberOfLines={2}>{reward.title}</Text>
                     <Text style={styles.rewardMerchant}>{reward.merchant}</Text>
                     <View style={styles.rewardCostRow}>
                       <CoinIcon size={12} color={colors.warmGold} />
                       <Text style={styles.rewardCost}>{reward.cost} EC</Text>
                     </View>
                   </View>
-                </View>
+                </Pressable>
               </Link>
             ))}
           </View>
@@ -305,24 +303,20 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 12,
   },
-  rewardLink: {
-    width: "47%",
-  },
   rewardCard: {
+    width: "47%",
     backgroundColor: colors.creamLight,
     borderWidth: 1,
     borderColor: colors.creamDark,
     borderRadius: 12,
-    overflow: "hidden",
-  },
-  rewardImage: {
-    height: 96,
-    backgroundColor: colors.creamMedium,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  rewardBody: {
     padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  rewardBody: {
+    flex: 1,
     gap: 4,
   },
   rewardTitle: {
@@ -343,7 +337,7 @@ const styles = StyleSheet.create({
   rewardCost: {
     fontSize: 14,
     fontWeight: "700",
-    color: colors.greenBright,
+    color: colors.greenDark,
   },
   emptyContainer: {
     padding: 40,
@@ -417,7 +411,7 @@ const styles = StyleSheet.create({
   activityPoints: {
     fontSize: 14,
     fontWeight: "700",
-    color: colors.greenBright,
+    color: colors.greenDark,
   },
   activityExpiry: {
     fontSize: 12,

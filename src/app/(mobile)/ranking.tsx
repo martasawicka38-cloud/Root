@@ -87,7 +87,7 @@ function IndividualRanking({ period }: { period: LeaderboardPeriod }) {
                 <Text style={styles.podiumName} numberOfLines={1}>
                   {entry.name}
                 </Text>
-                <Text style={styles.podiumPoints}>{entry.points}</Text>
+                <Text style={styles.podiumPoints}>{entry.points} pkt</Text>
               </View>
             </View>
           ))}
@@ -109,19 +109,20 @@ function IndividualRanking({ period }: { period: LeaderboardPeriod }) {
             {entry.rootStage && (
               <View style={styles.levelBadge}>
                 <Text style={styles.levelBadgeText}>
-                  Lv.{entry.rootStage.level}
+                  Poziom {entry.rootStage.level}
                 </Text>
               </View>
             )}
-            <Text style={styles.listPoints}>{entry.points}</Text>
+            <Text style={styles.listPoints}>{entry.points} pkt</Text>
           </View>
         ))}
       </View>
 
       {myRank && myRank.rank && (
         <View style={styles.myRankBox}>
+          <Text style={styles.myRankLabel}>Twoja pozycja</Text>
           <Text style={styles.myRankText}>
-            #{myRank.rank} / {myRank.totalParticipants} · {myRank.points} pkt
+            #{myRank.rank} z {myRank.totalParticipants} uczestnikow · {myRank.points} pkt
           </Text>
         </View>
       )}
@@ -172,7 +173,7 @@ function CompanyRanking({ period }: { period: LeaderboardPeriod }) {
                 <Text style={styles.podiumName} numberOfLines={1}>
                   {entry.name}
                 </Text>
-                <Text style={styles.podiumPoints}>{entry.points}</Text>
+                <Text style={styles.podiumPoints}>{entry.points} pkt</Text>
               </View>
             </View>
           ))}
@@ -196,7 +197,7 @@ function CompanyRanking({ period }: { period: LeaderboardPeriod }) {
                 {entry.memberCount} czlonkow
               </Text>
             </View>
-            <Text style={styles.listPoints}>{entry.points}</Text>
+            <Text style={styles.listPoints}>{entry.points} pkt</Text>
           </View>
         ))}
       </View>
@@ -212,6 +213,9 @@ export default function RankingScreen() {
   return (
     <Screen>
       <Text style={styles.title}>Ranking</Text>
+      <Text style={styles.subtitle}>
+        Punkty zdobywasz za aktywnosci ekologiczne. Im wiecej dzialasz, tym wyzej w rankingu.
+      </Text>
 
       {/* Scope tabs */}
       <View style={styles.scopeTabs}>
@@ -295,7 +299,13 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
     color: colors.brownDark,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: colors.olive,
     marginBottom: 16,
+    lineHeight: 20,
   },
   scopeTabs: {
     flexDirection: "row",
@@ -472,11 +482,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: colors.creamDark,
     borderRadius: 12,
+    gap: 4,
+  },
+  myRankLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.olive,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   myRankText: {
     fontSize: 14,
     fontWeight: "600",
     color: colors.brownDark,
-    textAlign: "center",
   },
 });

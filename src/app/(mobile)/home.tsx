@@ -134,37 +134,29 @@ export default function HomeScreen() {
       {/* Quick Actions */}
       <View style={styles.quickActions}>
         <Link href="/(mobile)/activity" asChild>
-          <Pressable style={styles.actionBtn}>
-            <View style={styles.actionIconBox}>
-              <RunningIcon size={22} color={colors.mossGreen} />
-            </View>
+          <Pressable style={styles.actionTile}>
+            <RunningIcon size={28} color={colors.mossGreen} />
             <Text style={styles.actionLabel}>Dodaj aktywnosc</Text>
           </Pressable>
         </Link>
 
         <Link href="/(mobile)/declarations" asChild>
-          <Pressable style={styles.actionBtn}>
-            <View style={styles.actionIconBox}>
-              <LeafIcon size={22} color={colors.mossGreen} />
-            </View>
+          <Pressable style={styles.actionTile}>
+            <LeafIcon size={28} color={colors.mossGreen} />
             <Text style={styles.actionLabel}>Zloz eko-deklaracje</Text>
           </Pressable>
         </Link>
 
         <Link href="/(mobile)/market" asChild>
-          <Pressable style={styles.actionBtn}>
-            <View style={styles.actionIconBox}>
-              <CoinIcon size={22} color={colors.mossGreen} />
-            </View>
+          <Pressable style={styles.actionTile}>
+            <CoinIcon size={28} color={colors.mossGreen} />
             <Text style={styles.actionLabel}>Przegladaj rynek nagrod</Text>
           </Pressable>
         </Link>
 
         <Link href="/(mobile)/ranking" asChild>
-          <Pressable style={styles.actionBtn}>
-            <View style={styles.actionIconBox}>
-              <TrophyIcon size={22} color={colors.mossGreen} />
-            </View>
+          <Pressable style={styles.actionTile}>
+            <TrophyIcon size={28} color={colors.mossGreen} />
             <Text style={styles.actionLabel}>Sprawdz ranking</Text>
           </Pressable>
         </Link>
@@ -341,34 +333,30 @@ const styles = StyleSheet.create({
   streakBadgeText: {
     fontSize: 14,
     fontWeight: "700",
-    color: colors.greenBright,
+    color: colors.greenDark,
   },
   quickActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
     marginBottom: 16,
   },
-  actionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+  actionTile: {
+    width: "48%",
     borderWidth: 1,
     borderColor: colors.creamDark,
     borderRadius: 12,
-  },
-  actionIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    backgroundColor: colors.creamMedium,
+    backgroundColor: colors.creamLight,
+    padding: 16,
     alignItems: "center",
-    justifyContent: "center",
+    gap: 8,
   },
+
   actionLabel: {
     fontSize: 15,
     fontWeight: "600",
     color: colors.brownDark,
+    textAlign: "center",
   },
   sectionTitle: {
     fontSize: 18,
@@ -403,7 +391,7 @@ const styles = StyleSheet.create({
   declCardPoints: {
     fontSize: 24,
     fontWeight: "800",
-    color: colors.greenBright,
+    color: colors.greenDark,
   },
   declCardPointsLabel: {
     fontSize: 14,
@@ -413,7 +401,7 @@ const styles = StyleSheet.create({
   challengeOrg: {
     fontSize: 12,
     fontWeight: "700",
-    color: colors.greenBright,
+    color: colors.greenDark,
     letterSpacing: 1,
   },
   challengeTitle: {
