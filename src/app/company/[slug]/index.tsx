@@ -21,9 +21,6 @@ import {
   toggleUserActive,
   companyEditEmployee,
   companyRemoveEmployee,
-  createChallenge,
-  fetchChallenges,
-  deleteChallenge,
   createRewardActivity,
   deleteRewardActivity,
   fetchCompanyActivities,
@@ -32,7 +29,7 @@ import type { CompanyToken, EcoActivity } from "../../../lib/types/api";
 import { colors, radius } from "../../../styles/tokens";
 import { useAppStore } from "../../../store/useAppStore";
 
-type Tab = "employees" | "analytics" | "tokens" | "challenges" | "activities";
+type Tab = "employees" | "analytics" | "tokens" | "activities";
 
 export default function CompanyPanelScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -121,37 +118,6 @@ export default function CompanyPanelScreen() {
     },
   });
 
-  const challengesQuery = useQuery({
-    queryKey: ["company", slug, "challenges"],
-    queryFn: () => fetchChallenges(),
-    enabled: !!slug,
-  });
-
-  const createChallengeMutation = useMutation({
-    mutationFn: (input: {
-      title: string;
-      description?: string;
-      points: number;
-      scope: "company" | "global";
-      startsAt?: string;
-      endsAt?: string;
-    }) => createChallenge(input),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["company", slug, "challenges"],
-      });
-    },
-  });
-
-  const deleteChallengeMutation = useMutation({
-    mutationFn: (id: string) => deleteChallenge(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["company", slug, "challenges"],
-      });
-    },
-  });
-
   const companyId = companyQuery.data?.id;
 
   const activitiesQuery = useQuery({
@@ -212,7 +178,6 @@ export default function CompanyPanelScreen() {
           { key: "analytics" as Tab, label: "Analityka" },
           { key: "tokens" as Tab, label: "Tokeny" },
           { key: "activities" as Tab, label: "Aktywności" },
-          { key: "challenges" as Tab, label: "Nagrody" },
         ].map((t) => (
           <Pressable
             key={t.key}
@@ -292,16 +257,6 @@ export default function CompanyPanelScreen() {
               creating={createActivityMutation.isPending}
               onDelete={(id) => deleteActivityMutation.mutate(id)}
               deleting={deleteActivityMutation.isPending}
-            />
-          )}
-          {tab === "challenges" && (
-            <ChallengesTab
-              query={challengesQuery}
-              companySlug={slug!}
-              onCreate={(input) => createChallengeMutation.mutate(input)}
-              creating={createChallengeMutation.isPending}
-              onDelete={(id) => deleteChallengeMutation.mutate(id)}
-              deleting={deleteChallengeMutation.isPending}
             />
           )}
         </View>
@@ -674,284 +629,6 @@ function AnalyticsTab({
   );
 }
 
-function ChallengesTab({
-  query,
-  companySlug,
-  onCreate,
-  creating,
-  onDelete,
-  deleting,
-}: {
-  query: {
-    data?:
-      | { company: any[]; canCreateGlobal: boolean }
-      | { global: any[] }
-      | { available: any[]; joined: any[] }
-      | undefined;
-    isPending: boolean;
-    error: Error | null;
-  };
-  companySlug: string;
-  onCreate: (input: {
-    title: string;
-    description?: string;
-    points: number;
-    scope: "company" | "global";
-    startsAt?: string;
-    endsAt?: string;
-  }) => void;
-  creating: boolean;
-  onDelete: (id: string) => void;
-  deleting: boolean;
-}) {
-  const [showForm, setShowForm] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [points, setPoints] = useState("");
-  const [scope, setScope] = useState<"company" | "global">("company");
-
-  if (query.isPending)
-    return (
-      <ActivityIndicator
-        size="large"
-        color={colors.mossGreen}
-        style={{ marginTop: 48 }}
-      />
-    );
-  if (query.error)
-    return (
-      <View style={styles.errorCard}>
-        <Text style={styles.errorText}>Nie udalo sie zaladowac nagrod.</Text>
-        <Text style={styles.errorDetail}>{query.error.message}</Text>
-      </View>
-    );
-
-  const data = query.data as any;
-  const challenges: any[] =
-    data?.company ?? data?.global ?? data?.available ?? [];
-  const canCreateGlobal = data?.canCreateGlobal ?? false;
-
-  const handleCreate = () => {
-    if (!title || !points) return;
-    onCreate({
-      title,
-      description: description || undefined,
-      points: parseInt(points, 10),
-      scope,
-    });
-    setTitle("");
-    setDescription("");
-    setPoints("");
-    setShowForm(false);
-  };
-
-  return (
-    <>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-        }}
-      >
-        <Text style={styles.pageTitle}>Nagrody ({challenges.length})</Text>
-        <Pressable
-          style={[styles.genBigBtn, showForm && { opacity: 0.7 }]}
-          onPress={() => setShowForm(!showForm)}
-        >
-          <Text style={styles.genBigBtnText}>
-            {showForm ? "Anuluj" : "Dodaj nagrode"}
-          </Text>
-        </Pressable>
-      </View>
-
-      {showForm && (
-        <View
-          style={{
-            backgroundColor: colors.white,
-            borderWidth: 1,
-            borderColor: colors.slate200,
-            borderRadius: radius.md,
-            padding: 16,
-            gap: 10,
-            marginBottom: 16,
-          }}
-        >
-          <TextInput
-            style={styles.inputSmall}
-            placeholder="Tytul"
-            value={title}
-            onChangeText={setTitle}
-            placeholderTextColor={colors.inputPlaceholder}
-          />
-          <TextInput
-            style={styles.inputSmall}
-            placeholder="Opis (opcjonalny)"
-            value={description}
-            onChangeText={setDescription}
-            placeholderTextColor={colors.inputPlaceholder}
-          />
-          <TextInput
-            style={styles.inputSmall}
-            placeholder="Punkty EC"
-            value={points}
-            onChangeText={setPoints}
-            placeholderTextColor={colors.inputPlaceholder}
-            keyboardType="numeric"
-          />
-          {canCreateGlobal && (
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              <Pressable
-                style={[
-                  {
-                    paddingVertical: 10,
-                    borderRadius: radius.sm,
-                    alignItems: "center",
-                    backgroundColor:
-                      scope === "company" ? colors.inputBg : colors.slate100,
-                  },
-                  scope === "company" && {
-                    backgroundColor: colors.white,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 3,
-                    elevation: 2,
-                  },
-                  { flex: 1 },
-                ]}
-                onPress={() => setScope("company")}
-              >
-                <Text
-                  style={[
-                    {
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color:
-                        scope === "company" ? colors.slate900 : colors.slate500,
-                    },
-                  ]}
-                >
-                  Firmowa
-                </Text>
-              </Pressable>
-              <Pressable
-                style={[
-                  {
-                    paddingVertical: 10,
-                    borderRadius: radius.sm,
-                    alignItems: "center",
-                    backgroundColor:
-                      scope === "global" ? colors.inputBg : colors.slate100,
-                  },
-                  scope === "global" && {
-                    backgroundColor: colors.white,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 3,
-                    elevation: 2,
-                  },
-                  { flex: 1 },
-                ]}
-                onPress={() => setScope("global")}
-              >
-                <Text
-                  style={[
-                    {
-                      fontSize: 14,
-                      fontWeight: "600",
-                      color:
-                        scope === "global" ? colors.slate900 : colors.slate500,
-                    },
-                  ]}
-                >
-                  Globalna
-                </Text>
-              </Pressable>
-            </View>
-          )}
-          <Pressable
-            style={[
-              styles.genBigBtn,
-              (!title || !points || creating) && { opacity: 0.5 },
-            ]}
-            onPress={handleCreate}
-            disabled={!title || !points || creating}
-          >
-            <Text style={styles.genBigBtnText}>
-              {creating ? "Tworzenie..." : "Utworz nagrode"}
-            </Text>
-          </Pressable>
-        </View>
-      )}
-
-      {challenges.length === 0 ? (
-        <Text style={styles.emptyText}>
-          Brak nagrod. Kliknij Dodaj nagrodę, aby utworzyc pierwsza.
-        </Text>
-      ) : (
-        <View style={{ gap: 4 }}>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Tytul</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Punkty</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Status</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 0.7 }]}>Akcje</Text>
-          </View>
-          {challenges.map((c: any) => (
-            <View key={c.id} style={styles.tableRow}>
-              <View style={{ flex: 2 }}>
-                <Text style={[styles.tableCell, { fontWeight: "600" }]}>
-                  {c.title}
-                </Text>
-                {c.description && (
-                  <Text style={{ fontSize: 12, color: colors.slate500 }}>
-                    {c.description}
-                  </Text>
-                )}
-              </View>
-              <Text style={[styles.tableCell, { flex: 1 }]}>{c.points} EC</Text>
-              <View style={{ flex: 1 }}>
-                <View
-                  style={[
-                    styles.badge,
-                    { backgroundColor: c.active ? colors.successBg : colors.errorBg },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.badgeText,
-                      { color: c.active ? colors.success : colors.error },
-                    ]}
-                  >
-                    {c.active ? "Aktywny" : "Nieaktywny"}
-                  </Text>
-                </View>
-              </View>
-              <View style={{ flex: 0.7 }}>
-                <Pressable
-                  style={[
-                    styles.actionBtn,
-                    { borderColor: colors.errorBorder, backgroundColor: colors.errorBg },
-                    deleting && { opacity: 0.5 },
-                  ]}
-                  onPress={() => onDelete(c.id)}
-                  disabled={deleting}
-                >
-                  <Text style={[styles.actionBtnText, { color: colors.error }]}>
-                    Usun
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
-    </>
-  );
-}
-
 function ActivitiesTab({
   query,
   onCreate,
@@ -1023,40 +700,40 @@ function ActivitiesTab({
       </View>
 
       {showForm && (
-        <View style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 16, gap: 10, marginBottom: 16 }}>
+        <View style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.creamDark, borderRadius: radius.md, padding: 16, gap: 10, marginBottom: 16 }}>
           <TextInput style={styles.inputSmall} placeholder="Nazwa aktywnosci" value={name} onChangeText={setName} placeholderTextColor={colors.inputPlaceholder} />
           <TextInput style={styles.inputSmall} placeholder="Opis (opcjonalny)" value={description} onChangeText={setDescription} placeholderTextColor={colors.inputPlaceholder} />
           <TextInput style={styles.inputSmall} placeholder="Ikona (np. leaf, bike, run)" value={icon} onChangeText={setIcon} placeholderTextColor={colors.inputPlaceholder} />
           <TextInput style={styles.inputSmall} placeholder="Punkty bazowe" value={basePoints} onChangeText={setBasePoints} keyboardType="numeric" placeholderTextColor={colors.inputPlaceholder} />
 
-          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.slate700 }}>Kategoria:</Text>
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.olive }}>Kategoria:</Text>
           <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
             {["MOBILITY", "CIRCULARITY", "LOCAL_CONSUMPTION", "NATURE_ACTIVITY"].map((c) => (
               <Pressable
                 key={c}
-                style={[styles.actionBtn, category === c && { backgroundColor: colors.mossGreen, borderColor: colors.mossGreen }]}
+                style={[styles.actionBtn, category === c && { backgroundColor: colors.greenDark, borderColor: colors.greenDark }]}
                 onPress={() => setCategory(c)}
               >
-                <Text style={[styles.actionBtnText, category === c && { color: colors.white }]}>
+                <Text style={[styles.actionBtnText, category === c && { color: colors.creamLight }]}>
                   {{ MOBILITY: "Mobilnosc", CIRCULARITY: "Cykularnosc", LOCAL_CONSUMPTION: "Lokalne", NATURE_ACTIVITY: "Natura" }[c]}
                 </Text>
               </Pressable>
             ))}
           </View>
 
-          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.slate700 }}>Typ aktywnosci:</Text>
+          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.olive }}>Typ aktywnosci:</Text>
           <View style={{ flexDirection: "row", gap: 8 }}>
             <Pressable
-              style={[styles.actionBtn, activityType === "one_time" && { backgroundColor: colors.mossGreen, borderColor: colors.mossGreen }]}
+              style={[styles.actionBtn, activityType === "one_time" && { backgroundColor: colors.greenDark, borderColor: colors.greenDark }]}
               onPress={() => setActivityType("one_time")}
             >
-              <Text style={[styles.actionBtnText, activityType === "one_time" && { color: colors.white }]}>Jednorazowa</Text>
+              <Text style={[styles.actionBtnText, activityType === "one_time" && { color: colors.creamLight }]}>Jednorazowa</Text>
             </Pressable>
             <Pressable
-              style={[styles.actionBtn, activityType === "cyclical" && { backgroundColor: colors.mossGreen, borderColor: colors.mossGreen }]}
+              style={[styles.actionBtn, activityType === "cyclical" && { backgroundColor: colors.greenDark, borderColor: colors.greenDark }]}
               onPress={() => setActivityType("cyclical")}
             >
-              <Text style={[styles.actionBtnText, activityType === "cyclical" && { color: colors.white }]}>Cykliczna (raz dziennie)</Text>
+              <Text style={[styles.actionBtnText, activityType === "cyclical" && { color: colors.creamLight }]}>Cykliczna (raz dziennie)</Text>
             </Pressable>
           </View>
 
@@ -1085,10 +762,10 @@ function ActivitiesTab({
             <View key={a.id} style={styles.tableRow}>
               <View style={{ flex: 2 }}>
                 <Text style={[styles.tableCell, { fontWeight: "600" }]}>{a.name}</Text>
-                {a.description && <Text style={{ fontSize: 12, color: colors.slate500 }}>{a.description}</Text>}
+                {a.description && <Text style={{ fontSize: 12, color: colors.olive }}>{a.description}</Text>}
               </View>
               <View style={{ flex: 1 }}>
-                <View style={[styles.badge, { backgroundColor: a.activityType === "one_time" ? colors.warningBg : colors.successBg }]}>
+                <View style={[styles.badge, { backgroundColor: a.activityType === "one_time" ? colors.creamMedium : colors.successBg }]}>
                   <Text style={[styles.badgeText, { color: a.activityType === "one_time" ? colors.warning : colors.success }]}>
                     {a.activityType === "one_time" ? "Jednorazowa" : "Cykliczna"}
                   </Text>
