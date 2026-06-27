@@ -1,9 +1,19 @@
-import { Link, router } from "expo-router";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { router } from "expo-router";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import Svg, { Path } from "react-native-svg";
 
 import { AppLogo } from "../../features/common/AppLogo";
 import { Screen } from "../../features/common/Screen";
+import { loginUser } from "../../lib/api/endpoints";
 import { colors, radius } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
 
@@ -28,7 +38,38 @@ function AppleIcon({ size = 20 }: { size?: number }) {
 }
 
 export default function LoginScreen() {
+  const queryClient = useQueryClient();
   const login = useAppStore((s) => s.login);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await loginUser({ email, password });
+      queryClient.clear();
+      login(res.accessToken, res.user.role, res.user.name, res.user.email);
+      if (res.user.role === "superadmin") {
+        router.replace("/admin");
+      } else if (res.user.role === "company") {
+        router.replace(`/company/${res.user.partner}`);
+      } else {
+        router.replace("/(auth)/onboarding");
+      }
+    } catch (e: unknown) {
+      const msg =
+        e && typeof e === "object" && "response" in e
+          ? (e as { response: { data: { message: string } } }).response.data
+              .message
+          : "Blad logowania";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Screen>
@@ -38,20 +79,32 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.tabRow}>
-        <View style={[styles.tab, styles.tabActive]}>
+        <Pressable style={[styles.tab, styles.tabActive]}>
           <Text style={[styles.tabText, styles.tabTextActive]}>Zaloguj</Text>
-        </View>
-        <Link href="/(auth)/register" style={styles.tab}>
+        </Pressable>
+        <Pressable
+          style={styles.tab}
+          onPress={() => router.push("/(auth)/register")}
+        >
           <Text style={styles.tabText}>Rejestracja</Text>
-        </Link>
+        </Pressable>
       </View>
+
+      {error && (
+        <View style={styles.errorBox}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
 
       <Text style={styles.label}>Adres e-mail</Text>
       <TextInput
         style={styles.input}
         placeholder="jan@intel.com"
-        defaultValue="jan@intel.com"
+        value={email}
+        onChangeText={setEmail}
         placeholderTextColor={colors.slate400}
+        autoCapitalize="none"
+        keyboardType="email-address"
       />
 
       <Text style={styles.label}>Haslo</Text>
@@ -59,20 +112,23 @@ export default function LoginScreen() {
         style={styles.input}
         placeholder="Haslo"
         secureTextEntry
-        defaultValue="haslo123"
+        value={password}
+        onChangeText={setPassword}
         placeholderTextColor={colors.slate400}
       />
 
       <Text style={styles.forgot}>Nie pamietam hasla</Text>
 
       <Pressable
-        style={styles.loginButton}
-        onPress={() => {
-          login();
-          router.replace("/(auth)/onboarding");
-        }}
+        style={[styles.loginButton, loading && styles.buttonDisabled]}
+        onPress={handleLogin}
+        disabled={loading}
       >
-        <Text style={styles.loginButtonText}>Zaloguj sie</Text>
+        {loading ? (
+          <ActivityIndicator color={colors.white} size="small" />
+        ) : (
+          <Text style={styles.loginButtonText}>Zaloguj sie</Text>
+        )}
       </Pressable>
 
       <View style={styles.divider}>
@@ -104,12 +160,12 @@ const styles = StyleSheet.create({
   },
   tabRow: {
     flexDirection: "row",
-    borderWidth: 1,
-    borderColor: colors.slate200,
+    backgroundColor: colors.slate100,
     borderRadius: radius.md,
-    padding: 4,
+    padding: 3,
     marginTop: 16,
     marginBottom: 16,
+    gap: 3,
   },
   tab: {
     flex: 1,
@@ -119,8 +175,11 @@ const styles = StyleSheet.create({
   },
   tabActive: {
     backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.slate200,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
   tabText: {
     color: colors.slate500,
@@ -129,6 +188,20 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: colors.slate900,
+  },
+  errorBox: {
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FECACA",
+    borderRadius: radius.sm,
+    padding: 12,
+    marginBottom: 8,
+  },
+  errorText: {
+    fontSize: 14,
+    color: "#991B1B",
+    fontWeight: "600",
+    textAlign: "center",
   },
   label: {
     fontSize: 13,
@@ -159,6 +232,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     marginTop: 16,
     alignItems: "center",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   loginButtonText: {
     color: colors.white,

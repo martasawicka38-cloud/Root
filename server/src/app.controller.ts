@@ -7,9 +7,12 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from "@nestjs/common";
 import { ActivityType, TxType } from "@prisma/client";
 
+import { CurrentUser } from "./common/current-user.decorator";
+import { JwtAuthGuard } from "./common/jwt-auth.guard";
 import { AppService } from "./app.service";
 
 @Controller("api")
@@ -17,83 +20,99 @@ export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get("me")
-  me() {
-    return this.appService.me();
+  @UseGuards(JwtAuthGuard)
+  me(@CurrentUser() user: { userId: string }) {
+    return this.appService.me(user.userId);
   }
 
   @Get("wallet")
-  wallet() {
-    return this.appService.wallet();
+  @UseGuards(JwtAuthGuard)
+  wallet(@CurrentUser() user: { userId: string }) {
+    return this.appService.wallet(user.userId);
   }
 
   @Get("admin/dashboard")
+  @UseGuards(JwtAuthGuard)
   adminDashboard() {
     return this.appService.adminDashboard();
   }
 
   @Get("history")
-  history(@Query("type") type?: TxType | "all") {
-    return this.appService.history(type);
+  @UseGuards(JwtAuthGuard)
+  history(@Query("type") type?: TxType | "all", @CurrentUser() user?: { userId: string }) {
+    return this.appService.history(user?.userId ?? "", type);
   }
 
   @Get("market")
+  @UseGuards(JwtAuthGuard)
   market() {
     return this.appService.market();
   }
 
   @Post("market/redeem")
-  redeem(@Body() body: { rewardId: string }) {
-    return this.appService.redeemReward(body.rewardId);
+  @UseGuards(JwtAuthGuard)
+  redeem(@Body() body: { rewardId: string }, @CurrentUser() user: { userId: string }) {
+    return this.appService.redeem(user.userId, body.rewardId);
   }
 
   @Get("activity")
-  activities() {
-    return this.appService.activities();
+  @UseGuards(JwtAuthGuard)
+  activity(@CurrentUser() user: { userId: string }) {
+    return this.appService.activity(user.userId);
   }
 
   @Post("activity")
-  addActivity(@Body() body: { type: ActivityType; minutes: number }) {
-    return this.appService.addActivity(body.type, body.minutes);
+  @UseGuards(JwtAuthGuard)
+  addActivity(@Body() body: { type: ActivityType; minutes: number }, @CurrentUser() user: { userId: string }) {
+    return this.appService.addActivity(user.userId, body.type, body.minutes);
   }
 
   @Patch("activity/:id")
+  @UseGuards(JwtAuthGuard)
   updateActivity(@Param("id") id: string, @Body() body: { minutes: number }) {
     return this.appService.updateActivity(id, body.minutes);
   }
 
   @Delete("activity/:id")
+  @UseGuards(JwtAuthGuard)
   deleteActivity(@Param("id") id: string) {
     return this.appService.deleteActivity(id);
   }
 
   @Get("declarations")
-  declarations() {
-    return this.appService.declarations();
+  @UseGuards(JwtAuthGuard)
+  declarations(@CurrentUser() user: { userId: string }) {
+    return this.appService.declarations(user.userId);
   }
 
   @Post("declarations")
-  addDeclaration(@Body() body: { name: string; points: number }) {
-    return this.appService.addDeclaration(body.name, body.points);
+  @UseGuards(JwtAuthGuard)
+  addDeclaration(@Body() body: { name: string; points: number }, @CurrentUser() user: { userId: string }) {
+    return this.appService.addDeclaration(user.userId, body.name, body.points);
   }
 
   @Get("notifications")
-  notifications() {
-    return this.appService.notifications();
+  @UseGuards(JwtAuthGuard)
+  notifications(@CurrentUser() user: { userId: string }) {
+    return this.appService.notifications(user.userId);
   }
 
   @Patch("notifications/:id/read")
+  @UseGuards(JwtAuthGuard)
   readNotification(@Param("id") id: string) {
     return this.appService.readNotification(id);
   }
 
   @Post("notifications/read-all")
-  readAll() {
-    return this.appService.readAllNotifications();
+  @UseGuards(JwtAuthGuard)
+  readAll(@CurrentUser() user: { userId: string }) {
+    return this.appService.readAllNotifications(user.userId);
   }
 
   @Get("achievements")
-  achievements() {
-    return this.appService.achievements();
+  @UseGuards(JwtAuthGuard)
+  achievements(@CurrentUser() user: { userId: string }) {
+    return this.appService.achievements(user.userId);
   }
 
   @Get("ranking")
@@ -101,22 +120,26 @@ export class AppController {
     return this.appService.ranking();
   }
 
+  @Get("companies")
+  companies() {
+    return this.appService.companies();
+  }
+
   @Get("challenge/current")
+  @UseGuards(JwtAuthGuard)
   challenge() {
-    return this.appService.challengeCurrent();
+    return this.appService.challenge();
   }
 
   @Patch("profile")
-  profile(@Body() body: { name: string; stepGoal: number; partner: string }) {
-    return this.appService.updateProfile(
-      body.name,
-      body.stepGoal,
-      body.partner,
-    );
+  @UseGuards(JwtAuthGuard)
+  profile(@Body() body: { name: string; stepGoal: number; partner: string }, @CurrentUser() user: { userId: string }) {
+    return this.appService.patchProfile(user.userId, body);
   }
 
   @Patch("settings")
-  settings() {
-    return this.appService.updateSettings();
+  @UseGuards(JwtAuthGuard)
+  settings(@Body() body: { stepGoal?: number; partner?: string; name?: string }, @CurrentUser() user: { userId: string }) {
+    return this.appService.settings(user.userId, body);
   }
 }

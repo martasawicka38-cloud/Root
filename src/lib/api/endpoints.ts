@@ -3,18 +3,24 @@ import type {
   AchievementItem,
   Activity,
   AdminDashboard,
+  AdminUser,
+  AuthUser,
   ChallengePayload,
+  Company,
+  CompanyToken,
   Declaration,
+  LoginResponse,
   NotificationItem,
   RankingPayload,
   Reward,
   TxItem,
   TxType,
   UserProfile,
+  UserRole,
 } from "../types/api";
 
 export async function fetchMe() {
-  const { data } = await api.get<UserProfile>("/me");
+  const { data } = await api.get<UserProfile>("/auth/me");
   return data;
 }
 
@@ -109,5 +115,148 @@ export async function patchProfile(input: {
 
 export async function fetchAdminDashboard() {
   const { data } = await api.get<AdminDashboard>("/admin/dashboard");
+  return data;
+}
+
+export async function loginUser(input: { email: string; password: string }) {
+  const { data } = await api.post<LoginResponse>("/auth/login", input);
+  return data;
+}
+
+export async function registerUser(input: {
+  email: string;
+  password: string;
+  name: string;
+  role: "user" | "employer" | "company";
+  partner?: string;
+  companyToken?: string;
+  companyName?: string;
+  companySlug?: string;
+}) {
+  const { data } = await api.post<{ id: string; email: string; role: string }>(
+    "/auth/register",
+    input,
+  );
+  return data;
+}
+
+export async function fetchAuthMe() {
+  const { data } = await api.get<AuthUser>("/auth/me");
+  return data;
+}
+
+export async function fetchAdminUsers() {
+  const { data } = await api.get<AdminUser[]>("/admin/users");
+  return data;
+}
+
+export async function fetchUnassignedUsers() {
+  const { data } = await api.get<AdminUser[]>("/admin/users/unassigned");
+  return data;
+}
+
+export async function toggleUserActive(id: string) {
+  const { data } = await api.patch<{ id: string; isActive: boolean }>(
+    `/admin/users/${id}/toggle-active`,
+  );
+  return data;
+}
+
+export async function assignUserToCompany(userId: string, companyId: string) {
+  const { data } = await api.patch(
+    `/admin/users/${userId}/assign-company`,
+    { companyId },
+  );
+  return data;
+}
+
+export async function removeUserFromCompany(userId: string) {
+  const { data } = await api.patch(
+    `/admin/users/${userId}/remove-company`,
+  );
+  return data;
+}
+
+export async function fetchCompanies() {
+  const { data } = await api.get<Company[]>("/admin/companies");
+  return data;
+}
+
+export async function fetchPublicCompanies() {
+  const { data } = await api.get<Pick<Company, "id" | "name" | "slug">[]>("/companies");
+  return data;
+}
+
+export async function createCompany(input: { name: string; slug: string }) {
+  const { data } = await api.post<Company>("/admin/companies", input);
+  return data;
+}
+
+export async function generateCompanyToken() {
+  const { data } = await api.post<CompanyToken>(
+    "/admin/generate-company-token",
+  );
+  return data;
+}
+
+export async function fetchCompanyTokens() {
+  const { data } = await api.get<CompanyToken[]>(
+    "/admin/company-tokens",
+  );
+  return data;
+}
+
+export async function generateEmployerToken(companyId: string) {
+  const { data } = await api.post<CompanyToken>(
+    `/admin/companies/${companyId}/generate-employer-token`,
+  );
+  return data;
+}
+
+export async function fetchEmployerTokens(companyId: string) {
+  const { data } = await api.get<CompanyToken[]>(
+    `/admin/companies/${companyId}/tokens`,
+  );
+  return data;
+}
+
+export async function fetchCompanyUsers(companyId: string) {
+  const { data } = await api.get<AdminUser[]>(
+    `/admin/companies/${companyId}/users`,
+  );
+  return data;
+}
+
+export async function fetchCompanyBySlug(slug: string) {
+  const { data } = await api.get<Company & { _count: { users: number; tokens: number } }>(`/company/${slug}`);
+  return data;
+}
+
+export async function fetchCompanyEmployees(slug: string) {
+  const { data } = await api.get<{ id: string; email: string; name: string; isActive: boolean; balance: number; stepGoal: number; createdAt: string }[]>(`/company/${slug}/employees`);
+  return data;
+}
+
+export async function fetchCompanyAnalytics(slug: string) {
+  const { data } = await api.get<{
+    employees: { id: string; name: string; points: number }[];
+    totalActivities: number;
+    totalSteps: number;
+    totalDeclarations: number;
+    totalEarned: number;
+    totalPoints: number;
+    weeklySteps: { day: string; steps: number }[];
+    recentActivity: { id: string; userName: string; type: string; points: number; createdAt: string }[];
+  }>(`/company/${slug}/analytics`);
+  return data;
+}
+
+export async function fetchCompanyTokensBySlug(slug: string) {
+  const { data } = await api.get<CompanyToken[]>(`/company/${slug}/tokens`);
+  return data;
+}
+
+export async function generateEmployerTokenBySlug(slug: string) {
+  const { data } = await api.post<CompanyToken>(`/company/${slug}/generate-token`);
   return data;
 }

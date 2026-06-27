@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 type Partner = "intel" | "ergo";
+type UserRole = "user" | "employer" | "company" | "superadmin";
 
 type TxType = "earned" | "spent";
 
@@ -44,6 +45,8 @@ type Reward = {
 
 type AppState = {
   isAuthenticated: boolean;
+  accessToken: string | null;
+  userRole: UserRole | null;
   onboardingStep: number;
   partner: Partner;
   balance: number;
@@ -61,7 +64,7 @@ type AppState = {
   profileName: string;
   profileEmail: string;
   stepGoal: number;
-  login: () => void;
+  login: (token: string, role: UserRole, name: string, email: string) => void;
   logout: () => void;
   setPartner: (partner: Partner) => void;
   nextOnboarding: () => void;
@@ -162,6 +165,8 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       isAuthenticated: false,
+      accessToken: null,
+      userRole: null,
       onboardingStep: 0,
       partner: "intel",
       balance: 450,
@@ -179,18 +184,44 @@ export const useAppStore = create<AppState>()(
       profileName: "Jan Kowalski",
       profileEmail: "jan@intel.com",
       stepGoal: 8000,
-      login: () => set({ isAuthenticated: true }),
-      logout: () =>
+      login: (token, role, name, email) => {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("auth-token", token);
+        }
+        set({
+          isAuthenticated: true,
+          accessToken: token,
+          userRole: role,
+          profileName: name,
+          profileEmail: email,
+          balance: 0,
+          declarationsToday: 0,
+          txHistory: [],
+          activityLog: [],
+          unreadNotifications: 0,
+          achievedIds: [],
+          selectedReward: null,
+          redeemedCode: null,
+        });
+      },
+      logout: () => {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("auth-token");
+        }
         set({
           isAuthenticated: false,
+          accessToken: null,
+          userRole: null,
           onboardingStep: 0,
           selectedReward: null,
           redeemedCode: null,
-        }),
+        });
+      },
       setPartner: (partner) =>
         set({
           partner,
-          profileEmail: partner === "intel" ? "jan@intel.com" : "jan@hestia.pl",
+          profileEmail:
+            partner === "intel" ? "jan@intel.com" : "jan@hestia.pl",
         }),
       nextOnboarding: () =>
         set((s) => ({ onboardingStep: Math.min(2, s.onboardingStep + 1) })),
@@ -300,6 +331,8 @@ export const useAppStore = create<AppState>()(
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,
+        accessToken: state.accessToken,
+        userRole: state.userRole,
         onboardingStep: state.onboardingStep,
         partner: state.partner,
         balance: state.balance,

@@ -23,8 +23,8 @@ const menuItems = [
 
 export default function ProfileScreen() {
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
-  const name = me?.name ?? "Jan Kowalski";
-  const email = me?.email ?? "jan@intel.com";
+  const name = me?.name ?? "";
+  const email = me?.email ?? "";
 
   return (
     <Screen>

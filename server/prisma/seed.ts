@@ -3,6 +3,9 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const bcrypt = require("bcrypt");
+
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
@@ -14,12 +17,49 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
+  const hash = await bcrypt.hash("haslo123", 10);
+  const adminHash = await bcrypt.hash("admin123", 10);
+
+  // Seed superadmin
+  const admin = await prisma.user.upsert({
+    where: { email: "admin@eco-pulse.com" },
+    update: { passwordHash: adminHash },
+    create: {
+      email: "admin@eco-pulse.com",
+      name: "Super Admin",
+      passwordHash: adminHash,
+      role: "superadmin",
+      partner: "eco-pulse",
+      balance: 0,
+    },
+  });
+  console.log("Superadmin: admin@eco-pulse.com / admin123");
+
+  // Seed companies
+  const intel = await prisma.company.upsert({
+    where: { slug: "intel" },
+    update: {},
+    create: { name: "Intel Poland", slug: "intel" },
+  });
+
+  const ergo = await prisma.company.upsert({
+    where: { slug: "ergo" },
+    update: {},
+    create: { name: "ERGO Hestia", slug: "ergo" },
+  });
+
+  // Seed test user (jan@intel.com)
   const user = await prisma.user.upsert({
     where: { email: "jan@intel.com" },
-    update: {},
+    update: {
+      passwordHash: hash,
+      name: "Jan Kowalski",
+    },
     create: {
       email: "jan@intel.com",
       name: "Jan Kowalski",
+      passwordHash: hash,
+      role: "user",
       partner: "intel",
       balance: 450,
       declarationsToday: 0,
@@ -27,6 +67,36 @@ async function main() {
     },
   });
 
+  // Seed a company_registration token for testing
+  const existingCompanyToken = await prisma.companyToken.findFirst({
+    where: { type: "company_registration", used: false },
+  });
+  if (!existingCompanyToken) {
+    await prisma.companyToken.create({
+      data: {
+        token: "ECO-PULSE-COMPANY-001",
+        type: "company_registration",
+      },
+    });
+    console.log("Company token: ECO-PULSE-COMPANY-001");
+  }
+
+  // Seed an employer_registration token for Intel
+  const existingEmployerToken = await prisma.companyToken.findFirst({
+    where: { companyId: intel.id, type: "employer_registration", used: false },
+  });
+  if (!existingEmployerToken) {
+    await prisma.companyToken.create({
+      data: {
+        companyId: intel.id,
+        token: "INTEL-EMPLOYEE-001",
+        type: "employer_registration",
+      },
+    });
+    console.log("Intel employer token: INTEL-EMPLOYEE-001");
+  }
+
+  // Seed rewards
   const rewards = [
     {
       icon: "☕",
@@ -74,6 +144,7 @@ async function main() {
     });
   }
 
+  // Seed notifications for test user
   const notifCount = await prisma.notification.count({
     where: { userId: user.id },
   });
@@ -96,6 +167,7 @@ async function main() {
     });
   }
 
+  // Seed achievements for test user
   const achCount = await prisma.achievement.count({
     where: { userId: user.id },
   });
@@ -107,6 +179,8 @@ async function main() {
       ],
     });
   }
+
+  console.log("Seed completed successfully.");
 }
 
 main()

@@ -27,21 +27,63 @@ enum RewardCategory {
   eco
 }
 
+enum UserRole {
+  user
+  employer
+  company
+  superadmin
+}
+
+enum TokenType {
+  company_registration
+  employer_registration
+}
+
 model User {
-  id               String         @id @default(cuid())
-  email            String         @unique
-  name             String
-  partner          String         @default("intel")
-  stepGoal         Int            @default(8000)
-  balance          Int            @default(450)
-  declarationsToday Int           @default(0)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  activities       Activity[]
-  declarations     Declaration[]
-  transactions     Transaction[]
-  notifications    Notification[]
-  achievements     Achievement[]
+  id                String         @id @default(cuid())
+  email             String         @unique
+  name              String
+  passwordHash      String
+  role              UserRole       @default(user)
+  isActive          Boolean        @default(true)
+  partner           String         @default("intel")
+  stepGoal          Int            @default(8000)
+  balance           Int            @default(450)
+  declarationsToday Int            @default(0)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  companyId         String?
+  company           Company?       @relation("UserCompany", fields: [companyId], references: [id])
+  usedTokenId       String?        @unique
+  usedToken         CompanyToken?  @relation("TokenUsage", fields: [usedTokenId], references: [id])
+
+  activities        Activity[]
+  declarations      Declaration[]
+  transactions      Transaction[]
+  notifications     Notification[]
+  achievements      Achievement[]
+}
+
+model Company {
+  id        String         @id @default(cuid())
+  name      String         @unique
+  slug      String         @unique
+  createdAt DateTime       @default(now())
+  users     User[]         @relation("UserCompany")
+  tokens    CompanyToken[]
+}
+
+model CompanyToken {
+  id        String    @id @default(cuid())
+  companyId String?
+  company   Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  type      TokenType @default(employer_registration)
+  token     String    @unique
+  used      Boolean   @default(false)
+  usedAt    DateTime?
+  usedBy    User?     @relation("TokenUsage")
+  createdAt DateTime  @default(now())
 }
 
 model Reward {

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { ActivityType, RewardCategory, TxType } from "@prisma/client";
+import { ActivityType, TxType } from "@prisma/client";
 
 import { PrismaService } from "./prisma.service";
 
@@ -16,7 +16,11 @@ const activityRates: Record<ActivityType, number> = {
 export class AppService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async getUser() {
+  private async getUser(userId?: string) {
+    if (userId) {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (user) return user;
+    }
     const existing = await this.prisma.user.findFirst({
       orderBy: { createdAt: "asc" },
     });
@@ -25,92 +29,103 @@ export class AppService {
       data: {
         email: "jan@intel.com",
         name: "Jan Kowalski",
+        passwordHash: "",
         partner: "intel",
       },
     });
   }
 
-  async me() {
-    const user = await this.getUser();
+  async me(userId: string) {
+    const user = await this.getUser(userId);
     return user;
   }
 
   async adminDashboard() {
-    const users = await this.prisma.user.findMany();
-    const userCount = users.length;
-
-    const declarationCount = await this.prisma.declaration.count();
-    const activityCount = await this.prisma.activity.count();
-    const usersWithActivity = await this.prisma.user.count({
-      where: { activities: { some: {} } },
+    const allUsers = await this.prisma.user.findMany();
+    const companies = await this.prisma.company.findMany({
+      include: {
+        _count: { select: { users: true } },
+        users: {
+          where: { role: "employer" },
+          select: { id: true },
+        },
+      },
     });
 
-    const totalEc =
-      users.reduce((sum, u) => sum + u.balance, 0);
+    const regularUsers = allUsers.filter((u) => u.role === "user").length;
+    const companyAccounts = allUsers.filter((u) => u.role === "company").length;
+    const totalEmployees = allUsers.filter((u) => u.role === "employer").length;
+    const userCount = allUsers.length;
 
-    const [earnedAgg, spentAgg] = await Promise.all([
-      this.prisma.transaction.aggregate({
-        where: { type: "earned" },
-        _sum: { points: true },
-      }),
-      this.prisma.transaction.aggregate({
-        where: { type: "spent" },
-        _sum: { points: true },
-      }),
-    ]);
+    const totalDeclarations = await this.prisma.declaration.count();
+    const totalEarnedTxs = await this.prisma.transaction.aggregate({
+      where: { type: "earned" },
+      _sum: { points: true },
+    });
+    const totalSpentTxs = await this.prisma.transaction.aggregate({
+      where: { type: "spent" },
+      _sum: { points: true },
+    });
 
+    const totalBalance = allUsers.reduce((s, u) => s + u.balance, 0);
+    const totalEarned = totalEarnedTxs._sum.points ?? 0;
+    const totalSpent = totalSpentTxs._sum.points ?? 0;
+
+    const totalActivities = await this.prisma.activity.count();
     const stepsAgg = await this.prisma.activity.aggregate({
       _sum: { steps: true },
     });
+    const totalSteps = stepsAgg._sum.steps ?? 0;
 
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const recentActivities = await this.prisma.activity.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      include: { user: { select: { name: true } } },
-    });
-
-    const weeklyActivities = await this.prisma.activity.findMany({
-      where: { createdAt: { gte: sevenDaysAgo } },
-      orderBy: { createdAt: "asc" },
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const weeklyRaw = await this.prisma.activity.findMany({
+      where: { createdAt: { gte: weekAgo } },
+      select: { steps: true, createdAt: true, user: { select: { name: true, role: true } } },
     });
 
     const dayMap: Record<string, number> = {};
-    for (const a of weeklyActivities) {
+    for (const a of weeklyRaw) {
       const day = a.createdAt.toISOString().slice(0, 10);
-      dayMap[day] = (dayMap[day] || 0) + a.steps;
+      dayMap[day] = (dayMap[day] ?? 0) + a.steps;
     }
+    const weeklySteps = Object.entries(dayMap)
+      .map(([day, steps]) => ({ day, steps }))
+      .sort((a, b) => a.day.localeCompare(b.day));
 
-    const weeklySteps = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(sevenDaysAgo);
-      d.setDate(d.getDate() + i + 1);
-      const key = d.toISOString().slice(0, 10);
-      return { day: key, steps: dayMap[key] || 0 };
+    const recentActivities = await this.prisma.activity.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      include: { user: { select: { name: true } } },
     });
+
+    const companyStats = companies.map((c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      employeeCount: c._count.users,
+    }));
 
     return {
       users: {
         total: userCount,
-        activeDeclarations: declarationCount,
-        participationRate:
-          userCount > 0
-            ? Math.round((usersWithActivity / userCount) * 100)
-            : 0,
+        regularUsers,
+        companyAccounts,
+        totalEmployees,
+        activeDeclarations: totalDeclarations,
+        participationRate: userCount > 0
+          ? Math.round((totalDeclarations / userCount) * 100) : 0,
       },
       economy: {
-        totalEcInCirculation: totalEc,
-        totalEarned: earnedAgg._sum.points ?? 0,
-        totalSpent: spentAgg._sum.points ?? 0,
+        totalEcInCirculation: totalBalance,
+        totalEarned,
+        totalSpent,
       },
       activity: {
-        totalActivities: activityCount,
-        totalSteps: stepsAgg._sum.steps ?? 0,
-        avgStepsPerActivity:
-          activityCount > 0
-            ? Math.round((stepsAgg._sum.steps ?? 0) / activityCount)
-            : 0,
+        totalActivities,
+        totalSteps,
+        avgStepsPerActivity: totalActivities > 0
+          ? Math.round(totalSteps / totalActivities) : 0,
         weeklySteps,
       },
       recentActivity: recentActivities.map((a) => ({
@@ -120,41 +135,33 @@ export class AppService {
         points: a.points,
         createdAt: a.createdAt.toISOString(),
       })),
+      companies: companyStats,
     };
   }
 
-  async wallet() {
-    const user = await this.getUser();
+  async wallet(userId: string) {
+    const user = await this.getUser(userId);
     return { balance: user.balance };
   }
 
-  async history(type?: TxType | "all") {
-    const user = await this.getUser();
-    return this.prisma.transaction.findMany({
-      where: {
-        userId: user.id,
-        ...(type && type !== "all" ? { type } : {}),
-      },
-      orderBy: { createdAt: "desc" },
-    });
+  async history(userId: string, type?: string) {
+    const user = await this.getUser(userId);
+    const where: Record<string, unknown> = { userId: user.id };
+    if (type && type !== "all") where.type = type;
+    const txs = await this.prisma.transaction.findMany({ where, orderBy: { createdAt: "desc" } });
+    return txs;
   }
 
   async market() {
-    return this.prisma.reward.findMany({
-      where: { active: true },
-      orderBy: { createdAt: "asc" },
-    });
+    return this.prisma.reward.findMany({ where: { active: true } });
   }
 
-  async redeemReward(rewardId: string) {
-    const user = await this.getUser();
-    const reward = await this.prisma.reward.findUnique({
-      where: { id: rewardId },
-    });
-    if (!reward) return { ok: false, message: "Reward not found" };
-    if (user.balance < reward.cost)
-      return { ok: false, message: "Insufficient balance" };
-
+  async redeem(userId: string, rewardId: string) {
+    const reward = await this.prisma.reward.findUnique({ where: { id: rewardId } });
+    if (!reward) return { ok: false, message: "Nagroda nie istnieje." };
+    if (!reward.active) return { ok: false, message: "Nagroda jest nieaktywna." };
+    const user = await this.getUser(userId);
+    if (user.balance < reward.cost) return { ok: false, message: "Za mało Eco-Coins." };
     await this.prisma.$transaction([
       this.prisma.user.update({
         where: { id: user.id },
@@ -169,126 +176,92 @@ export class AppService {
         },
       }),
     ]);
-
-    return { ok: true, code: reward.code };
+    return { ok: true, code: reward.code, message: "Nagroda wykupiona." };
   }
 
-  async activities() {
-    const user = await this.getUser();
+  async activity(userId: string) {
+    const user = await this.getUser(userId);
     return this.prisma.activity.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
     });
   }
 
-  async addActivity(type: ActivityType, minutes: number) {
-    const user = await this.getUser();
-    const steps = Math.max(0, Math.floor(minutes * activityRates[type]));
+  async addActivity(userId: string, type: string, minutes: number) {
+    const user = await this.getUser(userId);
+    const steps = Math.max(0, Math.floor(minutes * (activityRates[type as ActivityType] ?? 100)));
     const points = Math.min(40, Math.floor(steps / 200));
-
-    const [activity] = await this.prisma.$transaction([
-      this.prisma.activity.create({
-        data: { userId: user.id, type, minutes, steps, points },
-      }),
-      this.prisma.user.update({
+    await this.prisma.$transaction(async (tx) => {
+      await tx.activity.create({
+        data: { userId: user.id, type: type as ActivityType, minutes, steps, points },
+      });
+      await tx.user.update({
         where: { id: user.id },
         data: { balance: { increment: points } },
-      }),
-      this.prisma.transaction.create({
-        data: {
-          userId: user.id,
-          name: `Aktywnosc ${type} (${minutes} min)`,
-          points,
-          type: "earned",
-        },
-      }),
-    ]);
-
-    return activity;
+      });
+      await tx.transaction.create({
+        data: { userId: user.id, name: `${type} ${minutes}min`, points, type: "earned" },
+      });
+    });
+    return this.activity(userId);
   }
 
   async updateActivity(id: string, minutes: number) {
-    const user = await this.getUser();
-    const old = await this.prisma.activity.findFirst({
-      where: { id, userId: user.id },
+    const activity = await this.prisma.activity.findUnique({ where: { id } });
+    if (!activity) return { ok: false, message: "Activity not found" };
+    const oldPoints = activity.points;
+    const newSteps = Math.max(0, Math.floor(minutes * (activityRates[activity.type as ActivityType] ?? 100)));
+    const newPoints = Math.min(40, Math.floor(newSteps / 200));
+    const diff = newPoints - oldPoints;
+    await this.prisma.$transaction(async (tx) => {
+      await tx.activity.update({ where: { id }, data: { minutes, steps: newSteps, points: newPoints } });
+      if (diff !== 0) {
+        await tx.user.update({ where: { id: activity.userId }, data: { balance: { increment: diff } } });
+      }
     });
-    if (!old) return null;
-    const steps = Math.max(0, Math.floor(minutes * activityRates[old.type]));
-    const points = Math.min(40, Math.floor(steps / 200));
-    const delta = points - old.points;
-
-    const [activity] = await this.prisma.$transaction([
-      this.prisma.activity.update({
-        where: { id },
-        data: { minutes, steps, points },
-      }),
-      this.prisma.user.update({
-        where: { id: user.id },
-        data: { balance: { increment: delta } },
-      }),
-    ]);
-
-    return activity;
-  }
-
-  async deleteActivity(id: string) {
-    const user = await this.getUser();
-    const old = await this.prisma.activity.findFirst({
-      where: { id, userId: user.id },
-    });
-    if (!old) return { ok: false };
-
-    await this.prisma.$transaction([
-      this.prisma.activity.delete({ where: { id } }),
-      this.prisma.user.update({
-        where: { id: user.id },
-        data: { balance: { decrement: Math.min(user.balance, old.points) } },
-      }),
-    ]);
-
     return { ok: true };
   }
 
-  async declarations() {
-    const user = await this.getUser();
-    return this.prisma.declaration.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
+  async deleteActivity(id: string) {
+    const activity = await this.prisma.activity.findUnique({ where: { id } });
+    if (!activity) return { ok: false, message: "Activity not found" };
+    await this.prisma.$transaction(async (tx) => {
+      await tx.activity.delete({ where: { id } });
+      await tx.user.update({
+        where: { id: activity.userId },
+        data: { balance: { decrement: activity.points } },
+      });
     });
+    return { ok: true };
   }
 
-  async addDeclaration(name: string, points: number) {
-    const user = await this.getUser();
-    if (user.declarationsToday >= 3) {
-      return { ok: false, message: "Daily limit reached" };
-    }
+  async declarations(userId: string) {
+    const user = await this.getUser(userId);
+    return this.prisma.declaration.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" } });
+  }
 
-    const [declaration] = await this.prisma.$transaction([
+  async addDeclaration(userId: string, name: string, points: number) {
+    const user = await this.getUser(userId);
+    if (user.declarationsToday >= 3) {
+      return { ok: false, message: "Limit deklaracji wyczerpany." };
+    }
+    await this.prisma.$transaction([
       this.prisma.declaration.create({
         data: { userId: user.id, name, points },
       }),
       this.prisma.user.update({
         where: { id: user.id },
-        data: {
-          balance: { increment: points },
-          declarationsToday: { increment: 1 },
-        },
+        data: { declarationsToday: { increment: 1 }, balance: { increment: points } },
       }),
       this.prisma.transaction.create({
-        data: {
-          userId: user.id,
-          name,
-          points,
-          type: "earned",
-        },
+        data: { userId: user.id, name, points, type: "earned" },
       }),
     ]);
-
-    return { ok: true, declaration };
+    return { ok: true };
   }
 
-  async notifications() {
-    const user = await this.getUser();
+  async notifications(userId: string) {
+    const user = await this.getUser(userId);
     return this.prisma.notification.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
@@ -296,14 +269,12 @@ export class AppService {
   }
 
   async readNotification(id: string) {
-    return this.prisma.notification.update({
-      where: { id },
-      data: { read: true },
-    });
+    await this.prisma.notification.update({ where: { id }, data: { read: true } });
+    return { ok: true };
   }
 
-  async readAllNotifications() {
-    const user = await this.getUser();
+  async readAllNotifications(userId: string) {
+    const user = await this.getUser(userId);
     await this.prisma.notification.updateMany({
       where: { userId: user.id, read: false },
       data: { read: true },
@@ -311,53 +282,52 @@ export class AppService {
     return { ok: true };
   }
 
-  async achievements() {
-    const user = await this.getUser();
-    return this.prisma.achievement.findMany({
-      where: { userId: user.id },
-      orderBy: { unlockedAt: "desc" },
-    });
+  async achievements(userId: string) {
+    const user = await this.getUser(userId);
+    return this.prisma.achievement.findMany({ where: { userId: user.id }, orderBy: { unlockedAt: "desc" } });
   }
 
   async ranking() {
-    return {
-      team: [
-        { name: "Zespol B", points: 14200 },
-        { name: "Zespol A", points: 12450 },
-        { name: "Zespol C", points: 10800 },
-      ],
-      individual: [
-        { name: "Piotr W.", points: 18500 },
-        { name: "Anna K.", points: 15200 },
-        { name: "Jan K.", points: 6200 },
-      ],
-    };
+    const users = await this.prisma.user.findMany({
+      orderBy: { balance: "desc" },
+      select: { name: true, balance: true, partner: true },
+    });
+    const individual = users.slice(0, 10).map((u) => ({ name: u.name, points: u.balance }));
+    const teamMap: Record<string, number> = {};
+    for (const u of users) {
+      teamMap[u.partner] = (teamMap[u.partner] ?? 0) + u.balance;
+    }
+    const team = Object.entries(teamMap)
+      .map(([name, points]) => ({ name, points: Math.round(points / 10) }))
+      .sort((a, b) => b.points - a.points);
+    return { team, individual };
   }
 
-  async challengeCurrent() {
-    return {
-      title: "10 000 krokow dziennie",
-      team: "ERGO Hestia",
-      progress: 71,
-      daysDone: 5,
-      daysTotal: 7,
-      reward: 200,
-    };
-  }
-
-  async updateProfile(name: string, stepGoal: number, partner: string) {
-    const user = await this.getUser();
-    return this.prisma.user.update({
-      where: { id: user.id },
-      data: {
-        name,
-        stepGoal,
-        partner,
-      },
+  async companies() {
+    return this.prisma.company.findMany({
+      select: { id: true, name: true, slug: true },
+      orderBy: { name: "asc" },
     });
   }
 
-  async updateSettings() {
-    return { ok: true };
+  async challenge() {
+    return {
+      title: "10k krokow dziennie",
+      team: "Intel",
+      progress: 80,
+      daysDone: 20,
+      daysTotal: 30,
+      reward: 150,
+    };
+  }
+
+  async settings(userId: string, data: { stepGoal?: number; partner?: string; name?: string }) {
+    const user = await this.getUser(userId);
+    return this.prisma.user.update({ where: { id: user.id }, data });
+  }
+
+  async patchProfile(userId: string, data: { name?: string; stepGoal?: number; partner?: string }) {
+    const user = await this.getUser(userId);
+    return this.prisma.user.update({ where: { id: user.id }, data });
   }
 }

@@ -28,7 +28,7 @@ export default function HomeScreen() {
     queryFn: fetchWallet,
   });
 
-  const profileName = me?.name ?? "Jan Kowalski";
+  const profileName = me?.name ?? "";
   const balance = wallet?.balance ?? me?.balance ?? 0;
   const stepGoal = me?.stepGoal ?? 8000;
   const currentSteps = 6200;

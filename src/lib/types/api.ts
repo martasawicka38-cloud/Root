@@ -4,6 +4,7 @@ export type UserProfile = {
   id: string;
   email: string;
   name: string;
+  role: UserRole;
   partner: string;
   stepGoal: number;
   balance: number;
@@ -77,9 +78,18 @@ export type ChallengePayload = {
 export type AdminDashboard = {
   users: {
     total: number;
+    regularUsers: number;
+    companyAccounts: number;
+    totalEmployees: number;
     activeDeclarations: number;
     participationRate: number;
   };
+  companies: {
+    id: string;
+    name: string;
+    slug: string;
+    employeeCount: number;
+  }[];
   economy: {
     totalEcInCirculation: number;
     totalEarned: number;
@@ -98,4 +108,50 @@ export type AdminDashboard = {
     points: number;
     createdAt: string;
   }[];
+};
+
+export type UserRole = "user" | "employer" | "company" | "superadmin";
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  partner: string;
+};
+
+export type LoginResponse = {
+  accessToken: string;
+  user: AuthUser;
+};
+
+export type Company = {
+  id: string;
+  name: string;
+  slug: string;
+  createdAt: string;
+  _count?: { users: number; tokens: number };
+};
+
+export type CompanyToken = {
+  id: string;
+  companyId: string | null;
+  type: "company_registration" | "employer_registration";
+  token: string;
+  used: boolean;
+  usedAt: string | null;
+  createdAt: string;
+};
+
+export type AdminUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  isActive: boolean;
+  partner: string;
+  balance: number;
+  createdAt: string;
+  companyId: string | null;
+  company: { id: string; name: string } | null;
 };
