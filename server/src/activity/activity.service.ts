@@ -185,7 +185,7 @@ export class ActivityService {
           firstTimeBonus: isFirstTime,
           synergyBonus: hasFullSynergy,
         },
-        message: `+${expPoints} EXP, +${leaderboardPoints} pkt rankingowych${hasFullSynergy ? " 🔗 Synergia!" : ""}${isFirstTime ? " 🌟 First-time!" : ""}`,
+        message: `+${expPoints} EXP, +${leaderboardPoints} pkt rankingowych${hasFullSynergy ? " Synergia!" : ""}${isFirstTime ? " First-time!" : ""}`,
       };
     });
   }

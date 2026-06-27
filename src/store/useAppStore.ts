@@ -119,7 +119,7 @@ const txSeed: TxItem[] = [
 export const rewardsSeed: Reward[] = [
   {
     id: "r-1",
-    icon: "☕",
+    icon: "coffee",
     title: "Kawa w sieciowce",
     merchant: "American Cafe",
     category: "food",
@@ -129,7 +129,7 @@ export const rewardsSeed: Reward[] = [
   },
   {
     id: "r-2",
-    icon: "🧘",
+    icon: "yoga",
     title: "Joga w Centrum",
     merchant: "Centrum Jogi Sopot",
     category: "wellness",
@@ -139,7 +139,7 @@ export const rewardsSeed: Reward[] = [
   },
   {
     id: "r-3",
-    icon: "🏊",
+    icon: "swim",
     title: "Karnet na basen",
     merchant: "Aquapark Sopot",
     category: "sport",
@@ -149,7 +149,7 @@ export const rewardsSeed: Reward[] = [
   },
   {
     id: "r-4",
-    icon: "🌱",
+    icon: "leaf",
     title: "Zestaw roslinny",
     merchant: "Zielony Zakatek",
     category: "eco",

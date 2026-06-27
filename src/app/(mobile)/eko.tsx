@@ -1,8 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-
-import { SproutIcon } from "../../components/icons";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Screen } from "../../features/common/Screen";
 import {
   fetchEcoActivities,
@@ -10,6 +8,7 @@ import {
   submitEcoActivity,
   transformRoot,
 } from "../../lib/api/endpoints";
+import { EcoIcon } from "../../components/EcoIcon";
 import type { EcoActivity, SubmitActivityResponse } from "../../lib/types/api";
 import { colors, radius, spacing } from "../../styles/tokens";
 
@@ -19,6 +18,20 @@ const CATEGORY_META: Record<string, { label: string; color: string; bg: string }
   LOCAL_CONSUMPTION: { label: "Lokalne", color: "#B47A3B", bg: "#FEF3C7" },
   NATURE_ACTIVITY: { label: "Natura", color: "#2D6A4F", bg: "#C6ECD2" },
 };
+
+const STAGE_IMAGES: Record<number, any> = {
+  1: require("../../../assets/00_seed.png"),
+  2: require("../../../assets/01_seed.png"),
+  3: require("../../../assets/02_seed.png"),
+};
+
+function StageImage({ level }: { level: number }) {
+  const src = STAGE_IMAGES[level];
+  if (src) {
+    return <Image source={src} style={{ width: 48, height: 48 }} />;
+  }
+  return null;
+}
 
 export default function EkoScreen() {
   const queryClient = useQueryClient();
@@ -116,7 +129,7 @@ export default function EkoScreen() {
       {/* Root Evolution Card */}
       <View style={styles.rootCard}>
         <View style={styles.rootHeader}>
-          <SproutIcon size={48} color={colors.mossGreen} />
+          <StageImage level={currentStage?.level ?? 1} />
           <View style={styles.rootInfo}>
             <Text style={styles.rootStage}>{currentStage?.name ?? "Ziarenko"}</Text>
             <Text style={styles.rootExp}>{totalExp} EXP</Text>
@@ -138,7 +151,7 @@ export default function EkoScreen() {
             {transformMutation.isPending ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.transformBtnText}>🌿 Ewoluuj!</Text>
+              <Text style={styles.transformBtnText}>Ewoluuj!</Text>
             )}
           </Pressable>
         )}
@@ -156,13 +169,13 @@ export default function EkoScreen() {
             +{lastResult.points.exp} EXP · +{lastResult.points.leaderboard} pkt rankingowych
           </Text>
           <View style={styles.toastBadges}>
-            {lastResult.caps.firstTimeBonus && <Text style={styles.badge}>🌟 First-time x2</Text>}
-            {lastResult.caps.synergyBonus && <Text style={styles.badge}>🔗 Synergia +20%</Text>}
+            {lastResult.caps.firstTimeBonus && <Text style={styles.badge}>First-time x2</Text>}
+            {lastResult.caps.synergyBonus && <Text style={styles.badge}>Synergia +20%</Text>}
             {lastResult.caps.diminishingMultiplier < 1 && lastResult.caps.diminishingMultiplier > 0 && (
-              <Text style={styles.badge}>📉 x{lastResult.caps.diminishingMultiplier}</Text>
+              <Text style={styles.badge}>x{lastResult.caps.diminishingMultiplier}</Text>
             )}
             {lastResult.caps.diminishingMultiplier === 0 && (
-              <Text style={[styles.badge, styles.badgeWarn]}>⛔ Brak pkt rankingowych (diminishing)</Text>
+              <Text style={[styles.badge, styles.badgeWarn]}>Brak pkt rankingowych (diminishing)</Text>
             )}
           </View>
           <Text style={styles.toastCaps}>
@@ -188,7 +201,7 @@ export default function EkoScreen() {
                 return (
                   <View key={act.id} style={[styles.actRow, done && styles.actRowDone]}>
                     <View style={styles.actInfo}>
-                      <Text style={[styles.actIcon, done && styles.textMuted]}>{act.icon}</Text>
+                      <EcoIcon name={act.icon} size={20} />
                       <View style={styles.actTextWrap}>
                         <Text style={[styles.actName, done && styles.textMuted]}>{act.name}</Text>
                         <Text style={[styles.actPoints, done && styles.textMuted]}>{act.basePoints} pkt bazowych · EXP + ranking</Text>
@@ -245,7 +258,7 @@ const styles = StyleSheet.create({
   catLabel: { fontSize: 13, fontWeight: "700" },
   actRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: spacing.x2s, paddingHorizontal: spacing.sm, borderTopWidth: 1, borderTopColor: colors.slate100 },
   actInfo: { flexDirection: "row", alignItems: "center", gap: spacing.x2s, flex: 1 },
-  actIcon: { fontSize: 20 },
+
   actTextWrap: { flex: 1 },
   actName: { fontSize: 13, fontWeight: "600", color: colors.slate900 },
   actPoints: { fontSize: 11, color: colors.slate500, marginTop: 1 },

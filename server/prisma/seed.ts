@@ -96,7 +96,7 @@ async function main() {
   // Seed rewards
   const rewards = [
     {
-      icon: "☕",
+      icon: "coffee",
       title: "Kawa w sieciowce",
       merchant: "American Cafe",
       category: "food" as const,
@@ -105,7 +105,7 @@ async function main() {
       description: "Darmowa kawa w punktach American Cafe.",
     },
     {
-      icon: "🧘",
+      icon: "yoga",
       title: "Joga w Centrum",
       merchant: "Centrum Jogi Sopot",
       category: "wellness" as const,
@@ -114,7 +114,7 @@ async function main() {
       description: "Jednorazowe wejscie na zajecia jogi.",
     },
     {
-      icon: "🏊",
+      icon: "swim",
       title: "Karnet na basen",
       merchant: "Aquapark Sopot",
       category: "sport" as const,
@@ -123,7 +123,7 @@ async function main() {
       description: "Miesieczny karnet na basen.",
     },
     {
-      icon: "🌱",
+      icon: "leaf",
       title: "Zestaw roslinny",
       merchant: "Zielony Zakatek",
       category: "eco" as const,
@@ -209,28 +209,28 @@ async function main() {
   // Seed Eco-activities
   const ecoActivities = [
     // MOBILITY
-    { name: "Rower zamiast samochodu", description: "Dojazd do pracy rowerem zamiast auta.", icon: "🚲", category: "MOBILITY" as const, basePoints: 30 },
-    { name: "Korzystanie z komunikacji miejskiej", description: "Przejazd autobusem/tramwajem zamiast samochodu.", icon: "🚌", category: "MOBILITY" as const, basePoints: 20 },
-    { name: "Miesiąc bez auta (dzień)", description: "Codzienna aktywność w ramach wyzwania 'Miesiąc bez auta'.", icon: "🚶", category: "MOBILITY" as const, basePoints: 40 },
-    { name: "Car-sharing / ride-sharing", description: "Wspólny przejazd z innymi osobami.", icon: "🚗", category: "MOBILITY" as const, basePoints: 25 },
+    { name: "Rower zamiast samochodu", description: "Dojazd do pracy rowerem zamiast auta.", icon: "bike", category: "MOBILITY" as const, basePoints: 30 },
+    { name: "Korzystanie z komunikacji miejskiej", description: "Przejazd autobusem/tramwajem zamiast samochodu.", icon: "bus", category: "MOBILITY" as const, basePoints: 20 },
+    { name: "Miesiąc bez auta (dzień)", description: "Codzienna aktywność w ramach wyzwania 'Miesiąc bez auta'.", icon: "walk", category: "MOBILITY" as const, basePoints: 40 },
+    { name: "Car-sharing / ride-sharing", description: "Wspólny przejazd z innymi osobami.", icon: "car", category: "MOBILITY" as const, basePoints: 25 },
     // CIRCULARITY
-    { name: "Bookcrossing", description: "Uwolnij książkę – zostaw ją w publicznym miejscu.", icon: "📚", category: "CIRCULARITY" as const, basePoints: 20 },
-    { name: "Segregacja odpadów", description: "Prawidłowe segregowanie śmieci.", icon: "♻️", category: "CIRCULARITY" as const, basePoints: 15 },
-    { name: "Naprawa zamiast wyrzucania", description: "Naprawa zepsutego przedmiotu zamiast kupna nowego.", icon: "🔧", category: "CIRCULARITY" as const, basePoints: 35 },
-    { name: "Oddanie ubrań do second-handu", description: "Przekazanie nieużywanych ubrań do ponownego obiegu.", icon: "👕", category: "CIRCULARITY" as const, basePoints: 25 },
-    { name: "Kompostowanie", description: "Kompostowanie odpadków organicznych.", icon: "🌱", category: "CIRCULARITY" as const, basePoints: 30 },
+    { name: "Bookcrossing", description: "Uwolnij książkę – zostaw ją w publicznym miejscu.", icon: "book", category: "CIRCULARITY" as const, basePoints: 20 },
+    { name: "Segregacja odpadów", description: "Prawidłowe segregowanie śmieci.", icon: "recycle", category: "CIRCULARITY" as const, basePoints: 15 },
+    { name: "Naprawa zamiast wyrzucania", description: "Naprawa zepsutego przedmiotu zamiast kupna nowego.", icon: "tool", category: "CIRCULARITY" as const, basePoints: 35 },
+    { name: "Oddanie ubrań do second-handu", description: "Przekazanie nieużywanych ubrań do ponownego obiegu.", icon: "clothes", category: "CIRCULARITY" as const, basePoints: 25 },
+    { name: "Kompostowanie", description: "Kompostowanie odpadków organicznych.", icon: "leaf", category: "CIRCULARITY" as const, basePoints: 30 },
     // LOCAL_CONSUMPTION
-    { name: "Zakupy na targu", description: "Zakupy na lokalnym targu zamiast w supermarkecie.", icon: "🛍️", category: "LOCAL_CONSUMPTION" as const, basePoints: 30 },
-    { name: "Korzystanie z wielorazowych opakowań", description: "Zakupy z własną torbą i pojemnikami.", icon: "👜", category: "LOCAL_CONSUMPTION" as const, basePoints: 20 },
-    { name: "Kupno lokalnych produktów", description: "Wybór produktów od lokalnych dostawców.", icon: "🧀", category: "LOCAL_CONSUMPTION" as const, basePoints: 25 },
-    { name: "Domowy posiłek zamiast jedzenia na wynos", description: "Przygotowanie posiłku w domu z lokalnych składników.", icon: "🍳", category: "LOCAL_CONSUMPTION" as const, basePoints: 20 },
+    { name: "Zakupy na targu", description: "Zakupy na lokalnym targu zamiast w supermarkecie.", icon: "shopping", category: "LOCAL_CONSUMPTION" as const, basePoints: 30 },
+    { name: "Korzystanie z wielorazowych opakowań", description: "Zakupy z własną torbą i pojemnikami.", icon: "bag", category: "LOCAL_CONSUMPTION" as const, basePoints: 20 },
+    { name: "Kupno lokalnych produktów", description: "Wybór produktów od lokalnych dostawców.", icon: "cheese", category: "LOCAL_CONSUMPTION" as const, basePoints: 25 },
+    { name: "Domowy posiłek zamiast jedzenia na wynos", description: "Przygotowanie posiłku w domu z lokalnych składników.", icon: "cook", category: "LOCAL_CONSUMPTION" as const, basePoints: 20 },
     // NATURE_ACTIVITY
-    { name: "Eko-wycieczka", description: "Spacer/wycieczka po lesie lub parku.", icon: "🌲", category: "NATURE_ACTIVITY" as const, basePoints: 50 },
-    { name: "Sprzątanie lasu/plaży", description: "Wolontariat sprzątania dzikich wysypisk.", icon: "🧹", category: "NATURE_ACTIVITY" as const, basePoints: 60 },
-    { name: "Sadzenie drzew", description: "Udział w akcji sadzenia drzew.", icon: "🌳", category: "NATURE_ACTIVITY" as const, basePoints: 80 },
-    { name: "Obserwacja ptaków", description: "Spacer z lornetką i identyfikacja gatunków.", icon: "🐦", category: "NATURE_ACTIVITY" as const, basePoints: 25 },
-    { name: "Joga na świeżym powietrzu", description: "Sesja jogi w plenerze.", icon: "🧘", category: "NATURE_ACTIVITY" as const, basePoints: 35 },
-    { name: "Bieganie w terenie", description: "Bieg po leśnych ścieżkach zamiast po mieście.", icon: "🏃", category: "NATURE_ACTIVITY" as const, basePoints: 40 },
+    { name: "Eko-wycieczka", description: "Spacer/wycieczka po lesie lub parku.", icon: "nature", category: "NATURE_ACTIVITY" as const, basePoints: 50 },
+    { name: "Sprzątanie lasu/plaży", description: "Wolontariat sprzątania dzikich wysypisk.", icon: "clean", category: "NATURE_ACTIVITY" as const, basePoints: 60 },
+    { name: "Sadzenie drzew", description: "Udział w akcji sadzenia drzew.", icon: "tree", category: "NATURE_ACTIVITY" as const, basePoints: 80 },
+    { name: "Obserwacja ptaków", description: "Spacer z lornetką i identyfikacja gatunków.", icon: "bird", category: "NATURE_ACTIVITY" as const, basePoints: 25 },
+    { name: "Joga na świeżym powietrzu", description: "Sesja jogi w plenerze.", icon: "yoga", category: "NATURE_ACTIVITY" as const, basePoints: 35 },
+    { name: "Bieganie w terenie", description: "Bieg po leśnych ścieżkach zamiast po mieście.", icon: "run", category: "NATURE_ACTIVITY" as const, basePoints: 40 },
   ];
 
   for (const activity of ecoActivities) {

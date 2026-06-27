@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { CoinIcon } from "../../components/icons";
+import { EcoIcon } from "../../components/EcoIcon";
 import { Screen } from "../../features/common/Screen";
 import { fetchMarket, fetchWallet } from "../../lib/api/endpoints";
 import { colors, radius, spacing } from "../../styles/tokens";
@@ -76,7 +77,7 @@ export default function MarketScreen() {
             style={styles.card}
           >
             <View style={styles.cardImage}>
-              <Text style={styles.cardEmoji}>{reward.icon}</Text>
+              <EcoIcon name={reward.icon} size={32} />
             </View>
             <View style={styles.cardInfo}>
               <Text style={styles.cardTitle} numberOfLines={2}>
@@ -165,9 +166,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  cardEmoji: {
-    fontSize: 36,
-  },
+
   cardInfo: {
     padding: 12,
     gap: 4,
