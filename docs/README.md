@@ -14,7 +14,7 @@
 | [Ekrany mobilne](modules/mobile-screens.md) | Spis ekranów, routing, stany UI |
 | [Panel admina](modules/admin.md) | Web-only admin, platform guards |
 | [Backend NestJS](modules/backend.md) | Moduły, serwisy, konfiguracja |
-| [API Endpoints](modules/api-endpoints.md) | REST API — pełna specyfikacja 18 endpointów |
+| [API Endpoints](modules/api-endpoints.md) | REST API — pełna specyfikacja endpointów |
 | [Baza danych](modules/database.md) | Schemat Prisma, modele, migracje |
 | [Przepływ danych](modules/data-flow.md) | TanStack Query, Zustand, Axios |
 | **Operacje** | |
@@ -38,9 +38,52 @@ Model biznesowy: B2B2C — firma klient (np. Intel, ERGO) kupuje dostęp dla pra
 
 - **Frontend:** Expo 56, React 19.2, React Native 0.85, Expo Router 4, TanStack Query 5, Zustand 5, Axios
 - **Backend:** NestJS 10, TypeScript 6.0, Prisma 7, PostgreSQL 16
-- **UI:** react-native-web, design tokens
+- **UI:** react-native-web, design tokens (`src/styles/tokens.ts`)
 - **Auth:** JWT (access + refresh token w HttpOnly cookie) — w trakcie implementacji
-- **i18n:** i18next + react-i18next — w trakcie implementacji
+- **i18n:** i18next + react-i18next — skonfigurowane, ~400 kluczy, pl/en
+
+## Architektura frontendu
+
+```
+src/
+├── app/                  # Expo Router (routing + ekrany)
+├── components/
+│   ├── shared/           # Wspólne komponenty UI (9 komponentów)
+│   └── icons/            # 30+ ikon SVG
+├── features/             # Feature-based moduły
+│   ├── admin/            # Panel admina (6 tabów)
+│   ├── company/          # Panel firmy (4 taby)
+│   ├── home/             # Ekran główny
+│   ├── ranking/          # Ranking
+│   ├── eko/              # Eko-rozwój
+│   ├── market/           # Rynek nagród
+│   └── auth/             # Autoryzacja
+├── i18n/                 # Tłumaczenia (pl/en)
+├── lib/api/endpoints/    # API podzielone per domena (11 plików)
+├── store/                # Zustand (types, seeds, helpers)
+└── styles/               # Design tokens
+```
+
+## Wspólne komponenty
+
+| Komponent | Opis |
+|-----------|------|
+| `LoadingState` | ActivityIndicator + message |
+| `ErrorCard` | Error title + detail + retry |
+| `EmptyState` | Icon + message |
+| `StatusBadge` | one_time/cyclical/active/inactive |
+| `ConfirmDialog` | "Usunąć?" + Tak/Nie |
+| `TableHeader` | Konfigurowalny nagłówek tabeli |
+| `ActivitiesTab` | Unified tab (admin + company) |
+| `ActivitiesForm` | Formularz tworzenia aktywności |
+| `ActivitiesTable` | Tabela z listą aktywności |
+
+## i18n
+
+- **Biblioteka:** i18next + react-i18next
+- **Pliki:** `src/i18n/messages/{pl,en}.json` (~400 kluczy)
+- **Namespaces:** common, nav, auth, home, eco, market, ranking, activity, profile, history, notifications, achievements, challenge, declarations, reward, settings, editProfile, admin, company
+- **Wzorzec:** `const { t } = useTranslation(); <Text>{t("home.greeting")}</Text>`
 
 ## Uruchomienie
 

@@ -10,8 +10,8 @@ Jesteś technicznym AI Copilotem pracującym nad **Eco-Pulse** — uniwersalną 
 | Stan API | TanStack Query 5 | Fetching, cache, mutacje |
 | Stan UI | Zustand 5 | Persisted przez AsyncStorage |
 | HTTP | Axios | Instancja w `src/lib/api/client.ts` |
-| Tłumaczenia | i18next + react-i18next | W trakcie — obecnie hardcoded PL |
-| Backend | NestJS 10 + TypeScript 6 | 18 REST endpointów w AppController |
+| Tłumaczenia | i18next + react-i18next | Skonfigurowane, 400+ kluczy, pl/en |
+| Backend | NestJS 10 + TypeScript 6 | Modułowa architektura |
 | ORM | Prisma 7 + @prisma/adapter-pg | 7 modeli, single-user mode |
 | DB | PostgreSQL 16 | Docker Compose w server/ |
 | Walidacja | class-validator + class-transformer | Globalny ValidationPipe |
@@ -23,172 +23,190 @@ Jesteś technicznym AI Copilotem pracującym nad **Eco-Pulse** — uniwersalną 
 Root/
 ├── src/                          # Frontend Expo
 │   ├── app/                      # Expo Router (routing + ekrany)
-│   │   ├── _layout.tsx           # Root: QueryClientProvider + Stack
+│   │   ├── _layout.tsx           # Root: QueryClientProvider + i18n import
 │   │   ├── index.tsx             # Redirect → /(auth)/login
 │   │   ├── (auth)/               # Login, Register, Onboarding
 │   │   ├── (mobile)/             # 14 ekranów mobilnych + bottom tabs
-│   │   └── admin/                # Web-only panel (placeholder)
-│   ├── features/common/          # AppLogo, Screen wrapper
-│   ├── i18n/messages/            # {pl,en}.json (4 klucze — do rozbudowy)
+│   │   ├── admin/                # Web-only panel
+│   │   └── company/              # Panel firmy z [slug]
+│   ├── components/
+│   │   ├── icons/                # 30+ ikon SVG
+│   │   ├── EcoIcon.tsx           # Dynamiczna ikona po nazwie
+│   │   └── shared/               # Wspólne komponenty UI
+│   │       ├── index.ts          # Barrel export
+│   │       ├── LoadingState.tsx  # ActivityIndicator + message
+│   │       ├── ErrorCard.tsx     # Error title + detail + retry
+│   │       ├── EmptyState.tsx    # Icon + message
+│   │       ├── StatusBadge.tsx   # one_time/cyclical/active/inactive
+│   │       ├── ConfirmDialog.tsx # "Usunąć?" + Tak/Nie
+│   │       ├── TableHeader.tsx   # Konfigurowalny nagłówek tabeli
+│   │       ├── ActivitiesTab.tsx # Unified tab (admin + company)
+│   │       ├── ActivitiesForm.tsx # Formularz tworzenia aktywności
+│   │       └── ActivitiesTable.tsx # Tabela z listą aktywności
+│   ├── features/                 # Feature-based moduły
+│   │   ├── common/               # Screen.tsx, AppLogo.tsx
+│   │   ├── admin/                # Panel admina
+│   │   │   ├── admin.styles.ts
+│   │   │   ├── components/       # Badge.tsx, Icons.tsx
+│   │   │   └── tabs/             # DashboardTab, UsersTab, CompaniesTab,
+│   │   │                         # ActivitiesTab, AnalyticsTab, CompanyTokensTab
+│   │   ├── company/              # Panel firmy
+│   │   │   ├── company.styles.ts
+│   │   │   ├── components/       # CompanyBarChart.tsx
+│   │   │   └── tabs/             # ActivitiesTab, AnalyticsTab, ESGTab, TokensTab
+│   │   ├── home/                 # UserHome.tsx, CompanyHome.tsx, home.styles.ts
+│   │   ├── ranking/              # IndividualRanking, CompanyRanking, PodiumIcon
+│   │   ├── eko/                  # RootEvolutionCard, SubmissionFeedback, EcoActivityCategory
+│   │   ├── market/               # RewardsGrid, CompanyActivitiesList
+│   │   └── auth/                 # RoleSelector, CompanySearch, register.styles.ts
+│   ├── i18n/
+│   │   ├── index.ts              # Konfiguracja i18next (pl/en)
+│   │   └── messages/
+│   │       ├── pl.json           # ~400 kluczy (polski)
+│   │       └── en.json           # ~400 kluczy (angielski)
 │   ├── lib/
-│   │   ├── api/client.ts         # Axios instance
-│   │   ├── api/endpoints.ts      # 18 funkcji API
-│   │   └── types/api.ts          # TypeScript DTO
-│   ├── store/useAppStore.ts      # Zustand (persisted)
+│   │   ├── api/
+│   │   │   ├── client.ts         # Axios instance
+│   │   │   └── endpoints/        # Podzielone per domena
+│   │   │       ├── index.ts      # Barrel export
+│   │   │       ├── auth.ts       # loginUser, registerUser, fetchMe, patchProfile
+│   │   │       ├── market.ts     # fetchMarket, redeemReward, fetchWallet
+│   │   │       ├── activity.ts   # fetchActivities, addActivity, eco activities
+│   │   │       ├── admin.ts      # fetchAdminDashboard, users, companies, tokens
+│   │   │       ├── company.ts    # fetchCompanyBySlug, employees, analytics
+│   │   │       ├── challenge.ts  # fetchChallenges, createChallenge, join
+│   │   │       ├── leaderboard.ts # fetchLeaderboard, fetchMyRank
+│   │   │       ├── root.ts       # fetchRootStatus, transformRoot
+│   │   │       ├── esg.ts        # generateESGReport, PDF/DOCX
+│   │   │       ├── certificate.ts # generateCertificate, bulk, PDF
+│   │   │       └── notifications.ts # fetchNotifications, achievements
+│   │   └── types/
+│   │       ├── api.ts            # TypeScript DTO (360 linii)
+│   │       └── admin.ts          # Tab type
+│   ├── store/
+│   │   ├── types.ts              # Typy Zustand (AppState, ActivityLog, Reward)
+│   │   ├── seeds.ts              # Dane seed (txSeed, rewardsSeed)
+│   │   ├── helpers.ts            # activityRates, nowIso
+│   │   └── useAppStore.ts        # Zustand store (persisted)
 │   └── styles/
-│       ├── tokens.ts             # Design tokens (TS, nie CSS)
+│       ├── tokens.ts             # Design tokens (colors, spacing, radius, typography, shadows)
 │       └── theme.ts              # Re-export
 ├── server/                       # Backend NestJS
 │   ├── src/
 │   │   ├── main.ts               # Bootstrap: CORS, ValidationPipe
-│   │   ├── app.module.ts
-│   │   ├── app.controller.ts     # 18 endpointów REST
-│   │   ├── app.service.ts        # Logika biznesowa
-│   │   └── prisma.service.ts     # PrismaClient + adapter-pg
+│   │   ├── app.module.ts          # Rejestracja modułów
+│   │   ├── app.controller.ts      # Legacy endpointy
+│   │   ├── app.service.ts         # Legacy logika
+│   │   ├── prisma.service.ts      # PrismaClient + adapter-pg
+│   │   ├── auth/                  # Auth module (JWT)
+│   │   ├── admin/                 # Admin module
+│   │   ├── company/               # Company module (rozdzielony)
+│   │   │   ├── company.controller.ts    # CRUD + employees + analytics
+│   │   │   ├── company.service.ts       # Core company logic
+│   │   │   ├── esg-report.controller.ts # ESG report endpoints
+│   │   │   ├── esg-report.service.ts    # ESG report generation
+│   │   │   ├── certificate.controller.ts # Certificate endpoints
+│   │   │   ├── certificate.service.ts   # Certificate generation
+│   │   │   └── templates/              # HTML templates
+│   │   ├── activity/              # Activity module
+│   │   ├── challenge/             # Challenge module
+│   │   ├── leaderboard.controller.ts
+│   │   ├── leaderboard.service.ts
+│   │   ├── root.controller.ts
+│   │   ├── root.service.ts
+│   │   └── common/                # JWT strategy, guards, decorators
 │   ├── prisma/
-│   │   ├── schema.prisma         # 7 modeli
-│   │   ├── migrations/           # Inicjalna migracja
-│   │   └── seed.ts               # User + 4 nagrody + achievementy
-│   ├── prisma.config.ts          # Konfiguracja Prisma 7
-│   └── docker-compose.yml        # PostgreSQL 16
+│   │   ├── schema.prisma          # 7 modeli
+│   │   ├── migrations/
+│   │   └── seed.ts
+│   ├── prisma.config.ts
+│   └── docker-compose.yml
 ├── docs/                         # Dokumentacja projektu
 └── .opencode/                    # AI config + instrukcje
 ```
 
 ## Routing (Expo Router)
 
-- `src/app/_layout.tsx` — root Stack + QueryClientProvider
+- `src/app/_layout.tsx` — root Stack + QueryClientProvider + i18n import
 - `src/app/index.tsx` — redirect → `/(auth)/login`
 - `(auth)/` — Stack (headerShown: false): login, register, onboarding
-- `(mobile)/` — bottom tabs (Dom/Rynek/Ranking/Profil) + 14 sub-ekranów
+- `(mobile)/` — bottom tabs (Dom/Rynek/Eko/Ranking/Profil) + 14 sub-ekranów
 - `admin/` — web-only guard (`Platform.OS !== "web"` → fallback)
+- `company/[slug]/` — panel firmy z guard platformy
 
-### Zasady routingu
+## i18n — pełna konfiguracja
 
-- **Nie dodawaj `src/pages/`** — routing jest w `src/app/` przez Expo Router
-- **Nie twórz React Router** — projekt używa Expo Router (file-based)
-- **Nowy ekran** = nowy plik `.tsx` w odpowiedniej grupie route
-- **Admin web-only**: guard w `admin/_layout.tsx` przez `Platform.OS`
-- **Mobile na webie**: wrapper `maxWidth: 480` w `(mobile)/_layout.tsx`
+- **Biblioteka**: i18next + react-i18next
+- **Konfiguracja**: `src/i18n/index.ts`
+- **Pliki**: `src/i18n/messages/{pl,en}.json` (~400 kluczy)
+- **Namespaces**: common, nav, auth, home, eco, market, ranking, activity, profile, history, notifications, achievements, challenge, declarations, reward, settings, editProfile, admin, company
 
-## Architektura ekranów (zamiast PageContainers)
-
-Projekt **nie używa** `PageContainers`, `SectionContainer`, `ContentSection` ani `ColumnSection`. Ekrany budowane są:
-
-1. **Screen wrapper** (`src/features/common/Screen.tsx`): SafeAreaView + ScrollView + opcjonalny web container
-2. **Expo Router**: komponent ekranu = plik w `src/app/` (lub grupie)
-3. **Styling**: `StyleSheet.create()` z `react-native`, tokeny z `src/styles/tokens.ts`
-4. **Dane**: TanStack Query (useQuery/useMutation) bezpośrednio w ekranie
-
-### Wzorzec ekranu
+### Wzorzec użycia
 
 ```tsx
-// src/app/(mobile)/home.tsx
-import { useQuery } from "@tanstack/react-query";
-import { View, Text, StyleSheet } from "react-native";
-import { fetchMe } from "../../lib/api/endpoints";
-import { tokens } from "../../styles/tokens";
+import { useTranslation } from "react-i18next";
 
-export default function HomeScreen() {
-  const { data, isPending, error } = useQuery({
-    queryKey: ["me"],
-    queryFn: fetchMe,
-  });
-
-  if (isPending) return <ActivityIndicator />;
-  if (error) return <Text>Błąd: {error.message}</Text>;
-
-  return (
-    <Screen>
-      <View style={styles.container}>
-        <Text style={styles.title}>{data.name}</Text>
-      </View>
-    </Screen>
-  );
+export default function MyScreen() {
+  const { t } = useTranslation();
+  return <Text>{t("home.greeting")}</Text>;
 }
-
-const styles = StyleSheet.create({
-  container: { padding: tokens.spacing.md },
-  title: { fontSize: tokens.typography.h1.fontSize, color: tokens.colors.textPrimary },
-});
 ```
 
-### Wzorzec kafelka (tile list)
+### Zasady i18n
 
-Kafelki z ikoną + tekstem (np. lista szybkich akcji w home) buduj według tego schematu:
+- **Żaden hardcoded string** w JSX — wszystko przez `t()`
+- Klucze pisane po angielsku, wartości w języku docelowym
+- Namespace odpowiada sekcji (np. `admin.users.title`, `company.esg.reports`)
+- Dodanie nowego języka = dodanie pliku JSON + rejestracja w `i18n/index.ts`
 
-```tsx
-<Link href="/(mobile)/somewhere" style={styles.tileCard}>
-  <View style={styles.tileInner}>
-    <View style={styles.tileIconBox}>
-      <SomeIcon size={22} color={colors.mossGreen} />
-    </View>
-    <Text style={styles.tileLabel}>Etykieta</Text>
-  </View>
-</Link>
+## Wspólne komponenty (src/components/shared/)
 
-const styles = StyleSheet.create({
-  tileCard: {
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.slate200,
-    borderRadius: radius.md,
-  },
-  tileInner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  tileIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.sm,
-    backgroundColor: colors.mist,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  tileLabel: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "600",
-    color: colors.slate900,
-  },
-});
-```
+| Komponent | Props | Opis |
+|-----------|-------|------|
+| `LoadingState` | `{ message?, size?, style? }` | ActivityIndicator + opcjonalny message |
+| `ErrorCard` | `{ title?, error?, onRetry?, style? }` | Error title + detail + retry button |
+| `EmptyState` | `{ icon?, message?, style? }` | Icon + message |
+| `StatusBadge` | `{ type, label? }` | one_time/cyclical/active/inactive/used/available |
+| `ConfirmDialog` | `{ message?, onConfirm, onCancel, loading? }` | "Usunąć?" + Tak/Nie |
+| `TableHeader` | `{ columns: [{ label, flex, align? }] }` | Konfigurowalny nagłówek tabeli |
+| `ActivitiesTab` | `{ activities, isPending, error, onCreate, onDelete, ... }` | Unified tab (admin + company) |
+| `ActivitiesForm` | `{ onCreate, creating }` | Formularz tworzenia aktywności |
+| `ActivitiesTable` | `{ activities, onDelete, deleting }` | Tabela z listą aktywności |
 
-**Zasady:**
-- Flex layout (`flexDirection`, `alignItems`, `gap`) zawsze na wewnętrznym `View` (`tileInner`), **nigdy** bezpośrednio na `Link` — `gap` na `Link` nie działa niezawodnie na każdej platformie
-- `Link` trzyma tylko style wizualne (tło, border, radius, padding)
-- Ikonę opakuj w `View` z jawnym `width`/`height` + `alignItems: "center", justifyContent: "center"` — gwarantuje wycentrowanie SVG względem boxa
-- Tekst ma `flex: 1` i jest bezpośrednim dzieckiem flex rowa
-- Używaj tokenów `spacing.*` zamiast hardcoded wartości
+### Zasady wspólnych komponentów
 
-## Design tokeny (TypeScript, nie CSS)
+- Importuj z `../../components/shared/` (lub odpowiednia ścieżka)
+- Używaj zamiast inline powtarzalnych wzorców
+- Każdy komponent używa `useTranslation()` wewnętrznie
+- Style wewnętrzne w komponencie (nie w screen styles)
 
-Tokeny żyją w `src/styles/tokens.ts` jako stałe TypeScript:
+## Design tokeny (TypeScript)
+
+Tokeny żyją w `src/styles/tokens.ts`:
 
 ```typescript
-export const tokens = {
-  colors: { primary: "#22C55E", background: "#0F172A", ... },
-  spacing: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, ... },
-  radius: { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 },
-  typography: { h1: { fontSize: 32, fontWeight: "700" }, ... },
-  shadows: { sm: { shadowOffset: { width: 0, height: 1 }, ... }, ... },
-} as const;
+export const colors = { primary: "#4A5E0F", background: "#FAFAF2", ... };
+export const spacing = { x4s: 4, x3s: 8, x2s: 12, xs: 16, sm: 20, md: 24, lg: 32, xl: 40, ... };
+export const radius = { sm: 8, md: 12, lg: 16, xl: 24, full: 9999 };
+export const typography = { h1: { fontSize: 28, fontWeight: "700" }, ... };
+export const shadows = { sm: {...}, md: {...}, lg: {...}, xl: {...} };
 ```
 
-Import przez `import { tokens } from "../../styles/tokens"`.
-**Nie twórz** `tokens.css` — projekt nie używa CSS custom properties.
+### Zasady tokenów
+
+- Importuj przez `import { colors, spacing, radius, typography } from "../../styles/tokens"`
+- **Nie hardkoduj** kolorów, spacing, borderRadius, fontSize/fontWeight
+- Używaj `colors.*`, `spacing.*`, `radius.*`, `typography.*`
+- `StyleSheet.create()` z tokenami, nie surowymi wartościami
 
 ## Store + Data flow
 
 - **TanStack Query**: całe data fetching, cache, mutacje, refetch
-- **Zustand** (`src/store/useAppStore.ts`): wyłącznie stan UI + persisted offline data
-  - Sekcje: auth, onboarding, wallet, activities, marketplace, notifications, rankings
-  - Persisted przez AsyncStorage (zustand/middleware)
-- **Auth**: obecnie mock (Zustand `isAuthenticated: true`). Docelowo JWT.
+- **Zustand** (`src/store/`): wyłącznie stan UI + persisted offline data
+  - `types.ts` — typy (AppState, ActivityLog, Reward, TxItem)
+  - `seeds.ts` — dane seed (txSeed, rewardsSeed)
+  - `helpers.ts` — helpery (activityRates, nowIso)
+  - `useAppStore.ts` — store (persisted przez AsyncStorage)
 
 ### Schemat przepływu
 
@@ -198,43 +216,63 @@ Ekran → useQuery / useMutation → Axios → NestJS → Prisma → PostgreSQL
 TanStack Query cache → re-render
 ```
 
-## i18n — stan obecny i kierunek
+## Backend — architektura modułowa
 
-- **Obecnie**: 4 klucze w `src/i18n/messages/{pl,en}.json`, reszta UI hardcoded po polsku
-- **Docelowo**: `i18next` + `react-i18next`, namespace'y per sekcja, wszystkie stringi w JSON
-- **Nie**: używaj `t()` zanim i18next jest w pełni skonfigurowane
-- **Gdy dodajesz i18n**: najpierw wypełnij klucze we wszystkich językach, potem użyj w komponencie
+```
+server/src/
+├── auth/           # JWT auth (login, register, refresh)
+├── admin/          # Admin panel (users, companies, challenges)
+├── company/        # Company panel (rozdzielony)
+│   ├── company.*   # CRUD + employees + analytics + tokens
+│   ├── esg-report.* # ESG report generation + PDF/DOCX
+│   ├── certificate.* # Certificate generation + PDF
+│   └── templates/  # HTML templates
+├── activity/       # Physical activities + eco activities
+├── challenge/      # Challenges (company + global)
+├── leaderboard.*   # Rankings
+├── root.*          # Root evolution
+└── common/         # JWT strategy, guards, decorators
+```
 
-## Backend — reguły
+### Zasady backendu
 
-- `server/src/` używa NestJS 10, Prisma 7, class-validator
+- `import type` **nie** dla klas DI (NestJS wymaga runtime reference)
 - Globalny `ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true })`
 - Single-user mode (zawsze pierwszy user) — do zastąpienia przez JWT auth
 - DTO przez class-validator (nie Zod na backendzie)
-- `import type` **nie** dla klas DI (NestJS wymaga runtime reference)
+- Każdy serwis ma `verifyOwnership()` dla autoryzacji
 
-### Import type — reguła
+## Feature-based architektura
 
-- Frontend (`src/**`): używaj `import type { Foo }` dla symboli typowych
-- Backend (`server/**`): **nie używaj** `import type` dla `@Injectable`, `@Controller` — NestJS DI wymaga runtime importu
+Każdy feature ma własny katalog w `src/features/`:
 
-## Workflow — fazy (dostosowane do hackathonu)
+```
+src/features/{feature}/
+├── {feature}.styles.ts    # Wspólne style (opcjonalne)
+├── components/            # Komponenty feature (opcjonalne)
+└── tabs/                  # Taby (dla admin/company)
+```
+
+### Features
+
+| Feature | Lokalizacja | Odpowiedzialność |
+|---------|-------------|------------------|
+| `admin` | `features/admin/` | Panel admina (6 tabów) |
+| `company` | `features/company/` | Panel firmy (4 taby) |
+| `home` | `features/home/` | Ekran główny (UserHome, CompanyHome) |
+| `ranking` | `features/ranking/` | Ranking (Individual, Company) |
+| `eko` | `features/eko/` | Eko-rozwój (karty, aktywności) |
+| `market` | `features/market/` | Rynek (nagrody, aktywności) |
+| `auth` | `features/auth/` | Autoryzacja (RoleSelector, CompanySearch) |
+
+## Workflow — fazy
 
 Projekt jest w fazie **build**. Obowiązują uproszczone zasady:
 
 1. **Nie ma** `REQUIREMENTS.md` — dokumentacja projektu jest w `docs/`
-2. **Nie twórz** `src/spec/` — to wzorzec dla landing page'y, nie dla tego projektu
-3. **Nie twórz** `PageContainers/`, `shared/ui/`, `shared/sections/` — projekt używa Expo Router + inline komponentów
+2. **Nie twórz** `src/spec/` — to wzorzec dla landing page'y
+3. **Nie twórz** `PageContainers/`, `shared/ui/`, `shared/sections/`
 4. **Priorytet**: kontynuacja istniejącego kodu bez przełamywania architektury
-
-## Lista zadań priorytetowych (znane luki)
-
-1. **JWT Auth** — implementacja prawdziwego auth (access + refresh token, HttpOnly cookie, `/api/auth/me`)
-2. **i18n** — pełne tłumaczenia (wszystkie stringi → JSON, konfiguracja i18next)
-3. **Admin panel** — dashboard z metrykami z API (obecnie placeholder)
-4. **Health endpoint** + rate limiting na backendzie
-5. **Deployment** — Dockerfile dla NestJS, Nginx config, CI/CD
-6. **Podział app.service.ts** — na dedykowane serwisy domenowe
 
 ## Kiedy tworzyć nowy ekran
 
@@ -243,13 +281,15 @@ Projekt jest w fazie **build**. Obowiązują uproszczone zasady:
 3. Importuj tokeny z `src/styles/tokens`, API z `src/lib/api/endpoints`
 4. Dodaj ekran do nawigacji (tab w `(mobile)/_layout.tsx` lub Stack)
 5. Jeśli potrzeba nowej grupy route → utwórz katalog z `_layout.tsx`
+6. Używaj wspólnych komponentów z `src/components/shared/`
+7. Wszystkie stringi przez `t()` z i18next
 
 ## Jakość wykonania (frontend)
 
 - Każdy ekran musi obsługiwać stany: `isPending`, `error`, `success`
-- `isPending` → ActivityIndicator lub skeleton
-- `error` → komunikat + przycisk "Spróbuj ponownie"
-- Brak surowych nieostylowanych list — używaj `FlatList` z `ListEmptyComponent`
+- `isPending` → `<LoadingState />`
+- `error` → `<ErrorCard error={error} />`
+- `empty` → `<EmptyState message={t("...")} />`
 - Design tokeny z `tokens.ts` — bez hardcoded kolorów/spacingów
 - Mobile layout działa na webie (maxWidth 480)
 - Admin działa tylko na webie (guard przez Platform.OS)
@@ -263,43 +303,27 @@ Projekt jest w fazie **build**. Obowiązują uproszczone zasady:
 - **Nie twórz** `tokens.css` — tokeny są w `tokens.ts`
 - **Nie używaj** `import type` w backendzie dla klas DI
 - **Nie importuj** `server/` kodu w `src/` — granicą jest HTTP API
-
-## Bezpieczne defaulty (backend)
-
-- `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGIN` walidowane przy starcie, boot fail jeśli brak
-- Globalny `ValidationPipe` z whitelist, forbidNonWhitelisted, transform
-- CORS przez allowlistę originów (nie wildcard)
-- Auth: JWT z jawnym alg, issuer, audience, TTL
-- Refresh token w HttpOnly cookie, rotowany i unieważnialny
-- Endpoint health + rate limiting (ostrzejszy dla auth)
-- Kontenery runtime jako nieuprzywilejowany użytkownik + HEALTHCHECK
+- **Nie hardkoduj** stringów w JSX — używaj `t()`
+- **Nie hardkoduj** kolorów/spacingów — używaj tokenów
+- **Nie duplikuj** komponentów — używaj `src/components/shared/`
 
 ## Priorytety architektoniczne
 
 1. Prostota rozwiązania
 2. Modularność kodu
 3. Czytelny podział odpowiedzialności
-4. KISS
-5. SOLID (tam gdzie ma sens)
-6. Komponenty małe i proste
-7. Przewidywalność wdrożenia
-8. Minimalizacja zależności
+4. KISS / SOLID / DRY
+5. Komponenty małe i proste
+6. Przewidywalność wdrożenia
+7. Minimalizacja zależności
 
 ## Zasady antyhalucynacyjne
 
 - Nie zmyślaj API, plików, struktur
 - Nie zakładaj istnienia bibliotek, których nie ma w projekcie
 - Nie twórz fikcyjnych endpointów, komponentów, plików
-- Gdy brakuje informacji: powiedz czego brakuje, podaj bezpieczne założenie, oddziel fakty od założeń
-- Lepsza ostrożna odpowiedź niż pewnie brzmiąca błędna
-- Przed napisaniem kodu sprawdź, czy podobny wzorzec już istnieje w projekcie
-
-## Format odpowiedzi
-
-- Kod → kompletne fragmenty ze ścieżką pliku
-- Architektura → struktura katalogów + odpowiedzialności
-- Wdrożenie → konkretne kroki, komendy, pliki konfiguracyjne
-- Bez lania wody, bez marketingu, bez mentorskich porad
+- Gdy brakuje informacji: powiedz czego brakuje, podaj bezpieczne założenie
+- Przed napisaniem kodu sprawdź, czy podobny wzorzec już istnieje
 
 ## Reguła końcowa
 

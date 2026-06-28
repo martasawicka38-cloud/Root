@@ -29,23 +29,55 @@ Stosuj te instrukcje dla plików związanych z design systemem, tokenami, stylam
 - Preferuj układ `Name/Name.tsx` oraz `Name.styles.ts` albo `Name.tsx` + lokalny `StyleSheet`.
 - Ta konwencja obowiązuje dla `src/features/*`, `src/components/*` i ekranów w `src/app/*`.
 
+## Wspólne komponenty (src/components/shared/)
+
+Projekt ma zestaw współdzielonych komponentów UI:
+
+```text
+src/components/shared/
+  index.ts              # Barrel export
+  LoadingState.tsx      # ActivityIndicator + message
+  ErrorCard.tsx         # Error title + detail + retry
+  EmptyState.tsx        # Icon + message
+  StatusBadge.tsx       # one_time/cyclical/active/inactive/used/available
+  ConfirmDialog.tsx     # "Usunąć?" + Tak/Nie
+  TableHeader.tsx       # Konfigurowalny nagłówek tabeli
+  ActivitiesTab.tsx     # Unified tab (admin + company)
+  ActivitiesForm.tsx    # Formularz tworzenia aktywności
+  ActivitiesTable.tsx   # Tabela z listą aktywności
+```
+
+### Zasady używania wspólnych komponentów
+
+- Importuj z `../../components/shared/` (lub odpowiednia ścieżka)
+- Używaj zamiast inline powtarzalnych wzorców (loading, error, empty, badge, confirm)
+- Każdy komponent używa `useTranslation()` wewnętrznie
+- Style wewnętrzne w komponencie (nie w screen styles)
+- Nie duplikuj logiki — jeśli wzorzec się powtarza, wydziel do shared
+
 ## Struktura plików
 
 ```text
 src/
+  components/
+    shared/           # Wspólne komponenty UI
+    icons/            # Ikony SVG
+  features/
+    {feature}/
+      {feature}.styles.ts
+      components/
+      tabs/
   theme/
     tokens.ts
   app/
     _layout.tsx
     (mobile)/
     admin/
-  components/
-  features/
 ```
 
 ## Tokeny wizualne
 
-Tokeny mapują się 1:1 na sekcję identyfikacji wizualnej z `REQUIREMENTS.md`.
+Tokeny mapują się 1:1 na sekcję identyfikacji wizualnej.
 
 Minimalny baseline:
 
@@ -94,8 +126,8 @@ Jeśli sekcja potrzebuje dodatkowych wartości motion, overlay lub sizing, najpi
 1. Przeczytaj `Identyfikacja wizualna` z `REQUIREMENTS.md`.
 2. Wypełnij `src/theme/tokens.ts` wartościami z wymagań.
 3. Najpierw ostyluj pierwszy ekran mobile i pierwszy ekran admin, dopiero potem buduj dalsze feature'y.
-4. Przed zakończeniem tasku frontendowego zrób audit surowych wartości w `.module.css`.
-5. Przed zakończeniem sprawdź, czy strona nie wygląda jak wireframe: pola formularza mają grid i odstępy, karty są faktycznie kartami, a tagi nie sklejają się wizualnie.
-6. Przed zakończeniem zrób audit overflow: brak page-level poziomego scrolla, szerokie komponenty scrollują lokalnie, a newralgiczne children w flex/grid mają `min-width: 0`.
-7. Przed zakończeniem zrób audit kontrastu: sprawdź neutralne sekcje, pola formularza, nav linki, badge i teksty na tintowanych tłach względem WCAG AA.
-8. Przed zakończeniem sprawdź działanie mobile/admin na docelowych platformach.
+4. Przed zamknięciem tasku frontendowego zrób audit surowych wartości w `.module.css`.
+5. Przed zamknięciem sprawdź, czy strona nie wygląda jak wireframe: pola formularza mają grid i odstępy, karty są faktycznie kartami, a tagi nie sklejają się wizualnie.
+6. Przed zamknięciem zrób audit overflow: brak page-level poziomego scrolla, szerokie komponenty scrollują lokalnie, a newralgiczne children w flex/grid mają `min-width: 0`.
+7. Przed zamknięciem zrób audit kontrastu: sprawdź neutralne sekcje, pola formularza, nav linki, badge i teksty na tintowanych tłach względem WCAG AA.
+8. Przed zamknięciem sprawdź działanie mobile/admin na docelowych platformach.
