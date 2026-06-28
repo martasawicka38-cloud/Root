@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   },
   cardPoints: {
     fontSize: 13,
-    color: colors.warmGold,
+    color: colors.mossGreen,
     fontWeight: "700",
   },
   cardAction: {

@@ -69,7 +69,7 @@ export default function ProfileScreen() {
         <View style={[styles.card, styles.cardLight, { flex: 1 }]}>
           <View style={styles.statCardBody}>
             <View style={[styles.statIconBox, { backgroundColor: colors.creamDark }]}>
-              <MedalIcon size={20} color={colors.warmGold} />
+              <MedalIcon size={20} color={colors.mossGreen} />
             </View>
             <Text style={styles.statValue}>12</Text>
             <Text style={styles.statLabel}>Osiagniecia</Text>

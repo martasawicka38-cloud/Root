@@ -20,7 +20,7 @@ export default function ChallengeScreen() {
 
       <View style={styles.heroCard}>
         <View style={styles.heroIconWrap}>
-          <TrophyIcon size={36} color={colors.warmGold} />
+          <TrophyIcon size={36} color={colors.mossGreen} />
         </View>
         <Text style={styles.heroTitle}>
           {data?.title ?? "10 000 krokow dziennie"}
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   rewardValue: {
     fontSize: 32,
     fontWeight: "800",
-    color: colors.warmGold,
+    color: colors.mossGreen,
   },
   rewardHint: {
     fontSize: 13,

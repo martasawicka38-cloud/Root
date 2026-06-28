@@ -42,16 +42,16 @@ export default function MobileLayout() {
     <View style={styles.root}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <AppLogo size={22} />
+          <AppLogo size={60} />
           <View style={styles.headerActions}>
             <View style={styles.balancePill}>
-              <CoinIcon size={16} color={colors.warmGold} />
+              <CoinIcon size={16} color={colors.mossGreen} />
               <Text style={styles.balanceValue}>{balance}</Text>
               <Text style={styles.balanceUnit}>EC</Text>
             </View>
             <Link href="/(mobile)/notifications" asChild>
               <Pressable style={styles.bellButton}>
-                <BellIcon size={22} color={colors.warmGold} />
+                <BellIcon size={22} color={colors.mossGreen} />
                 {hasUnread && <View style={styles.bellDot} />}
               </Pressable>
             </Link>
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.x3s,
     paddingTop: Platform.OS === "web" ? 8 : 50,
     paddingBottom: 4,
   },

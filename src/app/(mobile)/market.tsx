@@ -58,7 +58,7 @@ export default function MarketScreen() {
       {/* Balance */}
       <View style={styles.balanceRow}>
         <View style={styles.coinBox}>
-          <CoinIcon size={18} color={colors.warmGold} />
+          <CoinIcon size={18} color={colors.mossGreen} />
         </View>
         <Text style={styles.balanceText}>Saldo: {balance} EC</Text>
       </View>
@@ -119,7 +119,7 @@ export default function MarketScreen() {
                     <Text style={styles.rewardTitle} numberOfLines={2}>{reward.title}</Text>
                     <Text style={styles.rewardMerchant}>{reward.merchant}</Text>
                     <View style={styles.rewardCostRow}>
-                      <CoinIcon size={12} color={colors.warmGold} />
+                      <CoinIcon size={12} color={colors.mossGreen} />
                       <Text style={styles.rewardCost}>{reward.cost} EC</Text>
                     </View>
                   </View>

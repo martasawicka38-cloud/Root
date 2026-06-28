@@ -58,7 +58,7 @@ export default function RewardScreen() {
 
         <View style={styles.priceRow}>
           <View style={styles.priceIconWrap}>
-            <CoinIcon size={20} color={colors.warmGold} />
+            <CoinIcon size={20} color={colors.mossGreen} />
           </View>
           <Text style={styles.priceText}>{reward.cost} EC</Text>
         </View>
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   priceText: {
     fontSize: 24,
     fontWeight: "800",
-    color: colors.warmGold,
+    color: colors.mossGreen,
   },
   divider: {
     height: 1,

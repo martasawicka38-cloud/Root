@@ -9,7 +9,7 @@ export default function AuthLayout() {
     <View style={styles.root}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <AppLogo size={22} />
+          <AppLogo size={60} />
         </View>
         <Stack screenOptions={{ headerShown: false }} />
       </View>

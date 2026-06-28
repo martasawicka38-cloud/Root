@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   estimatePoints: {
     fontSize: 20,
     fontWeight: "700",
-    color: colors.warmGold,
+    color: colors.mossGreen,
   },
   button: {
     marginTop: 12,

@@ -44,7 +44,7 @@ export default function AchievementsScreen() {
             >
               <TrophyIcon
                 size={24}
-                color={isUnlocked ? colors.warmGold : colors.slate400}
+                color={isUnlocked ? colors.mossGreen : colors.slate400}
               />
             </View>
             <View style={styles.cardContent}>

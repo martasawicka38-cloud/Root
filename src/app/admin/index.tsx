@@ -199,7 +199,7 @@ export default function AdminScreen() {
   return (
     <View style={styles.root}>
       <View style={styles.topbar}>
-        <AppLogo size={22} />
+        <AppLogo size={60} />
         <View style={styles.topbarRight}>
           <View style={adminBadgeStyles.badge}>
             <Text style={adminBadgeStyles.text}>Superadmin</Text>
