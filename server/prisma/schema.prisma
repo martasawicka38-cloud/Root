@@ -77,6 +77,7 @@ model User {
   challenges              Challenge[]
   ecoActivityLogs         UserEcoActivityLog[]
   rootStage               RootStage?                    @relation(fields: [rootStageId], references: [id])
+  certificates            Certificate[]
 }
 
 model Company {
@@ -89,6 +90,8 @@ model Company {
   challenges       Challenge[]
   ecoActivities    EcoActivity[]
   globalPermission CompanyGlobalPermission?
+  esgReports       ESGReport[]
+  certificates     Certificate[]
 }
 
 model CompanyToken {
@@ -254,4 +257,52 @@ model UserEcoActivityLog {
 
   @@index([userId, createdAt])
   @@index([ecoActivityId, userId, createdAt])
+}
+
+enum ReportStatus {
+  draft
+  published
+  archived
+}
+
+model ESGReport {
+  id          String       @id @default(cuid())
+  companyId   String
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      ReportStatus @default(draft)
+  periodFrom  DateTime
+  periodTo    DateTime
+  htmlContent String?      @db.Text
+  jsonData    String?      @db.Text
+  generatedAt DateTime     @default(now())
+  publishedAt DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  certificates Certificate[]
+}
+
+enum CertificateType {
+  participation
+  achievement
+  completion
+}
+
+model Certificate {
+  id             String          @id @default(cuid())
+  reportId       String?
+  report         ESGReport?      @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId      String
+  company        Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  type           CertificateType @default(participation)
+  title          String
+  description    String?
+  issuedAt       DateTime        @default(now())
+  validUntil     DateTime?
+  certificateUrl String?
+  htmlContent    String?         @db.Text
 }

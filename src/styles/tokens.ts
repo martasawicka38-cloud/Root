@@ -62,6 +62,7 @@ export const colors = {
   mist: "#F3F6CA",
   warmGold: "#C5E368",
   sunset: "#8B4513",
+  accentBlue: "#0ea5e9",
   slate900: "#293211",
   slate700: "#535A3E",
   slate600: "#535A3E",

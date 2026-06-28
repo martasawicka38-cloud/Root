@@ -315,3 +315,45 @@ export type UserStepsPayload = {
   };
   data: { label: string; steps: number }[];
 };
+
+// --- ESG Report Types ---
+
+export type ReportStatus = "draft" | "published" | "archived";
+
+export type ESGReportListItem = {
+  id: string;
+  title: string;
+  description: string | null;
+  status: ReportStatus;
+  periodFrom: string;
+  periodTo: string;
+  generatedAt: string;
+  publishedAt: string | null;
+  createdAt: string;
+};
+
+export type ESGReport = ESGReportListItem & {
+  htmlContent: string | null;
+  jsonData: string | null;
+  companyId: string;
+  updatedAt: string;
+};
+
+// --- Certificate Types ---
+
+export type CertificateType = "participation" | "achievement" | "completion";
+
+export type Certificate = {
+  id: string;
+  reportId: string | null;
+  userId: string;
+  companyId: string;
+  type: CertificateType;
+  title: string;
+  description: string | null;
+  issuedAt: string;
+  validUntil: string | null;
+  certificateUrl: string | null;
+  htmlContent: string | null;
+  user?: { id: string; name: string; email: string };
+};
