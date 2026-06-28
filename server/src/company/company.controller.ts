@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 
 import { JwtAuthGuard } from "../common/jwt-auth.guard";
 import { CurrentUser } from "../common/current-user.decorator";
@@ -31,6 +31,18 @@ export class CompanyController {
     @CurrentUser() user: { userId: string },
   ) {
     return this.companyService.getAnalytics(slug, user.userId);
+  }
+
+  @Get(":slug/employee-steps/:employeeId")
+  getEmployeeSteps(
+    @Param("slug") slug: string,
+    @Param("employeeId") employeeId: string,
+    @Query("period") period: "day" | "week" | "month",
+    @CurrentUser() user: { userId: string },
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+  ) {
+    return this.companyService.getEmployeeSteps(slug, employeeId, period, user.userId, from, to);
   }
 
   @Get(":slug/tokens")

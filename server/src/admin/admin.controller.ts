@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 
 import { AdminService } from "./admin.service";
 import { CreateCompanyDto } from "./dto/create-company.dto";
@@ -122,5 +122,22 @@ export class AdminController {
   @UseGuards(JwtAuthGuard)
   revokePermission(@Param("id") id: string, @CurrentUser() user: { userId: string }) {
     return this.adminService.revokeGlobalPermission(id, user.userId);
+  }
+
+  @Get("analytics/users")
+  @UseGuards(JwtAuthGuard)
+  listAnalyticsUsers() {
+    return this.adminService.listUsersForAnalytics();
+  }
+
+  @Get("user-steps/:userId")
+  @UseGuards(JwtAuthGuard)
+  getUserSteps(
+    @Param("userId") userId: string,
+    @Query("period") period: "day" | "week" | "month" = "day",
+    @Query("from") from?: string,
+    @Query("to") to?: string,
+  ) {
+    return this.adminService.getUserSteps(userId, period, from, to);
   }
 }

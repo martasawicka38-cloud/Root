@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Svg, { Path, Rect } from "react-native-svg";
 
 import {
   adminCreateUser,
@@ -18,6 +19,7 @@ import {
   createCompany,
   fetchAdminDashboard,
   fetchAdminUsers,
+  fetchAnalyticsUsers,
   fetchCompanies,
   fetchUnassignedUsers,
   fetchEmployerTokens,
@@ -33,12 +35,13 @@ import {
   createRewardActivity,
   deleteRewardActivity,
   fetchCompanyActivities,
+  fetchUserSteps,
 } from "../../lib/api/endpoints";
-import type { AdminUser, Company, CompanyGlobalPermissionItem, CompanyToken, EcoActivity } from "../../lib/types/api";
+import type { AdminDashboard, AdminUser, AnalyticsUser, Company, CompanyGlobalPermissionItem, CompanyToken, EcoActivity, UserStepsPayload } from "../../lib/types/api";
 import { AppLogo } from "../../features/common/AppLogo";
 import { colors, radius } from "../../styles/tokens";
 
-type Tab = "dashboard" | "users" | "companies" | "tokens" | "activities";
+type Tab = "dashboard" | "users" | "companies" | "tokens" | "activities" | "analytics";
 
 function Badge({ label, color, bg }: { label: string; color: string; bg: string }) {
   return (
@@ -210,6 +213,7 @@ export default function AdminScreen() {
           { key: "users" as Tab, label: "Uzytkownicy" },
           { key: "companies" as Tab, label: "Firmy" },
           { key: "activities" as Tab, label: "Aktywnosci" },
+          { key: "analytics" as Tab, label: "Analityka" },
           { key: "tokens" as Tab, label: "Tokeny firmowe" },
         ].map((t) => (
           <Pressable
@@ -298,6 +302,7 @@ export default function AdminScreen() {
               companiesQuery={companiesQuery}
             />
           )}
+          {tab === "analytics" && <AnalyticsTab />}
         </View>
       </ScrollView>
     </View>
@@ -698,7 +703,7 @@ function CompaniesTab({
               <Pressable style={styles.companyCardHeader} onPress={() => onToggleExpand(expandedCompanyId === c.id ? null : c.id)}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.companyName}>{c.name}</Text>
-                  <Text style={styles.companyMeta}>{c._count?.users ?? 0} uzytkownikow | {c._count?.tokens ?? 0} tokenow</Text>
+                  <Text style={styles.companyMeta}>ID: {c.id} | {c._count?.users ?? 0} uzytkownikow | {c._count?.tokens ?? 0} tokenow</Text>
                 </View>
                 <Text style={styles.expandIcon}>{expandedCompanyId === c.id ? "▼" : "▶"}</Text>
               </Pressable>
@@ -935,6 +940,401 @@ function ActivitiesTab({
   );
 }
 
+function IconSteps({ size = 18, color = "#535A3E" }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x="3" y="12" width="4" height="9" rx="1" fill={color} />
+      <Rect x="10" y="7" width="4" height="14" rx="1" fill={color} />
+      <Rect x="17" y="3" width="4" height="18" rx="1" fill={color} />
+    </Svg>
+  );
+}
+
+function IconTrophy({ size = 18, color = "#535A3E" }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M6 2h12v6a6 6 0 01-12 0V2z" fill={color} />
+      <Path d="M6 4H3a1 1 0 00-1 1v2a4 4 0 004 4h0" stroke={color} strokeWidth="1.5" fill="none" />
+      <Path d="M18 4h3a1 1 0 011 1v2a4 4 0 01-4 4h0" stroke={color} strokeWidth="1.5" fill="none" />
+      <Path d="M10 18h4v2h-4z" fill={color} />
+      <Path d="M8 20h8v2H8z" fill={color} />
+    </Svg>
+  );
+}
+
+function IconActivity({ size = 18, color = "#535A3E" }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill={color} />
+    </Svg>
+  );
+}
+
+type AnalyticsSubTab = "steps" | "ranking" | "activity";
+
+function AnalyticsTab() {
+  const [subTab, setSubTab] = useState<AnalyticsSubTab>("steps");
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+
+  const usersQuery = useQuery({
+    queryKey: ["admin", "analytics-users"],
+    queryFn: fetchAnalyticsUsers,
+  });
+
+  const dashboardQuery = useQuery({
+    queryKey: ["admin", "dashboard"],
+    queryFn: fetchAdminDashboard,
+  });
+
+  if (usersQuery.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
+  if (usersQuery.error) return (
+    <View style={styles.errorCard}>
+      <Text style={styles.errorText}>Nie udalo sie zaladowac uzytkownikow.</Text>
+      <Text style={styles.errorDetail}>{usersQuery.error.message}</Text>
+    </View>
+  );
+
+  const users = usersQuery.data ?? [];
+  const dashboard = dashboardQuery.data;
+
+  if (users.length === 0) return (
+    <View>
+      <Text style={styles.pageTitle}>Analityka</Text>
+      <View style={styles.analyticsPlaceholder}>
+        <Text style={styles.analyticsPlaceholderText}>Brak uzytkownikow w systemie.</Text>
+      </View>
+    </View>
+  );
+
+  if (!selectedUserId && users.length > 0) {
+    setSelectedUserId(users[0].id);
+  }
+
+  const selectedUser = users.find((u) => u.id === selectedUserId) ?? users[0];
+
+  const SUB_TABS: { key: AnalyticsSubTab; label: string; icon: React.ReactNode }[] = [
+    { key: "steps", label: "Liczba krokow", icon: <IconSteps color={subTab === "steps" ? colors.mossGreen : colors.slate500} /> },
+    { key: "ranking", label: "Ranking pracownikow", icon: <IconTrophy color={subTab === "ranking" ? colors.mossGreen : colors.slate500} /> },
+    { key: "activity", label: "Ostatnie aktywnosci", icon: <IconActivity color={subTab === "activity" ? colors.mossGreen : colors.slate500} /> },
+  ];
+
+  return (
+    <View style={styles.analyticsLayout}>
+      <View style={styles.analyticsSidebar}>
+        {SUB_TABS.map((t) => (
+          <Pressable
+            key={t.key}
+            style={[styles.analyticsSidebarItem, subTab === t.key && styles.analyticsSidebarItemActive]}
+            onPress={() => setSubTab(t.key)}
+          >
+            <View style={styles.analyticsSidebarIcon}>{t.icon}</View>
+            <Text style={[styles.analyticsSidebarLabel, subTab === t.key && styles.analyticsSidebarLabelActive]}>
+              {t.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      <View style={styles.analyticsMain}>
+        <View style={{ minHeight: 500 }}>
+        {subTab === "steps" && (
+          <AnalyticsStepsView
+            users={users}
+            selectedUserId={selectedUserId}
+            selectedUser={selectedUser}
+            onSelectUser={setSelectedUserId}
+          />
+        )}
+
+        {subTab === "ranking" && (
+          <AnalyticsRankingView dashboard={dashboard} isLoading={dashboardQuery.isPending} />
+        )}
+
+        {subTab === "activity" && (
+          <AnalyticsActivityView dashboard={dashboard} isLoading={dashboardQuery.isPending} />
+        )}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+type StepsPeriod = "day" | "week" | "month" | "custom";
+
+function AnalyticsStepsView({
+  users, selectedUserId, selectedUser, onSelectUser,
+}: {
+  users: AnalyticsUser[];
+  selectedUserId: string;
+  selectedUser: AnalyticsUser;
+  onSelectUser: (id: string) => void;
+}) {
+  const [period, setPeriod] = useState<StepsPeriod>("day");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+
+  const getEffectivePeriod = (): "day" | "week" | "month" => {
+    if (period !== "custom") return period;
+    if (!customFrom || !customTo) return "day";
+    const diffMs = new Date(customTo).getTime() - new Date(customFrom).getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    if (diffDays <= 14) return "day";
+    if (diffDays <= 90) return "week";
+    return "month";
+  };
+
+  const effectivePeriod = getEffectivePeriod();
+  const from = period === "custom" ? customFrom : undefined;
+  const to = period === "custom" ? customTo : undefined;
+
+  const stepsQuery = useQuery({
+    queryKey: ["admin", "user-steps", selectedUserId, effectivePeriod, from, to],
+    queryFn: () => fetchUserSteps(selectedUserId, effectivePeriod, from, to),
+    enabled: selectedUserId.length > 0 && (period !== "custom" || (!!customFrom && !!customTo)),
+  });
+
+  const PERIOD_OPTIONS: { key: StepsPeriod; label: string }[] = [
+    { key: "day", label: "7 dni" },
+    { key: "week", label: "9 tygodni" },
+    { key: "month", label: "12 miesiecy" },
+    { key: "custom", label: "Wlasny zakres" },
+  ];
+
+  const formatLabel = (label: string) => {
+    if (effectivePeriod === "day") {
+      const d = new Date(label);
+      if (period === "day") return d.toLocaleDateString("pl-PL", { weekday: "short" });
+      return d.toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
+    }
+    if (effectivePeriod === "week") {
+      const parts = label.split("-W");
+      return parts.length === 2 ? `T${parts[1]}` : label;
+    }
+    if (effectivePeriod === "month") {
+      const monthNames = ["Sty", "Lut", "Mar", "Kwi", "Maj", "Cze", "Lip", "Sie", "Wrz", "Paz", "Lis", "Gru"];
+      const idx = parseInt(label.split("-")[1], 10) - 1;
+      return monthNames[idx] ?? label;
+    }
+    return label;
+  };
+
+  return (
+    <>
+      <View style={styles.analyticsSelector}>
+        <Text style={styles.analyticsSelectorLabel}>Wybierz uzytkownika:</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
+          <View style={styles.analyticsUserList}>
+            {users.map((u) => (
+              <Pressable
+                key={u.id}
+                style={[styles.analyticsUserBtn, selectedUserId === u.id && styles.analyticsUserBtnActive]}
+                onPress={() => onSelectUser(u.id)}
+              >
+                <Text style={[styles.analyticsUserBtnText, selectedUserId === u.id && styles.analyticsUserBtnTextActive]}>
+                  {u.name}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
+
+      <View style={styles.analyticsUserInfo}>
+        <Text style={styles.analyticsUserName}>{selectedUser.name}</Text>
+        {selectedUser.rootStage && (
+          <Text style={styles.analyticsUserStage}>
+            {selectedUser.rootStage.name} (lvl {selectedUser.rootStage.level})
+          </Text>
+        )}
+        <Text style={styles.analyticsUserExp}>{selectedUser.totalExp} XP</Text>
+      </View>
+
+      <View style={styles.periodSelector}>
+        {PERIOD_OPTIONS.map((opt) => (
+          <Pressable
+            key={opt.key}
+            style={[styles.periodBtn, period === opt.key && styles.periodBtnActive]}
+            onPress={() => setPeriod(opt.key)}
+          >
+            <Text style={[styles.periodBtnText, period === opt.key && styles.periodBtnTextActive]}>
+              {opt.label}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {period === "custom" && (
+        <View style={styles.customDateRow}>
+          <View style={styles.customDateField}>
+            <Text style={styles.customDateLabel}>Od:</Text>
+            <TextInput
+              style={styles.customDateInput}
+              placeholder="RRRR-MM-DD"
+              value={customFrom}
+              onChangeText={setCustomFrom}
+              placeholderTextColor={colors.inputPlaceholder}
+            />
+          </View>
+          <View style={styles.customDateField}>
+            <Text style={styles.customDateLabel}>Do:</Text>
+            <TextInput
+              style={styles.customDateInput}
+              placeholder="RRRR-MM-DD"
+              value={customTo}
+              onChangeText={setCustomTo}
+              placeholderTextColor={colors.inputPlaceholder}
+            />
+          </View>
+        </View>
+      )}
+
+      <BarChartSection
+        query={stepsQuery}
+        formatLabel={formatLabel}
+        emptyMsg="Brak danych krokow dla wybranego okresu."
+      />
+    </>
+  );
+}
+
+function AnalyticsRankingView({ dashboard, isLoading }: {
+  dashboard?: AdminDashboard;
+  isLoading: boolean;
+}) {
+  if (isLoading) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
+  if (!dashboard) return <Text style={styles.emptyText}>Brak danych.</Text>;
+
+  const companies = dashboard.companies ?? [];
+
+  return (
+    <>
+      <Text style={styles.sectionTitle}>Ranking firm</Text>
+      {companies.length === 0 ? (
+        <Text style={styles.emptyText}>Brak firm w systemie.</Text>
+      ) : (
+        <View style={{ gap: 4 }}>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>#</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Firma</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Pracownicy</Text>
+          </View>
+          {companies.map((c, i) => (
+            <View key={c.id} style={styles.tableRow}>
+              <Text style={[styles.tableCell, { flex: 0.5, fontWeight: "700", color: colors.mossGreen }]}>{i + 1}</Text>
+              <Text style={[styles.tableCell, { flex: 2, fontWeight: "600" }]}>{c.name}</Text>
+              <Text style={[styles.tableCell, { flex: 1 }]}>{c.employeeCount}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </>
+  );
+}
+
+function AnalyticsActivityView({ dashboard, isLoading }: {
+  dashboard?: AdminDashboard;
+  isLoading: boolean;
+}) {
+  if (isLoading) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
+  if (!dashboard) return <Text style={styles.emptyText}>Brak danych.</Text>;
+
+  const activities = dashboard.recentActivity ?? [];
+
+  return (
+    <>
+      <Text style={styles.sectionTitle}>Ostatnie aktywnosci ({activities.length})</Text>
+      {activities.length === 0 ? (
+        <Text style={styles.emptyText}>Brak aktywnosci.</Text>
+      ) : (
+        <View style={{ gap: 4 }}>
+          {activities.map((a) => (
+            <View key={a.id} style={styles.tableRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: "600", color: colors.slate900 }}>{a.userName}</Text>
+                <Text style={{ fontSize: 12, color: colors.slate500 }}>
+                  {a.type} · {new Date(a.createdAt).toLocaleDateString("pl-PL")}
+                </Text>
+              </View>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: colors.mossGreen }}>+{a.points} EC</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </>
+  );
+}
+
+function BarChartSection({
+  query,
+  formatLabel,
+  emptyMsg,
+}: {
+  query: { data?: UserStepsPayload; isPending: boolean; error: Error | null };
+  formatLabel: (label: string) => string;
+  emptyMsg: string;
+}) {
+  if (query.isPending) return (
+    <View style={styles.analyticsChartCard}>
+      <ActivityIndicator size="small" color={colors.mossGreen} style={{ marginTop: 20 }} />
+    </View>
+  );
+
+  if (query.error) return (
+    <View style={styles.analyticsChartCard}>
+      <View style={[styles.errorCard, { marginTop: 12 }]}>
+        <Text style={styles.errorText}>Blad ladowania danych.</Text>
+        <Text style={styles.errorDetail}>{query.error.message}</Text>
+      </View>
+    </View>
+  );
+
+  const data = query.data?.data ?? [];
+
+  if (data.length === 0) return (
+    <View style={styles.analyticsChartCard}>
+      <Text style={styles.emptyText}>{emptyMsg}</Text>
+    </View>
+  );
+
+  const max = Math.max(...data.map((d) => d.steps), 1);
+  const total = data.reduce((sum, d) => sum + d.steps, 0);
+  const avg = Math.round(total / data.length);
+
+  return (
+    <View style={styles.analyticsChartCard}>
+      <View style={styles.analyticsChartHeader}>
+        <View style={styles.analyticsChartStats}>
+          <View style={styles.analyticsChartStat}>
+            <Text style={styles.analyticsChartStatValue}>{total.toLocaleString("pl-PL")}</Text>
+            <Text style={styles.analyticsChartStatLabel}>Suma</Text>
+          </View>
+          <View style={styles.analyticsChartStat}>
+            <Text style={styles.analyticsChartStatValue}>{avg.toLocaleString("pl-PL")}</Text>
+            <Text style={styles.analyticsChartStatLabel}>Srednia</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.analyticsChartRow}>
+        {data.map((d) => (
+          <View key={d.label} style={styles.analyticsChartCol}>
+            <Text style={styles.analyticsChartBarValue}>
+              {d.steps > 0 ? d.steps.toLocaleString("pl-PL") : ""}
+            </Text>
+            <View
+              style={[
+                styles.analyticsChartBar,
+                { height: Math.max((d.steps / max) * 140, 4) },
+              ]}
+            />
+            <Text style={styles.analyticsChartLabel}>{formatLabel(d.label)}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 function CompanyTokensTab({
   tokensQuery, onGenerate, generating,
 }: {
@@ -1089,5 +1489,50 @@ const styles = StyleSheet.create({
   listEmail: { fontSize: 12, color: colors.slate500, marginTop: 2 },
   badge: { alignSelf: "flex-start", paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   badgeText: { fontSize: 12, fontWeight: "600" },
+  // Analytics styles
+  analyticsSelector: { marginBottom: 24 },
+  analyticsSelectorLabel: { fontSize: 15, fontWeight: "600", color: colors.slate700, marginBottom: 12 },
+  analyticsUserList: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  analyticsUserBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.slate200, backgroundColor: colors.white },
+  analyticsUserBtnActive: { backgroundColor: colors.mossGreen, borderColor: colors.mossGreen },
+  analyticsUserBtnText: { fontSize: 14, fontWeight: "600", color: colors.slate700 },
+  analyticsUserBtnTextActive: { color: colors.white },
+  analyticsUserBtnEmail: { fontSize: 11, color: colors.slate500, marginTop: 2 },
+  analyticsUserBtnEmailActive: { color: colors.creamLight },
+  analyticsUserInfo: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 20, marginBottom: 24, flexDirection: "row", alignItems: "center", gap: 16 },
+  analyticsUserName: { fontSize: 20, fontWeight: "700", color: colors.slate900 },
+  analyticsUserStage: { fontSize: 14, color: colors.mossGreen, fontWeight: "600" },
+  analyticsUserExp: { fontSize: 14, color: colors.slate500, marginLeft: "auto" },
+  analyticsPlaceholder: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 48, alignItems: "center" },
+  analyticsPlaceholderText: { fontSize: 15, color: colors.slate500 },
+  analyticsChartCard: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 24, marginBottom: 20 },
+  analyticsChartHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 },
+  analyticsChartTitle: { fontSize: 18, fontWeight: "700", color: colors.slate900 },
+  analyticsChartStats: { flexDirection: "row", gap: 24 },
+  analyticsChartStat: { alignItems: "flex-end" },
+  analyticsChartStatValue: { fontSize: 20, fontWeight: "700", color: colors.mossGreen },
+  analyticsChartStatLabel: { fontSize: 12, color: colors.slate500, fontWeight: "500" },
+  analyticsChartRow: { flexDirection: "row", gap: 6, alignItems: "flex-end", minHeight: 180 },
+  analyticsChartCol: { flex: 1, alignItems: "center", gap: 4 },
+  analyticsChartBarValue: { fontSize: 10, color: colors.slate500, fontWeight: "600" },
+  analyticsChartBar: { width: "100%", maxWidth: 48, backgroundColor: colors.mossGreen, borderRadius: radius.sm, minHeight: 4 },
+  analyticsChartLabel: { fontSize: 10, color: colors.slate500, textTransform: "capitalize" },
+  analyticsLayout: { flexDirection: "row", gap: 24, minHeight: 600 },
+  analyticsSidebar: { width: 220, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 16, alignSelf: "flex-start" },
+  analyticsSidebarItem: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: radius.sm, marginBottom: 4 },
+  analyticsSidebarItemActive: { backgroundColor: colors.slate100 },
+  analyticsSidebarIcon: { width: 18, height: 18, alignItems: "center", justifyContent: "center" },
+  analyticsSidebarLabel: { fontSize: 14, fontWeight: "500", color: colors.slate600 },
+  analyticsSidebarLabelActive: { color: colors.mossGreen, fontWeight: "700" },
+  analyticsMain: { flex: 1 },
+  periodSelector: { flexDirection: "row", gap: 8, marginBottom: 16 },
+  periodBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.slate200, backgroundColor: colors.white },
+  periodBtnActive: { backgroundColor: colors.mossGreen, borderColor: colors.mossGreen },
+  periodBtnText: { fontSize: 13, fontWeight: "600", color: colors.slate600 },
+  periodBtnTextActive: { color: colors.white },
+  customDateRow: { flexDirection: "row", gap: 12, marginBottom: 16 },
+  customDateField: { flex: 1 },
+  customDateLabel: { fontSize: 13, fontWeight: "600", color: colors.slate700, marginBottom: 4 },
+  customDateInput: { borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, padding: 10, fontSize: 14, color: colors.slate900, backgroundColor: colors.white },
 });
 

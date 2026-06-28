@@ -22,7 +22,7 @@ export class CompanyService {
     await this.verifyOwnership(slug, userId);
 
     return this.prisma.user.findMany({
-      where: { companyId: company.id, role: "employer" },
+      where: { companyId: company.id, role: { in: ["employer", "user"] } },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -42,7 +42,7 @@ export class CompanyService {
     await this.verifyOwnership(slug, userId);
 
     const employees = await this.prisma.user.findMany({
-      where: { companyId: company.id, role: "employer" },
+      where: { companyId: company.id, role: { in: ["employer", "user"] } },
       select: { id: true, name: true, balance: true },
     });
 
@@ -70,10 +70,23 @@ export class CompanyService {
 
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const weeklyRaw = await this.prisma.activity.findMany({
-      where: { userId: { in: employeeIds }, createdAt: { gte: weekAgo } },
-      select: { steps: true, createdAt: true, user: { select: { name: true } } },
-    });
+    const nineWeeksAgo = new Date(now.getTime() - 9 * 7 * 24 * 60 * 60 * 1000);
+    const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+
+    const [weeklyRaw, nineWeeksRaw, yearRaw] = await Promise.all([
+      this.prisma.activity.findMany({
+        where: { userId: { in: employeeIds }, createdAt: { gte: weekAgo } },
+        select: { steps: true, createdAt: true },
+      }),
+      this.prisma.activity.findMany({
+        where: { userId: { in: employeeIds }, createdAt: { gte: nineWeeksAgo } },
+        select: { steps: true, createdAt: true },
+      }),
+      this.prisma.activity.findMany({
+        where: { userId: { in: employeeIds }, createdAt: { gte: yearAgo } },
+        select: { steps: true, createdAt: true },
+      }),
+    ]);
 
     const dayMap: Record<string, number> = {};
     for (const a of weeklyRaw) {
@@ -83,6 +96,28 @@ export class CompanyService {
     const weeklySteps = Object.entries(dayMap)
       .map(([day, steps]) => ({ day, steps }))
       .sort((a, b) => a.day.localeCompare(b.day));
+
+    const weekBucket: Record<string, number> = {};
+    for (const a of nineWeeksRaw) {
+      const d = new Date(a.createdAt);
+      const onejan = new Date(d.getFullYear(), 0, 1);
+      const weekNum = Math.ceil(((d.getTime() - onejan.getTime()) / 86400000 + onejan.getDay() + 1) / 7);
+      const key = `${d.getFullYear()}-W${String(weekNum).padStart(2, "0")}`;
+      weekBucket[key] = (weekBucket[key] ?? 0) + a.steps;
+    }
+    const weeklySteps9 = Object.entries(weekBucket)
+      .map(([label, steps]) => ({ label, steps }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    const monthBucket: Record<string, number> = {};
+    for (const a of yearRaw) {
+      const d = new Date(a.createdAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      monthBucket[key] = (monthBucket[key] ?? 0) + a.steps;
+    }
+    const monthlySteps12 = Object.entries(monthBucket)
+      .map(([label, steps]) => ({ label, steps }))
+      .sort((a, b) => a.label.localeCompare(b.label));
 
     const recentActivity = await this.prisma.activity.findMany({
       where: { userId: { in: employeeIds } },
@@ -99,6 +134,8 @@ export class CompanyService {
       totalEarned: totalEarned._sum.points ?? 0,
       totalPoints,
       weeklySteps,
+      weeklySteps9,
+      monthlySteps12,
       recentActivity: recentActivity.map((a) => ({
         id: a.id,
         userName: a.user.name,
@@ -107,6 +144,60 @@ export class CompanyService {
         createdAt: a.createdAt.toISOString(),
       })),
     };
+  }
+
+  async getEmployeeSteps(slug: string, employeeId: string, period: "day" | "week" | "month", userId: string, from?: string, to?: string) {
+    const company = await this.prisma.company.findUnique({ where: { slug } });
+    if (!company) throw new NotFoundException("Company not found");
+    await this.verifyOwnership(slug, userId);
+
+    const employee = await this.prisma.user.findFirst({
+      where: { id: employeeId, companyId: company.id },
+      select: { id: true, name: true, email: true, balance: true },
+    });
+    if (!employee) throw new NotFoundException("Employee not found");
+
+    const now = new Date();
+    let since: Date;
+    let until: Date = now;
+    if (from && to) {
+      since = new Date(from);
+      until = new Date(to);
+    } else if (period === "day") {
+      since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    } else if (period === "week") {
+      since = new Date(now.getTime() - 9 * 7 * 24 * 60 * 60 * 1000);
+    } else {
+      since = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+    }
+
+    const activities = await this.prisma.activity.findMany({
+      where: { userId: employeeId, createdAt: { gte: since, lte: until } },
+      select: { steps: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const bucketMap: Record<string, number> = {};
+    for (const a of activities) {
+      const d = new Date(a.createdAt);
+      let key: string;
+      if (period === "day") {
+        key = d.toISOString().slice(0, 10);
+      } else if (period === "week") {
+        const onejan = new Date(d.getFullYear(), 0, 1);
+        const weekNum = Math.ceil(((d.getTime() - onejan.getTime()) / 86400000 + onejan.getDay() + 1) / 7);
+        key = `${d.getFullYear()}-W${String(weekNum).padStart(2, "0")}`;
+      } else {
+        key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      }
+      bucketMap[key] = (bucketMap[key] ?? 0) + a.steps;
+    }
+
+    const data = Object.entries(bucketMap)
+      .map(([label, steps]) => ({ label, steps }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    return { employee, data };
   }
 
   async getTokens(slug: string, userId: string) {

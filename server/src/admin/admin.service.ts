@@ -299,4 +299,84 @@ export class AdminService {
       },
     });
   }
+
+  async listUsersForAnalytics() {
+    return this.prisma.user.findMany({
+      where: { role: { not: "superadmin" } },
+      orderBy: { name: "asc" },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        rootStage: { select: { name: true, level: true } },
+        totalExp: true,
+      },
+    });
+  }
+
+  async getUserSteps(userId: string, period: "day" | "week" | "month", from?: string, to?: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { rootStage: true },
+    });
+    if (!user) throw new NotFoundException("User not found");
+
+    const now = new Date();
+    let since: Date;
+    let until: Date = now;
+    if (from && to) {
+      since = new Date(from);
+      until = new Date(to);
+    } else if (period === "day") {
+      since = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    } else if (period === "week") {
+      since = new Date(now.getTime() - 9 * 7 * 24 * 60 * 60 * 1000);
+    } else {
+      since = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+    }
+
+    const activities = await this.prisma.activity.findMany({
+      where: { userId, createdAt: { gte: since, lte: until } },
+      select: { steps: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    });
+
+    const totalStepsAll = await this.prisma.activity.aggregate({
+      where: { userId },
+      _sum: { steps: true },
+    });
+
+    const bucketMap: Record<string, number> = {};
+
+    for (const a of activities) {
+      let key: string;
+      const d = new Date(a.createdAt);
+      if (period === "day") {
+        key = d.toISOString().slice(0, 10);
+      } else if (period === "week") {
+        const onejan = new Date(d.getFullYear(), 0, 1);
+        const weekNum = Math.ceil(((d.getTime() - onejan.getTime()) / 86400000 + onejan.getDay() + 1) / 7);
+        key = `${d.getFullYear()}-W${String(weekNum).padStart(2, "0")}`;
+      } else {
+        key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      }
+      bucketMap[key] = (bucketMap[key] ?? 0) + a.steps;
+    }
+
+    const data = Object.entries(bucketMap)
+      .map(([label, steps]) => ({ label, steps }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        rootStage: user.rootStage,
+        totalExp: user.totalExp,
+        totalSteps: totalStepsAll._sum.steps ?? 0,
+      },
+      data,
+    };
+  }
 }

@@ -4,6 +4,7 @@ import type {
   Activity,
   AdminDashboard,
   AdminUser,
+  AnalyticsUser,
   AuthUser,
   ChallengeItem,
   ChallengeParticipationItem,
@@ -22,6 +23,7 @@ import type {
   UserProfile,
   EcoActivity,
   UserEcoActivityLog,
+  UserStepsPayload,
   SubmitActivityResponse,
   RootStatus,
   TransformResponse,
@@ -257,8 +259,18 @@ export async function fetchCompanyAnalytics(slug: string) {
     totalEarned: number;
     totalPoints: number;
     weeklySteps: { day: string; steps: number }[];
+    weeklySteps9: { label: string; steps: number }[];
+    monthlySteps12: { label: string; steps: number }[];
     recentActivity: { id: string; userName: string; type: string; points: number; createdAt: string }[];
   }>(`/company/${slug}/analytics`);
+  return data;
+}
+
+export async function fetchCompanyEmployeeSteps(slug: string, employeeId: string, period: "day" | "week" | "month", from?: string, to?: string) {
+  const { data } = await api.get<{
+    employee: { id: string; name: string; email: string; balance: number };
+    data: { label: string; steps: number }[];
+  }>(`/company/${slug}/employee-steps/${employeeId}`, { params: { period, from, to } });
   return data;
 }
 
@@ -450,5 +462,15 @@ export async function fetchRootStatus() {
 
 export async function transformRoot() {
   const { data } = await api.post<TransformResponse>("/root/transform");
+  return data;
+}
+
+export async function fetchAnalyticsUsers() {
+  const { data } = await api.get<AnalyticsUser[]>("/admin/analytics/users");
+  return data;
+}
+
+export async function fetchUserSteps(userId: string, period: "day" | "week" | "month", from?: string, to?: string) {
+  const { data } = await api.get<UserStepsPayload>(`/admin/user-steps/${userId}`, { params: { period, from, to } });
   return data;
 }

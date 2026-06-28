@@ -10,10 +10,12 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Svg, { Path, Rect } from "react-native-svg";
 
 import {
   fetchAuthMe,
   fetchCompanyAnalytics,
+  fetchCompanyEmployeeSteps,
   fetchCompanyBySlug,
   fetchCompanyEmployees,
   fetchCompanyTokensBySlug,
@@ -242,7 +244,7 @@ export default function CompanyPanelScreen() {
               deletingEmployee={removeEmployeeMutation.isPending}
             />
           )}
-          {tab === "analytics" && <AnalyticsTab query={analyticsQuery} />}
+          {tab === "analytics" && <AnalyticsTab query={analyticsQuery} slug={slug!} />}
           {tab === "tokens" && (
             <TokensTab
               query={tokensQuery}
@@ -494,8 +496,41 @@ function EmployeesTab({
   );
 }
 
+type CompanyAnalyticsSubTab = "steps" | "ranking" | "activity";
+
+function IconSteps({ size = 18, color = "#535A3E" }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x="3" y="12" width="4" height="9" rx="1" fill={color} />
+      <Rect x="10" y="7" width="4" height="14" rx="1" fill={color} />
+      <Rect x="17" y="3" width="4" height="18" rx="1" fill={color} />
+    </Svg>
+  );
+}
+
+function IconTrophy({ size = 18, color = "#535A3E" }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M6 2h12v6a6 6 0 01-12 0V2z" fill={color} />
+      <Path d="M6 4H3a1 1 0 00-1 1v2a4 4 0 004 4h0" stroke={color} strokeWidth="1.5" fill="none" />
+      <Path d="M18 4h3a1 1 0 011 1v2a4 4 0 01-4 4h0" stroke={color} strokeWidth="1.5" fill="none" />
+      <Path d="M10 18h4v2h-4z" fill={color} />
+      <Path d="M8 20h8v2H8z" fill={color} />
+    </Svg>
+  );
+}
+
+function IconActivity({ size = 18, color = "#535A3E" }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill={color} />
+    </Svg>
+  );
+}
+
 function AnalyticsTab({
   query,
+  slug,
 }: {
   query: {
     data?:
@@ -507,6 +542,8 @@ function AnalyticsTab({
           totalEarned: number;
           totalPoints: number;
           weeklySteps: { day: string; steps: number }[];
+          weeklySteps9: { label: string; steps: number }[];
+          monthlySteps12: { label: string; steps: number }[];
           recentActivity: {
             id: string;
             userName: string;
@@ -519,14 +556,14 @@ function AnalyticsTab({
     isPending: boolean;
     error: Error | null;
   };
+  slug: string;
 }) {
+  const [subTab, setSubTab] = useState<CompanyAnalyticsSubTab>("steps");
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
+
   if (query.isPending)
     return (
-      <ActivityIndicator
-        size="large"
-        color={colors.mossGreen}
-        style={{ marginTop: 48 }}
-      />
+      <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />
     );
   if (query.error)
     return (
@@ -539,93 +576,293 @@ function AnalyticsTab({
   const d = query.data;
   if (!d) return null;
 
-  return (
-    <>
-      <Text style={styles.pageTitle}>Analityka</Text>
+  const selectedEmployee = d.employees.find((e) => e.id === selectedEmployeeId);
 
-      <View
-        style={{
-          flexDirection: "row",
-          gap: 8,
-          marginBottom: 16,
-          flexWrap: "wrap",
-        }}
-      >
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{d.totalActivities}</Text>
-          <Text style={styles.statLabel}>Aktywnosci</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{d.totalSteps.toLocaleString()}</Text>
-          <Text style={styles.statLabel}>Krokow</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{d.totalDeclarations}</Text>
-          <Text style={styles.statLabel}>Deklaracji</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{d.totalEarned}</Text>
-          <Text style={styles.statLabel}>Zarobione EC</Text>
-        </View>
+  const SUB_TABS: { key: CompanyAnalyticsSubTab; label: string; icon: React.ReactNode }[] = [
+    { key: "steps", label: "Liczba krokow", icon: <IconSteps color={subTab === "steps" ? colors.mossGreen : colors.slate500} /> },
+    { key: "ranking", label: "Ranking pracownikow", icon: <IconTrophy color={subTab === "ranking" ? colors.mossGreen : colors.slate500} /> },
+    { key: "activity", label: "Ostatnie aktywnosci", icon: <IconActivity color={subTab === "activity" ? colors.mossGreen : colors.slate500} /> },
+  ];
+
+  return (
+    <View style={styles.analyticsLayout}>
+      <View style={styles.analyticsSidebar}>
+        {SUB_TABS.map((t) => (
+          <Pressable
+            key={t.key}
+            style={[styles.analyticsSidebarItem, subTab === t.key && styles.analyticsSidebarItemActive]}
+            onPress={() => setSubTab(t.key)}
+          >
+            <View style={styles.analyticsSidebarIcon}>{t.icon}</View>
+            <Text style={[styles.analyticsSidebarLabel, subTab === t.key && styles.analyticsSidebarLabelActive]}>
+              {t.label}
+            </Text>
+          </Pressable>
+        ))}
       </View>
 
-      {d.employees.length > 0 && (
-        <>
-          <Text style={styles.sectionTitle}>Ranking pracownikow</Text>
-          <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderCell, { flex: 3 }]}>Pracownik</Text>
-            <Text
-              style={[styles.tableHeaderCell, { flex: 1, textAlign: "right" }]}
+      <View style={styles.analyticsMain}>
+        <View style={{ minHeight: 500 }}>
+          {subTab === "steps" && (
+            <CompanyStepsView
+              employees={d.employees}
+              selectedEmployeeId={selectedEmployeeId}
+              selectedEmployee={selectedEmployee}
+              onSelectEmployee={setSelectedEmployeeId}
+              slug={slug}
+            />
+          )}
+
+          {subTab === "ranking" && (
+            <CompanyRankingView employees={d.employees} />
+          )}
+
+          {subTab === "activity" && (
+            <CompanyActivityView activities={d.recentActivity} />
+          )}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+type StepsPeriod = "day" | "week" | "month" | "custom";
+
+function CompanyStepsView({
+  employees, selectedEmployeeId, selectedEmployee, onSelectEmployee, slug,
+}: {
+  employees: { id: string; name: string; points: number }[];
+  selectedEmployeeId: string;
+  selectedEmployee?: { id: string; name: string; points: number };
+  onSelectEmployee: (id: string) => void;
+  slug: string;
+}) {
+  const [period, setPeriod] = useState<StepsPeriod>("day");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+
+  const getEffectivePeriod = (): "day" | "week" | "month" => {
+    if (period !== "custom") return period;
+    if (!customFrom || !customTo) return "day";
+    const diffMs = new Date(customTo).getTime() - new Date(customFrom).getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    if (diffDays <= 14) return "day";
+    if (diffDays <= 90) return "week";
+    return "month";
+  };
+
+  const effectivePeriod = getEffectivePeriod();
+  const from = period === "custom" ? customFrom : undefined;
+  const to = period === "custom" ? customTo : undefined;
+
+  const stepsQuery = useQuery({
+    queryKey: ["company", slug, "employee-steps", selectedEmployeeId, effectivePeriod, from, to],
+    queryFn: () => fetchCompanyEmployeeSteps(slug, selectedEmployeeId, effectivePeriod, from, to),
+    enabled: selectedEmployeeId.length > 0 && (period !== "custom" || (!!customFrom && !!customTo)),
+  });
+
+  const PERIOD_OPTIONS: { key: StepsPeriod; label: string }[] = [
+    { key: "day", label: "7 dni" },
+    { key: "week", label: "9 tygodni" },
+    { key: "month", label: "12 miesiecy" },
+    { key: "custom", label: "Wlasny zakres" },
+  ];
+
+  const formatLabel = (label: string) => {
+    if (effectivePeriod === "day") {
+      const d = new Date(label);
+      if (period === "day") return d.toLocaleDateString("pl-PL", { weekday: "short" });
+      return d.toLocaleDateString("pl-PL", { day: "numeric", month: "short" });
+    }
+    if (effectivePeriod === "week") {
+      const parts = label.split("-W");
+      return parts.length === 2 ? `T${parts[1]}` : label;
+    }
+    if (effectivePeriod === "month") {
+      const monthNames = ["Sty", "Lut", "Mar", "Kwi", "Maj", "Cze", "Lip", "Sie", "Wrz", "Paz", "Lis", "Gru"];
+      const idx = parseInt(label.split("-")[1], 10) - 1;
+      return monthNames[idx] ?? label;
+    }
+    return label;
+  };
+
+  const data = stepsQuery.data?.data ?? [];
+
+  return (
+    <>
+      <Text style={styles.sectionTitle}>Wybierz pracownika</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: 20 }}>
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          {employees.map((emp) => (
+            <Pressable
+              key={emp.id}
+              style={[styles.filterBtn, selectedEmployeeId === emp.id && styles.filterBtnActive]}
+              onPress={() => onSelectEmployee(emp.id)}
             >
-              PKT
-            </Text>
-          </View>
-          {d.employees.map((emp, i) => (
-            <View key={emp.id} style={styles.tableRow}>
-              <Text style={[styles.tableCell, { flex: 3 }]}>
-                {i + 1}. {emp.name}
+              <Text style={[styles.filterBtnText, selectedEmployeeId === emp.id && styles.filterBtnTextActive]}>
+                {emp.name}
               </Text>
-              <Text style={[styles.tableCell, { flex: 1, textAlign: "right" }]}>
-                {emp.points}
-              </Text>
-            </View>
+            </Pressable>
           ))}
+        </View>
+      </ScrollView>
+
+      {selectedEmployeeId && selectedEmployee && (
+        <>
+          <View style={styles.analyticsUserInfo}>
+            <Text style={styles.analyticsUserName}>{selectedEmployee.name}</Text>
+            <Text style={styles.analyticsUserPoints}>{selectedEmployee.points} PKT</Text>
+          </View>
+
+          <View style={styles.periodSelector}>
+            {PERIOD_OPTIONS.map((opt) => (
+              <Pressable
+                key={opt.key}
+                style={[styles.periodBtn, period === opt.key && styles.periodBtnActive]}
+                onPress={() => setPeriod(opt.key)}
+              >
+                <Text style={[styles.periodBtnText, period === opt.key && styles.periodBtnTextActive]}>
+                  {opt.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {period === "custom" && (
+            <View style={styles.customDateRow}>
+              <View style={styles.customDateField}>
+                <Text style={styles.customDateLabel}>Od:</Text>
+                <TextInput
+                  style={styles.customDateInput}
+                  placeholder="RRRR-MM-DD"
+                  value={customFrom}
+                  onChangeText={setCustomFrom}
+                  placeholderTextColor={colors.inputPlaceholder}
+                />
+              </View>
+              <View style={styles.customDateField}>
+                <Text style={styles.customDateLabel}>Do:</Text>
+                <TextInput
+                  style={styles.customDateInput}
+                  placeholder="RRRR-MM-DD"
+                  value={customTo}
+                  onChangeText={setCustomTo}
+                  placeholderTextColor={colors.inputPlaceholder}
+                />
+              </View>
+            </View>
+          )}
+
+          <CompanyBarChart
+            data={data.map((s) => ({ label: formatLabel(s.label), steps: s.steps }))}
+            emptyMsg="Brak danych krokow dla wybranego okresu."
+          />
         </>
       )}
 
-      {d.recentActivity.length > 0 && (
-        <>
-          <Text style={styles.sectionTitle}>Ostatnie aktywnosci</Text>
-          {d.recentActivity.map((a) => (
-            <View key={a.id} style={styles.tableRow}>
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "600",
-                    color: colors.slate900,
-                  }}
-                >
-                  {a.userName}
-                </Text>
-                <Text style={{ fontSize: 12, color: colors.slate500 }}>
-                  {a.type} · {new Date(a.createdAt).toLocaleDateString()}
-                </Text>
-              </View>
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "700",
-                  color: colors.mossGreen,
-                }}
-              >
-                +{a.points}
-              </Text>
-            </View>
-          ))}
-        </>
+      {!selectedEmployeeId && (
+        <View style={styles.analyticsPlaceholder}>
+          <Text style={styles.analyticsPlaceholderText}>Wybierz pracownika, aby zobaczyc wykresy krokow.</Text>
+        </View>
       )}
     </>
+  );
+}
+
+function CompanyRankingView({ employees }: {
+  employees: { id: string; name: string; points: number }[];
+}) {
+  return (
+    <>
+      <Text style={styles.sectionTitle}>Ranking pracownikow</Text>
+      {employees.length === 0 ? (
+        <Text style={styles.emptyText}>Brak pracownikow.</Text>
+      ) : (
+        <View style={{ gap: 4 }}>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>#</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Pracownik</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1, textAlign: "right" }]}>PKT</Text>
+          </View>
+          {employees.map((emp, i) => (
+            <View key={emp.id} style={styles.tableRow}>
+              <Text style={[styles.tableCell, { flex: 0.5, fontWeight: "700", color: colors.mossGreen }]}>{i + 1}</Text>
+              <Text style={[styles.tableCell, { flex: 2, fontWeight: "600" }]}>{emp.name}</Text>
+              <Text style={[styles.tableCell, { flex: 1, textAlign: "right" }]}>{emp.points}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </>
+  );
+}
+
+function CompanyActivityView({ activities }: {
+  activities: { id: string; userName: string; type: string; points: number; createdAt: string }[];
+}) {
+  return (
+    <>
+      <Text style={styles.sectionTitle}>Ostatnie aktywnosci ({activities.length})</Text>
+      {activities.length === 0 ? (
+        <Text style={styles.emptyText}>Brak aktywnosci.</Text>
+      ) : (
+        <View style={{ gap: 4 }}>
+          {activities.map((a) => (
+            <View key={a.id} style={styles.tableRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 14, fontWeight: "600", color: colors.slate900 }}>{a.userName}</Text>
+                <Text style={{ fontSize: 12, color: colors.slate500 }}>
+                  {a.type} · {new Date(a.createdAt).toLocaleDateString("pl-PL")}
+                </Text>
+              </View>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: colors.mossGreen }}>+{a.points}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </>
+  );
+}
+
+
+function CompanyBarChart({ data, emptyMsg }: {
+  data: { label: string; steps: number }[];
+  emptyMsg: string;
+}) {
+  if (data.length === 0) return (
+    <View style={styles.chartCard}>
+      <Text style={{ fontSize: 14, color: colors.slate500, textAlign: "center", padding: 20 }}>{emptyMsg}</Text>
+    </View>
+  );
+
+  const max = Math.max(...data.map((d) => d.steps), 1);
+  const total = data.reduce((sum, d) => sum + d.steps, 0);
+  const avg = Math.round(total / data.length);
+
+  return (
+    <View style={styles.chartCard}>
+      <View style={{ flexDirection: "row", justifyContent: "flex-end", alignItems: "flex-start", marginBottom: 16 }}>
+        <View style={{ flexDirection: "row", gap: 20 }}>
+          <View style={{ alignItems: "flex-end" }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: colors.mossGreen }}>{total.toLocaleString("pl-PL")}</Text>
+            <Text style={{ fontSize: 11, color: colors.slate500 }}>Suma</Text>
+          </View>
+          <View style={{ alignItems: "flex-end" }}>
+            <Text style={{ fontSize: 18, fontWeight: "700", color: colors.mossGreen }}>{avg.toLocaleString("pl-PL")}</Text>
+            <Text style={{ fontSize: 11, color: colors.slate500 }}>Srednia</Text>
+          </View>
+        </View>
+      </View>
+      <View style={styles.chartRow}>
+        {data.map((d, i) => (
+          <View key={`${d.label}-${i}`} style={styles.chartCol}>
+            <Text style={styles.chartBarValue}>{d.steps > 0 ? d.steps.toLocaleString("pl-PL") : ""}</Text>
+            <View style={[styles.chartBar, { height: Math.max((d.steps / max) * 140, 4) }]} />
+            <Text style={styles.chartLabel}>{d.label}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -1132,6 +1369,117 @@ const styles = StyleSheet.create({
   tokenListFull: {
     gap: 4,
   },
+  chartCard: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    borderRadius: radius.md,
+    padding: 24,
+    marginBottom: 20,
+  },
+  chartTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.slate900,
+  },
+  chartRow: {
+    flexDirection: "row",
+    gap: 6,
+    alignItems: "flex-end",
+    minHeight: 180,
+  },
+  chartCol: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  chartBarValue: {
+    fontSize: 10,
+    color: colors.slate500,
+    fontWeight: "600",
+  },
+  chartBar: {
+    width: "100%",
+    maxWidth: 48,
+    backgroundColor: colors.mossGreen,
+    borderRadius: radius.sm,
+    minHeight: 4,
+  },
+  chartLabel: {
+    fontSize: 10,
+    color: colors.slate500,
+  },
+  analyticsUserInfo: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    borderRadius: radius.sm,
+    padding: 16,
+    marginBottom: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  analyticsUserName: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.slate900,
+  },
+  analyticsUserPoints: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: colors.mossGreen,
+  },
+  analyticsPlaceholder: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    borderRadius: radius.sm,
+    padding: 40,
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  analyticsPlaceholderText: {
+    fontSize: 15,
+    color: colors.slate500,
+  },
+  filterBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    backgroundColor: colors.white,
+  },
+  filterBtnActive: {
+    backgroundColor: colors.mossGreen,
+    borderColor: colors.mossGreen,
+  },
+  filterBtnText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.slate600,
+  },
+  filterBtnTextActive: {
+    color: colors.white,
+  },
+  analyticsLayout: { flexDirection: "row", gap: 24, minHeight: 600 },
+  analyticsSidebar: { width: 220, backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 16, alignSelf: "flex-start" },
+  analyticsSidebarItem: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderRadius: radius.sm, marginBottom: 4 },
+  analyticsSidebarItemActive: { backgroundColor: colors.slate100 },
+  analyticsSidebarIcon: { width: 18, height: 18, alignItems: "center", justifyContent: "center" },
+  analyticsSidebarLabel: { fontSize: 14, fontWeight: "500", color: colors.slate600 },
+  analyticsSidebarLabelActive: { color: colors.mossGreen, fontWeight: "700" },
+  analyticsMain: { flex: 1 },
+  periodSelector: { flexDirection: "row", gap: 8, marginBottom: 16 },
+  periodBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.slate200, backgroundColor: colors.white },
+  periodBtnActive: { backgroundColor: colors.mossGreen, borderColor: colors.mossGreen },
+  periodBtnText: { fontSize: 13, fontWeight: "600", color: colors.slate600 },
+  periodBtnTextActive: { color: colors.white },
+  customDateRow: { flexDirection: "row", gap: 12, marginBottom: 16 },
+  customDateField: { flex: 1 },
+  customDateLabel: { fontSize: 13, fontWeight: "600", color: colors.slate700, marginBottom: 4 },
+  customDateInput: { borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.sm, padding: 10, fontSize: 14, color: colors.slate900, backgroundColor: colors.white },
   tokenTableHeader: {
     flexDirection: "row",
     backgroundColor: colors.slate100,

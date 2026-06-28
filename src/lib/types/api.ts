@@ -295,3 +295,23 @@ export type UserRank = {
 };
 
 export type LeaderboardPeriod = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
+
+export type AnalyticsUser = {
+  id: string;
+  name: string;
+  email: string;
+  rootStage: { name: string; level: number } | null;
+  totalExp: number;
+};
+
+export type UserStepsPayload = {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    rootStage: { id: string; name: string; level: number; expRequired: number; description: string | null } | null;
+    totalExp: number;
+    totalSteps: number;
+  };
+  data: { label: string; steps: number }[];
+};
