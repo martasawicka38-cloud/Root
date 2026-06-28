@@ -1,7 +1,7 @@
 import { Link } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import {
   BikeIcon,
@@ -15,16 +15,83 @@ import {
 } from "../../components/icons";
 
 import { Screen } from "../../features/common/Screen";
-import { fetchMe } from "../../lib/api/endpoints";
+import { fetchMe, fetchCompanyBySlug, fetchCompanyEmployees } from "../../lib/api/endpoints";
 import { colors } from "../../styles/tokens";
 
 const CARD_W = 188;
 
-export default function HomeScreen() {
-  const { data: me } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
+function CompanyHome({ companySlug }: { companySlug: string }) {
+  const { data: company, isPending: companyPending } = useQuery({
+    queryKey: ["company", companySlug],
+    queryFn: () => fetchCompanyBySlug(companySlug),
+    enabled: !!companySlug,
+  });
 
-  const profileName = me?.name ?? "";
-  const stepGoal = me?.stepGoal ?? 8000;
+  const { data: employees, isPending: employeesPending } = useQuery({
+    queryKey: ["company", companySlug, "employees"],
+    queryFn: () => fetchCompanyEmployees(companySlug),
+    enabled: !!companySlug,
+  });
+
+  if (companyPending || employeesPending) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.mossGreen} />
+      </View>
+    );
+  }
+
+  const employeeCount = employees?.length ?? 0;
+  const totalBalance = employees?.reduce((sum, e) => sum + e.balance, 0) ?? 0;
+  const activeEmployees = employees?.filter((e) => e.isActive).length ?? 0;
+
+  return (
+    <>
+      <Text style={styles.greeting}>
+        Dzien dobry, <Text style={styles.greetingName}>{company?.name ?? "Firma"}</Text>
+      </Text>
+
+      <View style={[styles.card, styles.cardLight, { marginBottom: 16 }]}>
+        <View style={styles.cardBody}>
+          <Text style={styles.companyStatsTitle}>Twoja firma</Text>
+          <View style={styles.companyStatsRow}>
+            <View style={styles.companyStatItem}>
+              <Text style={styles.companyStatValue}>{employeeCount}</Text>
+              <Text style={styles.companyStatLabel}>Pracownikow</Text>
+            </View>
+            <View style={styles.companyStatItem}>
+              <Text style={styles.companyStatValue}>{activeEmployees}</Text>
+              <Text style={styles.companyStatLabel}>Aktywnych</Text>
+            </View>
+            <View style={styles.companyStatItem}>
+              <Text style={styles.companyStatValue}>{totalBalance}</Text>
+              <Text style={styles.companyStatLabel}>Suma EC</Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.quickActions}>
+        <Link href="/(mobile)/ranking" asChild>
+          <Pressable style={styles.actionTile}>
+            <TrophyIcon size={28} color={colors.mossGreen} />
+            <Text style={styles.actionLabel}>Ranking pracownikow</Text>
+          </Pressable>
+        </Link>
+
+        <Link href="/company" asChild>
+          <Pressable style={styles.actionTile}>
+            <LeafIcon size={28} color={colors.mossGreen} />
+            <Text style={styles.actionLabel}>Panel firmy</Text>
+          </Pressable>
+        </Link>
+      </View>
+    </>
+  );
+}
+
+function UserHome({ userName }: { userName: string }) {
+  const stepGoal = 8000;
   const currentSteps = 6200;
   const progress = Math.min(100, Math.round((currentSteps / stepGoal) * 100));
 
@@ -75,10 +142,10 @@ export default function HomeScreen() {
   const allCards = [...declarationCards, ...declarationCards];
 
   return (
-    <Screen>
+    <>
       <Text style={styles.greeting}>
         Dzien dobry,{" "}
-        <Text style={styles.greetingName}>{profileName.split(" ")[0]}</Text>
+        <Text style={styles.greetingName}>{userName.split(" ")[0]}</Text>
       </Text>
 
       {/* Steps Card */}
@@ -230,6 +297,24 @@ export default function HomeScreen() {
           </View>
         </View>
       </Link>
+    </>
+  );
+}
+
+export default function HomeScreen() {
+  const { data: me } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
+
+  if (me?.role === "company") {
+    return (
+      <Screen>
+        <CompanyHome companySlug={me.partner} />
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen>
+      <UserHome userName={me?.name ?? ""} />
     </Screen>
   );
 }
@@ -243,6 +328,35 @@ const styles = StyleSheet.create({
   },
   greetingName: {
     color: colors.greenDark,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 48,
+  },
+  companyStatsTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.brownDark,
+    marginBottom: 8,
+  },
+  companyStatsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+  },
+  companyStatItem: {
+    alignItems: "center",
+  },
+  companyStatValue: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: colors.greenDark,
+  },
+  companyStatLabel: {
+    fontSize: 12,
+    color: colors.olive,
+    marginTop: 4,
   },
   card: {
     borderWidth: 1,

@@ -213,8 +213,8 @@ export default function CompanyPanelScreen() {
 
       <ScrollView contentContainerStyle={styles.body} style={{ flex: 1 }}>
         <View style={styles.bodyInner}>
-          {authQuery.data && (
-            <Text style={styles.welcome}>Witaj, {authQuery.data.name}</Text>
+          {companyQuery.data && (
+            <Text style={styles.welcome}>Witaj, {companyQuery.data.name}</Text>
           )}
 
           {tab === "employees" && (

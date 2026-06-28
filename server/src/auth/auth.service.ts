@@ -22,6 +22,10 @@ export class AuthService {
       throw new ConflictException("Email already registered");
     }
 
+    if (dto.role !== "company" && !dto.name) {
+      throw new UnauthorizedException("Name is required for user and employer registration");
+    }
+
     if (dto.role === "employer") {
       if (!dto.companyToken) {
         throw new UnauthorizedException(
@@ -49,7 +53,7 @@ export class AuthService {
       const user = await this.prisma.user.create({
         data: {
           email: dto.email,
-          name: dto.name,
+          name: dto.name!,
           passwordHash,
           role: "employer",
           partner: token.company!.slug,
@@ -105,7 +109,7 @@ export class AuthService {
       const user = await this.prisma.user.create({
         data: {
           email: dto.email,
-          name: dto.name,
+          name: dto.companyName,
           passwordHash,
           role: "company",
           partner: dto.companySlug,
@@ -130,7 +134,7 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
-        name: dto.name,
+        name: dto.name!,
         passwordHash,
         role: "user",
         rootStageId: seedStage?.id,

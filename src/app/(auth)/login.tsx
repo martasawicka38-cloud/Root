@@ -73,8 +73,6 @@ export default function LoginScreen() {
 
   return (
     <Screen>
-      <View style={{ height: 24 }} />
-
       <View style={styles.tabRow}>
         <Pressable style={[styles.tab, styles.tabActive]}>
           <Text style={[styles.tabText, styles.tabTextActive]}>Zaloguj</Text>

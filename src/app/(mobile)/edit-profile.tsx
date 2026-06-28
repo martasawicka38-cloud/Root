@@ -9,8 +9,9 @@ import { colors, radius } from "../../styles/tokens";
 export default function EditProfileScreen() {
   const queryClient = useQueryClient();
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
-  const [name, setName] = useState(me?.name ?? "Jan Kowalski");
+  const [name, setName] = useState(me?.name ?? "");
   const [goal, setGoal] = useState(String(me?.stepGoal ?? 8000));
+  const isCompany = me?.role === "company";
   const save = useMutation({
     mutationFn: patchProfile,
     onSuccess: () => {
@@ -23,12 +24,12 @@ export default function EditProfileScreen() {
     <Screen>
       <Text style={styles.title}>Edytuj profil</Text>
 
-      <Text style={styles.label}>Imie i nazwisko</Text>
+      <Text style={styles.label}>{isCompany ? "Nazwa firmy" : "Imie i nazwisko"}</Text>
       <TextInput
         value={name}
         onChangeText={setName}
         style={styles.input}
-        placeholder="Imie i nazwisko"
+        placeholder={isCompany ? "Nazwa firmy" : "Imie i nazwisko"}
       />
 
       <Text style={styles.label}>Dzienny cel krokow</Text>
@@ -44,7 +45,7 @@ export default function EditProfileScreen() {
         style={styles.button}
         onPress={() =>
           save.mutate({
-            name: name.trim() || "Jan Kowalski",
+            name: name.trim() || (isCompany ? "Firma" : "Jan Kowalski"),
             stepGoal: Number(goal) || 8000,
             partner: me?.partner ?? "intel",
           })

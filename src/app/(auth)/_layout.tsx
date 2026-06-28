@@ -30,6 +30,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   header: {
+    alignItems: "center",
     paddingHorizontal: spacing.md,
     paddingTop: Platform.OS === "web" ? 8 : 50,
     paddingBottom: 4,

@@ -29,10 +29,54 @@ const menuItems = [
   { href: "/(mobile)/settings", icon: SettingsIcon, label: "Ustawienia" },
 ] as const;
 
+function CompanyProfile({ name, email }: { name: string; email: string }) {
+  return (
+    <>
+      <Text style={styles.title}>Profil firmy</Text>
+
+      <View style={styles.avatarSection}>
+        <View style={styles.avatarWrapper}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarLetter}>
+              {name[0]?.toUpperCase() ?? "F"}
+            </Text>
+          </View>
+        </View>
+        <Text style={styles.name}>{name}</Text>
+        <Text style={styles.email}>{email}</Text>
+      </View>
+
+      <View style={[styles.card, styles.cardLight, { marginTop: 24 }]}>
+        <View style={styles.menuContainer}>
+          <Link href="/(mobile)/edit-profile" asChild>
+            <Pressable style={styles.menuItem}>
+              <View style={styles.menuItemLeft}>
+                <View style={styles.menuIconBox}>
+                  <EditIcon size={18} color={colors.slate700} />
+                </View>
+                <Text style={styles.menuLabel}>Edytuj profil</Text>
+              </View>
+              <Text style={styles.menuArrow}>›</Text>
+            </Pressable>
+          </Link>
+        </View>
+      </View>
+    </>
+  );
+}
+
 export default function ProfileScreen() {
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
   const name = me?.name ?? "";
   const email = me?.email ?? "";
+
+  if (me?.role === "company") {
+    return (
+      <Screen>
+        <CompanyProfile name={name} email={email} />
+      </Screen>
+    );
+  }
 
   return (
     <Screen>

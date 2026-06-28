@@ -12,10 +12,10 @@ import {
   SproutIcon,
   RankingIcon,
 } from "../../components/icons";
-import { fetchNotifications, fetchWallet } from "../../lib/api/endpoints";
+import { fetchNotifications, fetchWallet, fetchMe } from "../../lib/api/endpoints";
 import { colors, radius, spacing } from "../../styles/tokens";
 
-const tabs = [
+const allTabs = [
   { href: "/(mobile)/home", label: "Dom", icon: HomeIcon },
   { href: "/(mobile)/market", label: "Rynek", icon: MarketIcon },
   { href: "/(mobile)/eko", label: "Eko", icon: SproutIcon },
@@ -23,18 +23,32 @@ const tabs = [
   { href: "/(mobile)/profile", label: "Profil", icon: ProfileIcon },
 ] as const;
 
+const companyTabs = [
+  { href: "/(mobile)/home", label: "Dom", icon: HomeIcon },
+  { href: "/(mobile)/ranking", label: "Ranking", icon: RankingIcon },
+  { href: "/(mobile)/profile", label: "Profil", icon: ProfileIcon },
+] as const;
+
 export default function MobileLayout() {
   const pathname = usePathname();
+
+  const { data: me } = useQuery({
+    queryKey: ["me"],
+    queryFn: fetchMe,
+  });
 
   const { data: wallet } = useQuery({
     queryKey: ["wallet"],
     queryFn: fetchWallet,
+    enabled: me?.role !== "company",
   });
   const { data: notifications } = useQuery({
     queryKey: ["notifications"],
     queryFn: fetchNotifications,
   });
 
+  const isCompany = me?.role === "company";
+  const tabs = isCompany ? companyTabs : allTabs;
   const balance = wallet?.balance ?? 0;
   const hasUnread = notifications?.some((n) => !n.read) ?? false;
 
@@ -43,13 +57,15 @@ export default function MobileLayout() {
       <View style={styles.content}>
         <View style={styles.header}>
           <AppLogo size={60} />
-          <View style={styles.headerActions}>
+        <View style={styles.headerActions}>
+          {!isCompany && (
             <View style={styles.balancePill}>
               <CoinIcon size={16} color={colors.mossGreen} />
               <Text style={styles.balanceValue}>{balance}</Text>
               <Text style={styles.balanceUnit}>EC</Text>
             </View>
-            <Link href="/(mobile)/notifications" asChild>
+          )}
+          <Link href="/(mobile)/notifications" asChild>
               <Pressable style={styles.bellButton}>
                 <BellIcon size={22} color={colors.mossGreen} />
                 {hasUnread && <View style={styles.bellDot} />}

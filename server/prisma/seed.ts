@@ -263,7 +263,7 @@ async function main() {
   ];
 
   const ziarenkoId: string[] = [];
-  const allStages: { id: string; level: number; expRequired: number }[] = [];
+  const allStages: { id: string; name: string; level: number; expRequired: number }[] = [];
 
   for (const stage of rootStages) {
     const created = await prisma.rootStage.upsert({

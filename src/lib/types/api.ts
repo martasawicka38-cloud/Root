@@ -13,6 +13,7 @@ export type UserProfile = {
   canTransform: boolean;
   rootStageId: string | null;
   rootStage: RootStage | null;
+  companyId: string | null;
 };
 
 export type Reward = {

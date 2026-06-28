@@ -75,9 +75,9 @@ export default function RegisterScreen() {
     );
   }, [companies, searchQuery]);
 
-  const canSubmit = email && password && name && (
-    role === "user" ||
-    (role === "employer" && selectedCompany && companyToken) ||
+  const canSubmit = email && password && (
+    (role === "user" && name) ||
+    (role === "employer" && name && selectedCompany && companyToken) ||
     (role === "company" && companyToken && companyName && companySlug)
   );
 
@@ -87,15 +87,18 @@ export default function RegisterScreen() {
     setError(null);
     try {
       const payload: Record<string, unknown> = {
-        email, password, name, role,
+        email, password, role,
       };
-      if (role === "employer") {
-        payload.companyToken = companyToken;
-      }
       if (role === "company") {
+        payload.name = companyName;
         payload.companyToken = companyToken;
         payload.companyName = companyName;
         payload.companySlug = companySlug;
+      } else {
+        payload.name = name;
+        if (role === "employer") {
+          payload.companyToken = companyToken;
+        }
       }
       await registerUser(payload as Parameters<typeof registerUser>[0]);
       const res = await loginUser({ email, password });
@@ -138,9 +141,6 @@ export default function RegisterScreen() {
 
   return (
     <Screen>
-      <View style={{ height: 24 }} />
-      <Text style={styles.tagline}>Zakorzen dobre nawyki</Text>
-
       <Text style={styles.title}>Zaloz konto</Text>
 
       <Text style={styles.label}>Wybierz typ konta</Text>
@@ -187,14 +187,18 @@ export default function RegisterScreen() {
         </View>
       )}
 
-      <Text style={styles.label}>Imie i nazwisko</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Jan Kowalski"
-        value={name}
-        onChangeText={setName}
-        placeholderTextColor={colors.slate400}
-      />
+      {role !== "company" && (
+        <>
+          <Text style={styles.label}>Imie i nazwisko</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Jan Kowalski"
+            value={name}
+            onChangeText={setName}
+            placeholderTextColor={colors.slate400}
+          />
+        </>
+      )}
 
       <Text style={styles.label}>Adres e-mail</Text>
       <TextInput
