@@ -16,6 +16,10 @@ import { ChallengeController } from "./challenge/challenge.controller";
 import { ChallengeService } from "./challenge/challenge.service";
 import { CompanyController } from "./company/company.controller";
 import { CompanyService } from "./company/company.service";
+import { EsgReportController } from "./company/esg-report.controller";
+import { EsgReportService } from "./company/esg-report.service";
+import { CertificateController } from "./company/certificate.controller";
+import { CertificateService } from "./company/certificate.service";
 import { ActivityController } from "./activity/activity.controller";
 import { ActivityService } from "./activity/activity.service";
 import { LeaderboardController } from "./leaderboard.controller";
@@ -36,7 +40,7 @@ if (!jwtSecret) {
       signOptions: { expiresIn: "7d", algorithm: "HS256" },
     }),
   ],
-  controllers: [AppController, AuthController, AdminController, CompanyController, ChallengeController, ActivityController, LeaderboardController, RootController],
-  providers: [AppService, AuthService, AdminService, CompanyService, ChallengeService, ActivityService, LeaderboardService, RootService, PrismaService, JwtStrategy],
+  controllers: [AppController, AuthController, AdminController, CompanyController, EsgReportController, CertificateController, ChallengeController, ActivityController, LeaderboardController, RootController],
+  providers: [AppService, AuthService, AdminService, CompanyService, EsgReportService, CertificateService, ChallengeService, ActivityService, LeaderboardService, RootService, PrismaService, JwtStrategy],
 })
 export class AppModule {}
