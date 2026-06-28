@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 import { styles } from "../company.styles";
-import { colors } from "../../../styles/tokens";
+import { colors, spacing } from "../../../styles/tokens";
 
 export function CompanyBarChart({ data, emptyMsg }: {
   data: { label: string; steps: number }[];
@@ -8,7 +8,7 @@ export function CompanyBarChart({ data, emptyMsg }: {
 }) {
   if (data.length === 0) return (
     <View style={styles.chartCard}>
-      <Text style={{ fontSize: 14, color: colors.slate500, textAlign: "center", padding: 20 }}>{emptyMsg}</Text>
+      <Text style={{ fontSize: 14, color: colors.slate500, textAlign: "center", padding: spacing.sm }}>{emptyMsg}</Text>
     </View>
   );
 
@@ -18,8 +18,8 @@ export function CompanyBarChart({ data, emptyMsg }: {
 
   return (
     <View style={styles.chartCard}>
-      <View style={{ flexDirection: "row", justifyContent: "flex-end", alignItems: "flex-start", marginBottom: 16 }}>
-        <View style={{ flexDirection: "row", gap: 20 }}>
+      <View style={{ flexDirection: "row", justifyContent: "flex-end", alignItems: "flex-start", marginBottom: spacing.xs }}>
+        <View style={{ flexDirection: "row", gap: spacing.sm }}>
           <View style={{ alignItems: "flex-end" }}>
             <Text style={{ fontSize: 18, fontWeight: "700", color: colors.mossGreen }}>{total.toLocaleString("pl-PL")}</Text>
             <Text style={{ fontSize: 11, color: colors.slate500 }}>Suma</Text>

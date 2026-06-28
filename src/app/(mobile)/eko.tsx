@@ -18,7 +18,7 @@ import {
 } from "../../lib/api/endpoints";
 import { EcoIcon } from "../../components/EcoIcon";
 import type { EcoActivity, SubmitActivityResponse } from "../../lib/types/api";
-import { colors } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 
 const CATEGORY_META_BASE: Record<
   string,
@@ -131,7 +131,7 @@ export default function EkoScreen() {
   if (rootPending || activitiesPending) {
     return (
       <Screen>
-        <ActivityIndicator style={{ padding: 40 }} color={colors.mossGreen} />
+        <ActivityIndicator style={{ padding: spacing.xl }} color={colors.mossGreen} />
       </Screen>
     );
   }
@@ -153,7 +153,7 @@ export default function EkoScreen() {
       <Text style={styles.title}>{t("eco.title")}</Text>
 
       {/* Root Evolution Card */}
-      <View style={[styles.card, styles.cardLight, { marginBottom: 16 }]}>
+      <View style={[styles.card, styles.cardLight, { marginBottom: spacing.xs }]}>
         <View style={styles.cardBody}>
           <View style={styles.row}>
             <StageImage level={currentStage?.level ?? 1} />
@@ -249,7 +249,7 @@ export default function EkoScreen() {
       <Text style={styles.sectionTitle}>{t("eco.activities")}</Text>
 
       {!activities ? (
-        <ActivityIndicator style={{ padding: 20 }} />
+        <ActivityIndicator style={{ padding: spacing.sm }} />
       ) : (
         Object.entries(grouped).map(([cat, acts]) => {
           const meta = CATEGORY_META_BASE[cat] ?? {
@@ -338,29 +338,29 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
     color: colors.brownDark,
-    marginBottom: 16,
+    marginBottom: spacing.xs,
   },
   errorText: {
     textAlign: "center",
-    paddingVertical: 40,
+    paddingVertical: spacing.xl,
     color: colors.olive,
   },
   card: {
     borderWidth: 1,
     borderColor: colors.creamDark,
-    borderRadius: 12,
+    borderRadius: radius.md,
   },
   cardLight: {
     backgroundColor: colors.creamLight,
   },
   cardBody: {
-    gap: 12,
-    padding: 16,
+    gap: spacing.x2s,
+    padding: spacing.xs,
   },
   row: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
+    gap: spacing.xs,
   },
   stageImage: {
     width: 48,
@@ -381,13 +381,13 @@ const styles = StyleSheet.create({
   },
   progressBarBg: {
     height: 8,
-    borderRadius: 9999,
+    borderRadius: radius.full,
     backgroundColor: colors.creamDark,
     overflow: "hidden",
   },
   progressBarFill: {
     height: "100%",
-    borderRadius: 9999,
+    borderRadius: radius.full,
     backgroundColor: colors.greenDark,
   },
   nextStageText: {
@@ -396,9 +396,9 @@ const styles = StyleSheet.create({
   },
   btnPrimary: {
     backgroundColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    borderRadius: radius.md,
+    paddingVertical: spacing.x2s,
+    paddingHorizontal: spacing.md,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -408,9 +408,9 @@ const styles = StyleSheet.create({
     color: colors.primaryForeground,
   },
   errorBanner: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+    padding: spacing.x2s,
+    borderRadius: radius.sm,
+    marginBottom: spacing.x2s,
     backgroundColor: "rgba(139, 69, 19, 0.1)",
   },
   errorBannerText: {
@@ -419,10 +419,10 @@ const styles = StyleSheet.create({
     color: colors.error,
   },
   resultBanner: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-    gap: 8,
+    padding: spacing.x2s,
+    borderRadius: radius.sm,
+    marginBottom: spacing.x2s,
+    gap: spacing.x3s,
     backgroundColor: colors.creamDark,
   },
   resultText: {
@@ -433,11 +433,11 @@ const styles = StyleSheet.create({
   badgesRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: spacing.x3s,
   },
   badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: spacing.x3s,
+    paddingVertical: spacing.x4s,
     borderRadius: 6,
   },
   badgeText: {
@@ -454,18 +454,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: colors.brownDark,
-    marginBottom: 12,
+    marginBottom: spacing.x2s,
   },
   categoryBlock: {
-    marginBottom: 12,
-    borderRadius: 8,
+    marginBottom: spacing.x2s,
+    borderRadius: radius.sm,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: colors.creamDark,
   },
   categoryHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.x3s,
   },
   categoryHeaderText: {
     fontSize: 14,
@@ -475,8 +475,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: spacing.x2s,
+    paddingHorizontal: spacing.xs,
     borderTopWidth: 1,
     borderTopColor: colors.creamDark,
   },
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
   activityLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: spacing.x2s,
     flex: 1,
   },
   activityInfo: {
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
   doneCircle: {
     width: 32,
     height: 32,
-    borderRadius: 9999,
+    borderRadius: radius.full,
     backgroundColor: colors.olive,
     alignItems: "center",
     justifyContent: "center",
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
   },
   addBtn: {
     backgroundColor: colors.primary,
-    borderRadius: 12,
+    borderRadius: radius.md,
     width: 36,
     height: 36,
     alignItems: "center",

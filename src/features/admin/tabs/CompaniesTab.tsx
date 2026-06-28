@@ -1,9 +1,12 @@
-import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import type { Company, CompanyToken } from "../../../lib/types/api";
 import { Badge } from "../components/Badge";
+import { EmptyState } from "../../../components/shared/EmptyState";
+import { ErrorCard } from "../../../components/shared/ErrorCard";
 import { styles } from "../admin.styles";
-import { colors } from "../../../styles/tokens";
+import { colors, spacing } from "../../../styles/tokens";
+import { LoadingState } from "../../../components/shared/LoadingState";
 
 interface CompaniesTabProps {
   companiesQuery: { data?: Company[]; isPending: boolean; error: Error | null };
@@ -39,11 +42,11 @@ export function CompaniesTab({
       </View>
 
       {companiesQuery.isPending ? (
-        <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 32 }} />
+        <LoadingState />
       ) : companiesQuery.error ? (
-        <View style={styles.errorCard}><Text style={styles.errorText}>{t("common.errorLoading")}</Text><Text style={styles.errorDetail}>{companiesQuery.error.message}</Text></View>
+        <ErrorCard title={t("common.errorLoading")} error={companiesQuery.error} />
       ) : (
-        <View style={{ gap: 8, marginTop: 16 }}>
+        <View style={{ gap: spacing.x3s, marginTop: spacing.xs }}>
           {companiesQuery.data?.map((c) => (
             <View key={c.id} style={styles.companyCard}>
               <Pressable style={styles.companyCardHeader} onPress={() => onToggleExpand(expandedCompanyId === c.id ? null : c.id)}>
@@ -64,9 +67,9 @@ export function CompaniesTab({
 
                   <Text style={styles.tokensTitle}>{t("admin.companies.tokens")} ({tokensQuery.data?.length ?? 0})</Text>
                   {tokensQuery.isPending ? (
-                    <ActivityIndicator size="small" color={colors.mossGreen} />
+                    <LoadingState size="small" />
                   ) : tokensQuery.data?.length === 0 ? (
-                    <Text style={styles.emptyText}>{t("admin.companies.noTokens")}</Text>
+                    <EmptyState message={t("admin.companies.noTokens")} />
                   ) : (
                     <View style={styles.tokenList}>
                       <View style={styles.tokenHeader}>

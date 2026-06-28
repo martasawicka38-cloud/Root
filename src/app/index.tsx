@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { colors } from "../styles/tokens";
+import { colors, radius, spacing } from "../styles/tokens";
 
 export default function WelcomeScreen() {
   return (
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: spacing.lg,
     paddingTop: 112,
   },
   imageContainer: {
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   },
   content: {
     alignItems: "center",
-    gap: 20,
+    gap: spacing.sm,
   },
   title: {
     fontSize: 32,
@@ -95,13 +95,13 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.slate100,
     paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 12,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.md,
     marginTop: 8,
   },
   buttonText: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#293211",
+    color: colors.brownDark,
   },
 });

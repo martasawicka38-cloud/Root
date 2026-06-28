@@ -15,7 +15,7 @@ import Svg, { Path } from "react-native-svg";
 
 import { Screen } from "../../features/common/Screen";
 import { loginUser } from "../../lib/api/endpoints";
-import { colors, radius } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
 
 function GoogleIcon({ size = 20 }: { size?: number }) {
@@ -148,8 +148,8 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   logoSection: {
-    marginTop: 12,
-    gap: 4,
+    marginTop: spacing.x2s,
+    gap: spacing.x4s,
   },
   tagline: {
     fontSize: 14,
@@ -160,8 +160,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.slate100,
     borderRadius: radius.md,
     padding: 3,
-    marginTop: 16,
-    marginBottom: 16,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xs,
     gap: 3,
   },
   tab: {
@@ -191,8 +191,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.errorBorder,
     borderRadius: radius.sm,
-    padding: 12,
-    marginBottom: 8,
+    padding: spacing.x2s,
+    marginBottom: spacing.x3s,
   },
   errorText: {
     fontSize: 14,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.slate500,
     marginBottom: 6,
-    marginTop: 8,
+    marginTop: spacing.x3s,
   },
   input: {
     borderWidth: 1,
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   },
   forgot: {
     alignSelf: "flex-end",
-    marginTop: 8,
+    marginTop: spacing.x3s,
     color: colors.mossGreen,
     fontSize: 13,
     fontWeight: "600",
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.mossGreen,
     paddingVertical: 14,
     borderRadius: radius.md,
-    marginTop: 16,
+    marginTop: spacing.xs,
     alignItems: "center",
   },
   buttonDisabled: {
@@ -241,9 +241,9 @@ const styles = StyleSheet.create({
   divider: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    marginTop: 16,
-    marginBottom: 12,
+    gap: spacing.x2s,
+    marginTop: spacing.xs,
+    marginBottom: spacing.x2s,
   },
   dividerLine: {
     flex: 1,

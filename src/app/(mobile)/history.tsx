@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { HistoryIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
-import { colors, radius } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
 import { fetchHistory } from "../../lib/api/endpoints";
 
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
   },
   filterRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: spacing.x3s,
     marginBottom: 12,
   },
   filterChip: {
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: "center",
-    gap: 8,
+    gap: spacing.x3s,
     marginTop: 24,
   },
   emptyText: {

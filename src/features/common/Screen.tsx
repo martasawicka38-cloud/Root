@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 
-import { colors } from "../../styles/tokens";
+import { colors, spacing } from "../../styles/tokens";
 
 type ScreenProps = PropsWithChildren<{
   padded?: boolean;
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   padded: {
-    padding: 16,
-    gap: 12,
+    padding: spacing.xs,
+    gap: spacing.x2s,
   },
 });

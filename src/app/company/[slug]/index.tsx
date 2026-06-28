@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, router } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -23,8 +23,13 @@ import { AnalyticsTab } from "../../../features/company/tabs/AnalyticsTab";
 import { ActivitiesTab } from "../../../features/company/tabs/ActivitiesTab";
 import { TokensTab } from "../../../features/company/tabs/TokensTab";
 import { ESGTab } from "../../../features/company/tabs/ESGTab";
+import { EmptyState } from "../../../components/shared/EmptyState";
+import { ErrorCard } from "../../../components/shared/ErrorCard";
+import { StatusBadge } from "../../../components/shared/StatusBadge";
+import { ConfirmDialog } from "../../../components/shared/ConfirmDialog";
 import { styles } from "../../../features/company/company.styles";
-import { colors } from "../../../styles/tokens";
+import { colors, spacing } from "../../../styles/tokens";
+import { LoadingState } from "../../../components/shared/LoadingState";
 import { useAppStore } from "../../../store/useAppStore";
 
 type Tab = "employees" | "analytics" | "tokens" | "activities" | "esg";
@@ -71,7 +76,7 @@ export default function CompanyPanelScreen() {
     );
   }
 
-  if (authQuery.isPending || companyQuery.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ flex: 1 }} />;
+  if (authQuery.isPending || companyQuery.isPending) return <LoadingState />;
   if (authQuery.error || companyQuery.error) return (
     <View style={styles.fallbackRoot}>
       <Text style={styles.fallbackTitle}>{t("common.error")}</Text>
@@ -150,13 +155,8 @@ function EmployeesView({ query, editEmployeeId, editEmployeeName, editEmployeeEm
 }) {
   const { t } = useTranslation();
 
-  if (query.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
-  if (query.error) return (
-    <View style={styles.errorCard}>
-      <Text style={styles.errorText}>{t("common.errorLoading")}</Text>
-      <Text style={styles.errorDetail}>{query.error.message}</Text>
-    </View>
-  );
+  if (query.isPending) return <LoadingState />;
+  if (query.error) return <ErrorCard title={t("common.errorLoading")} error={query.error} />;
 
   const employees = query.data ?? [];
 
@@ -164,9 +164,9 @@ function EmployeesView({ query, editEmployeeId, editEmployeeName, editEmployeeEm
     <>
       <Text style={styles.pageTitle}>{t("company.employees.title")} ({employees.length})</Text>
       {employees.length === 0 ? (
-        <Text style={styles.emptyText}>{t("company.employees.noEmployees")}</Text>
+        <EmptyState message={t("company.employees.noEmployees")} />
       ) : (
-        <View style={{ gap: 4 }}>
+        <View style={{ gap: spacing.x4s }}>
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>{t("company.employees.table.name")}</Text>
             <Text style={[styles.tableHeaderCell, { flex: 2 }]}>{t("company.employees.table.email")}</Text>
@@ -182,7 +182,7 @@ function EmployeesView({ query, editEmployeeId, editEmployeeName, editEmployeeEm
                   <TextInput style={[styles.inputSmall, { flex: 2 }]} value={editEmployeeEmail} onChangeText={onEditEmailChange} placeholderTextColor={colors.inputPlaceholder} autoCapitalize="none" />
                   <Text style={[styles.tableCell, { flex: 0.8 }]}>{e.balance}</Text>
                   <View style={{ flex: 0.7 }} />
-                  <View style={{ flex: 1.5, flexDirection: "row", gap: 4 }}>
+                  <View style={{ flex: 1.5, flexDirection: "row", gap: spacing.x4s }}>
                     <Pressable style={[styles.actionBtn, { borderColor: colors.successBorder, backgroundColor: colors.successBg }]} onPress={onSaveEdit}>
                       <Text style={[styles.actionBtnText, { color: colors.success }]}>{t("common.save")}</Text>
                     </Pressable>
@@ -197,14 +197,8 @@ function EmployeesView({ query, editEmployeeId, editEmployeeName, editEmployeeEm
                   <Text style={[styles.tableCell, { flex: 2 }]}>{e.email}</Text>
                   <Text style={[styles.tableCell, { flex: 0.8 }]}>{e.balance}</Text>
                   <View style={{ flex: 0.7 }} />
-                  <View style={{ flex: 1.5, flexDirection: "row", gap: 4 }}>
-                    <Text style={{ fontSize: 13, color: colors.error, fontWeight: "600", alignSelf: "center" }}>{t("common.deleteConfirm")}</Text>
-                    <Pressable style={[styles.actionBtn, { borderColor: colors.errorBorder, backgroundColor: colors.errorBg }]} onPress={onConfirmDelete}>
-                      <Text style={[styles.actionBtnText, { color: colors.error }]}>{t("common.yes")}</Text>
-                    </Pressable>
-                    <Pressable style={styles.actionBtn} onPress={onCancelDelete}>
-                      <Text style={styles.actionBtnText}>{t("common.no")}</Text>
-                    </Pressable>
+                  <View style={{ flex: 1.5, flexDirection: "row", gap: spacing.x4s }}>
+                    <ConfirmDialog onConfirm={onConfirmDelete} onCancel={onCancelDelete} />
                   </View>
                 </>
               ) : (
@@ -213,11 +207,9 @@ function EmployeesView({ query, editEmployeeId, editEmployeeName, editEmployeeEm
                   <Text style={[styles.tableCell, { flex: 2 }]}>{e.email}</Text>
                   <Text style={[styles.tableCell, { flex: 0.8 }]}>{e.balance}</Text>
                   <View style={{ flex: 0.7 }}>
-                    <View style={[styles.badge, { backgroundColor: e.isActive ? colors.successBg : colors.errorBg }]}>
-                      <Text style={[styles.badgeText, { color: e.isActive ? colors.success : colors.error }]}>{e.isActive ? t("company.employees.active") : t("company.employees.inactive")}</Text>
-                    </View>
+                    <StatusBadge type={e.isActive ? "active" : "inactive"} />
                   </View>
-                  <View style={{ flex: 1.5, flexDirection: "row", gap: 4 }}>
+                  <View style={{ flex: 1.5, flexDirection: "row", gap: spacing.x4s }}>
                     <Pressable style={[styles.actionBtn, { borderColor: colors.creamDark, backgroundColor: colors.inputBg }]} onPress={() => onStartEdit(e.id, e.name, e.email)}>
                       <Text style={[styles.actionBtnText, { color: colors.slate600 }]}>{t("common.edit")}</Text>
                     </Pressable>

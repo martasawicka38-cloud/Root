@@ -3,7 +3,9 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { fetchCompanyLeaderboard } from "../../lib/api/endpoints";
 import type { CompanyLeaderboardEntry, LeaderboardPeriod } from "../../lib/types/api";
-import { colors } from "../../styles/tokens";
+import { EmptyState } from "../../components/shared/EmptyState";
+import { ErrorCard } from "../../components/shared/ErrorCard";
+import { colors, spacing } from "../../styles/tokens";
 import { rankingStyles as styles } from "./ranking.styles";
 import { PodiumIcon } from "./PodiumIcon";
 
@@ -14,14 +16,14 @@ export function CompanyRanking({ period }: { period: LeaderboardPeriod }) {
     queryFn: () => fetchCompanyLeaderboard(period),
   });
 
-  if (isLoading) return <ActivityIndicator style={{ padding: 40 }} />;
-  if (error) return <Text style={styles.errorText}>{t("ranking.companyError")} {error.message}</Text>;
+  if (isLoading) return <ActivityIndicator style={{ padding: spacing.xl }} />;
+  if (error) return <ErrorCard title={t("ranking.companyError")} error={error} />;
 
   const rows = companies ?? [];
   const podium = rows.slice(0, 3);
   const listRows = rows.slice(3);
 
-  if (rows.length === 0) return <Text style={styles.emptyText}>{t("ranking.empty")}</Text>;
+  if (rows.length === 0) return <EmptyState message={t("ranking.empty")} />;
 
   return (
     <>

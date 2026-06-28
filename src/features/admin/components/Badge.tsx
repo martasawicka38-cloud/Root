@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import type { useTranslation } from "react-i18next";
-import { colors } from "../../../styles/tokens";
+import { colors, radius } from "../../../styles/tokens";
 
 type TFunction = ReturnType<typeof useTranslation>["t"];
 
@@ -26,6 +26,6 @@ export function Badge({ label, color, bg }: { label: string; color: string; bg: 
 }
 
 const badgeStyles = StyleSheet.create({
-  badge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 },
+  badge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: radius.full },
   text: { fontSize: 12, fontWeight: "600" },
 });

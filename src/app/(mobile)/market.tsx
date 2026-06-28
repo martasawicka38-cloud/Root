@@ -9,7 +9,7 @@ import { EcoIcon } from "../../components/EcoIcon";
 import { Screen } from "../../features/common/Screen";
 import { fetchMarket, fetchWallet, fetchEcoActivities, submitEcoActivity } from "../../lib/api/endpoints";
 import { useAppStore } from "../../store/useAppStore";
-import { colors } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 
 type Tab = "rewards" | "activities";
 
@@ -134,7 +134,7 @@ export default function MarketScreen() {
         <>
           {/* Company Activities */}
           {activitiesPending ? (
-            <ActivityIndicator style={{ padding: 40 }} />
+            <ActivityIndicator style={{ padding: spacing.xl }} />
           ) : companyActivities.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>{t("market.noCompanyActivities")}</Text>
@@ -225,18 +225,18 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "700",
     color: colors.brownDark,
-    marginBottom: 16,
+    marginBottom: spacing.xs,
   },
   balanceRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    marginBottom: 16,
+    gap: spacing.x3s,
+    marginBottom: spacing.xs,
   },
   coinBox: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: radius.sm,
     backgroundColor: colors.creamDark,
     alignItems: "center",
     justifyContent: "center",
@@ -248,13 +248,13 @@ const styles = StyleSheet.create({
   },
   tabsRow: {
     flexDirection: "row",
-    gap: 8,
-    marginBottom: 16,
+    gap: spacing.x3s,
+    marginBottom: spacing.xs,
   },
   tabBtn: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: radius.md,
     alignItems: "center",
     backgroundColor: colors.creamLight,
     borderWidth: 1,
@@ -274,13 +274,13 @@ const styles = StyleSheet.create({
   },
   filtersRow: {
     flexDirection: "row",
-    gap: 8,
-    marginBottom: 16,
+    gap: spacing.x3s,
+    marginBottom: spacing.xs,
   },
   filterBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    paddingVertical: spacing.x3s,
+    paddingHorizontal: spacing.xs,
+    borderRadius: radius.md,
   },
   filterBtnActive: {
     backgroundColor: colors.primary,
@@ -303,15 +303,15 @@ const styles = StyleSheet.create({
   rewardsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    gap: spacing.x2s,
   },
   rewardCard: {
     width: "47%",
     backgroundColor: colors.creamLight,
     borderWidth: 1,
     borderColor: colors.creamDark,
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: radius.md,
+    padding: spacing.x2s,
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
 
   rewardBody: {
     flex: 1,
-    gap: 4,
+    gap: spacing.x4s,
   },
   rewardTitle: {
     fontSize: 14,
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   rewardCostRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    gap: spacing.x4s,
     marginTop: 8,
   },
   rewardCost: {
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     color: colors.greenDark,
   },
   emptyContainer: {
-    padding: 40,
+    padding: spacing.xl,
     alignItems: "center",
   },
   emptyText: {
@@ -357,14 +357,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   activitiesList: {
-    gap: 12,
+    gap: spacing.x2s,
   },
   activityCard: {
     backgroundColor: colors.creamLight,
     borderWidth: 1,
     borderColor: colors.creamDark,
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: radius.md,
+    padding: spacing.xs,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -375,25 +375,25 @@ const styles = StyleSheet.create({
   activityLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: spacing.x2s,
     flex: 1,
   },
   activityIconBox: {
     width: 48,
     height: 48,
-    borderRadius: 12,
+    borderRadius: radius.md,
     backgroundColor: colors.creamMedium,
     alignItems: "center",
     justifyContent: "center",
   },
   activityInfo: {
     flex: 1,
-    gap: 4,
+    gap: spacing.x4s,
   },
   activityNameRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing.x3s,
   },
   activityName: {
     fontSize: 16,
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   activityMeta: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: spacing.x2s,
     marginTop: 4,
   },
   activityPoints: {
@@ -421,7 +421,7 @@ const styles = StyleSheet.create({
   },
   badgeOneTime: {
     backgroundColor: colors.greenLight,
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.x3s,
     paddingVertical: 2,
     borderRadius: 4,
   },
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   },
   badgeCyclical: {
     backgroundColor: colors.creamDark,
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.x3s,
     paddingVertical: 2,
     borderRadius: 4,
   },
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
   doneBadge: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: radius.lg,
     backgroundColor: colors.greenDark,
     alignItems: "center",
     justifyContent: "center",

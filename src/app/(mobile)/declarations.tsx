@@ -14,7 +14,7 @@ import {
   fetchDeclarations,
   fetchMe,
 } from "../../lib/api/endpoints";
-import { colors, radius } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 
 const declarations = [
   { id: "d1", name: "Dojazd rowerem do pracy", points: 5, icon: BikeIcon },
@@ -105,13 +105,13 @@ const styles = StyleSheet.create({
   counterRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing.x3s,
     marginBottom: 12,
   },
   counterBadge: {
     backgroundColor: colors.mist,
     borderRadius: radius.full,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.x2s,
     paddingVertical: 4,
   },
   counterBadgeFull: {

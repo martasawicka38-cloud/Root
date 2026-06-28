@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { TrophyIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
 import { fetchAchievements } from "../../lib/api/endpoints";
-import { colors, radius } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 
 const list = [
   { id: "first-step", title: "Pierwszy krok" },
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   statusDot: {
     width: 6,
     height: 6,
-    borderRadius: 999,
+    borderRadius: radius.full,
   },
   statusText: {
     fontSize: 12,

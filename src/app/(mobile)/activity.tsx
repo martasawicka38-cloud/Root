@@ -11,7 +11,7 @@ import {
   deleteActivity,
   fetchActivities,
 } from "../../lib/api/endpoints";
-import { colors, radius } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 
 function SwimIcon({ size = 20 }: { size?: number }) {
   return (
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   typeGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: spacing.x3s,
   },
   typeBtn: {
     borderWidth: 1,
@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing.x3s,
     backgroundColor: colors.inputBg,
   },
   typeBtnActive: {
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     borderColor: colors.slate200,
     borderRadius: radius.md,
     padding: 14,
-    gap: 8,
+    gap: spacing.x3s,
   },
   estimateLabel: {
     fontSize: 12,

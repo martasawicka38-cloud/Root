@@ -10,7 +10,7 @@ import {
   fetchWallet,
   redeemReward,
 } from "../../lib/api/endpoints";
-import { colors, radius } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 
 export default function RewardScreen() {
   const { t } = useTranslation();
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: spacing.x3s,
   },
   priceIconWrap: {
     width: 36,
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   missingBadge: {
     backgroundColor: colors.errorBg,
     borderRadius: radius.full,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.x2s,
     paddingVertical: 6,
     alignSelf: "center",
   },
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: spacing.x3s,
     backgroundColor: colors.mossGreen,
     borderRadius: radius.md,
     paddingVertical: 12,
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: 14,
     alignItems: "center",
-    gap: 8,
+    gap: spacing.x3s,
     borderWidth: 1,
     borderColor: colors.sage,
   },

@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import { Platform, StyleSheet, Text, View } from "react-native";
 
-import { colors } from "../../styles/tokens";
+import { colors, spacing } from "../../styles/tokens";
 
 export default function AdminLayout() {
   if (Platform.OS !== "web") {
@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 40,
+    padding: spacing.xl,
   },
   fallbackTitle: {
     fontSize: 22,

@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { BikeIcon, CoinIcon, FireIcon, LeafIcon, LightbulbIcon, RecycleIcon, RunningIcon, TrophyIcon } from "../../components/icons";
-import { colors } from "../../styles/tokens";
+import { colors, spacing } from "../../styles/tokens";
 import { homeStyles as styles } from "./home.styles";
 
 const CARD_W = 188;
@@ -42,7 +42,7 @@ export function UserHome({ userName }: { userName: string }) {
     <>
       <Text style={styles.greeting}>{t("home.greeting")} <Text style={styles.greetingName}>{userName.split(" ")[0]}</Text></Text>
 
-      <View style={[styles.card, styles.cardLight, { marginBottom: 16 }]}>
+      <View style={[styles.card, styles.cardLight, { marginBottom: spacing.xs }]}>
         <View style={styles.cardBody}>
           <View style={styles.stepsHeader}>
             <Text style={styles.labelSmall}>{t("home.dailyStepGoal")}</Text>
@@ -56,7 +56,7 @@ export function UserHome({ userName }: { userName: string }) {
         </View>
       </View>
 
-      <View style={[styles.card, styles.cardLight, { marginBottom: 16 }]}>
+      <View style={[styles.card, styles.cardLight, { marginBottom: spacing.xs }]}>
         <View style={styles.cardBody}>
           <View style={styles.streakRow}>
             <View style={styles.streakLeft}>
@@ -79,7 +79,7 @@ export function UserHome({ userName }: { userName: string }) {
       </View>
 
       <Text style={styles.sectionTitle}>{t("home.ecoDeclarations")}</Text>
-      <ScrollView ref={scrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 8, paddingRight: 12 }} scrollEnabled={false}>
+      <ScrollView ref={scrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: spacing.x3s, paddingRight: spacing.x2s }} scrollEnabled={false}>
         {allCards.map((card, idx) => {
           const Icon = card.icon;
           return (
@@ -101,11 +101,11 @@ export function UserHome({ userName }: { userName: string }) {
         })}
       </ScrollView>
 
-      <Text style={[styles.sectionTitle, { marginTop: 16 }]}>{t("home.weeklyChallenge")}</Text>
+      <Text style={[styles.sectionTitle, { marginTop: spacing.xs }]}>{t("home.weeklyChallenge")}</Text>
       <Link href="/(mobile)/challenge" asChild>
         <View style={styles.challengeCard}>
           <View style={styles.cardBody}>
-            <View style={{ gap: 4 }}>
+            <View style={{ gap: spacing.x4s }}>
               <Text style={styles.challengeOrg}>{t("home.challengeOrg")}</Text>
               <Text style={styles.challengeTitle}>{t("home.challengeTitle")}</Text>
             </View>

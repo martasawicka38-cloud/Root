@@ -1,10 +1,11 @@
 import { Link } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { LeafIcon, TrophyIcon } from "../../components/icons";
 import { fetchCompanyBySlug, fetchCompanyEmployees } from "../../lib/api/endpoints";
-import { colors } from "../../styles/tokens";
+import { colors, spacing } from "../../styles/tokens";
+import { LoadingState } from "../../components/shared/LoadingState";
 import { homeStyles as styles } from "./home.styles";
 
 export function CompanyHome({ companySlug }: { companySlug: string }) {
@@ -22,7 +23,7 @@ export function CompanyHome({ companySlug }: { companySlug: string }) {
   });
 
   if (companyPending || employeesPending) {
-    return <View style={styles.loadingContainer}><ActivityIndicator size="large" color={colors.mossGreen} /></View>;
+    return <LoadingState />;
   }
 
   const employeeCount = employees?.length ?? 0;
@@ -33,7 +34,7 @@ export function CompanyHome({ companySlug }: { companySlug: string }) {
     <>
       <Text style={styles.greeting}>{t("home.greeting")} <Text style={styles.greetingName}>{company?.name ?? t("common.company")}</Text></Text>
 
-      <View style={[styles.card, styles.cardLight, { marginBottom: 16 }]}>
+      <View style={[styles.card, styles.cardLight, { marginBottom: spacing.xs }]}>
         <View style={styles.cardBody}>
           <Text style={styles.companyStatsTitle}>{t("home.companyDashboard")}</Text>
           <View style={styles.companyStatsRow}>

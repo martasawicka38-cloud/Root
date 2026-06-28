@@ -8,7 +8,7 @@ import {
   fetchNotifications,
   readAllNotifications,
 } from "../../lib/api/endpoints";
-import { colors, radius } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 
 export default function NotificationsScreen() {
   const { t } = useTranslation();
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: spacing.x3s,
     backgroundColor: colors.mossGreen,
     borderRadius: radius.md,
     paddingVertical: 12,
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: "center",
-    gap: 8,
+    gap: spacing.x3s,
     marginTop: 24,
   },
   emptyText: {

@@ -15,7 +15,7 @@ import {
 
 import { Screen } from "../../features/common/Screen";
 import { fetchPublicCompanies, loginUser, registerUser } from "../../lib/api/endpoints";
-import { colors, radius, shadows } from "../../styles/tokens";
+import { colors, radius, shadows, spacing } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
 
 type RoleOption = "user" | "employer" | "company";
@@ -364,8 +364,8 @@ export default function RegisterScreen() {
 
 const styles = StyleSheet.create({
   logoSection: {
-    marginTop: 12,
-    gap: 4,
+    marginTop: spacing.x2s,
+    gap: spacing.x4s,
   },
   tagline: {
     fontSize: 14,
@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "700",
     color: colors.deepForest,
-    marginTop: 16,
+    marginTop: spacing.xs,
     marginBottom: 6,
   },
   label: {
@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: colors.slate500,
     marginBottom: 6,
-    marginTop: 8,
+    marginTop: spacing.x3s,
   },
   input: {
     borderWidth: 1,
@@ -397,16 +397,16 @@ const styles = StyleSheet.create({
 
   roleRow: {
     flexDirection: "row",
-    gap: 8,
-    marginBottom: 8,
+    gap: spacing.x3s,
+    marginBottom: spacing.x3s,
   },
   roleBtn: {
     flex: 1,
     borderWidth: 1,
     borderColor: colors.slate200,
     borderRadius: radius.md,
-    padding: 12,
-    gap: 4,
+    padding: spacing.x2s,
+    gap: spacing.x4s,
     backgroundColor: colors.inputBg,
   },
   roleDot: {
@@ -429,8 +429,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.errorBorder,
     borderRadius: radius.sm,
-    padding: 12,
-    marginBottom: 8,
+    padding: spacing.x2s,
+    marginBottom: spacing.x3s,
   },
   errorText: {
     fontSize: 14,
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
     color: colors.info,
   },
   clearBtn: {
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.x2s,
     paddingVertical: 6,
   },
   clearBtnText: {
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
     top: "100%",
     left: 0,
     right: 0,
-    marginTop: 4,
+    marginTop: spacing.x4s,
     maxHeight: 200,
     borderWidth: 1,
     borderColor: colors.slate200,
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     ...shadows.lg,
   },
   dropdownLoader: {
-    paddingVertical: 16,
+    paddingVertical: spacing.xs,
   },
   dropdownScroll: {
     maxHeight: 200,
@@ -493,7 +493,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: spacing.x2s,
     paddingHorizontal: 14,
     borderBottomWidth: 1,
     borderBottomColor: colors.slate100,
@@ -511,17 +511,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.slate500,
     textAlign: "center",
-    paddingVertical: 16,
+    paddingVertical: spacing.xs,
   },
 
   hint: {
     fontSize: 12,
     color: colors.slate400,
-    marginTop: 4,
+    marginTop: spacing.x4s,
   },
 
   button: {
-    marginTop: 16,
+    marginTop: spacing.xs,
     backgroundColor: colors.mossGreen,
     borderRadius: radius.md,
     paddingVertical: 14,
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   link: {
-    marginTop: 12,
+    marginTop: spacing.x2s,
     textAlign: "center",
     color: colors.mossGreen,
     fontWeight: "600",

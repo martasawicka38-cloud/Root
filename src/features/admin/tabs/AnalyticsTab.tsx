@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { AdminDashboard, AnalyticsUser, UserStepsPayload } from "../../../lib/types/api";
 import { fetchAnalyticsUsers, fetchAdminDashboard, fetchUserSteps } from "../../../lib/api/endpoints";
 import { IconSteps, IconTrophy, IconActivity } from "../components/Icons";
 import { styles } from "../admin.styles";
-import { colors, radius } from "../../../styles/tokens";
+import { colors, radius, spacing } from "../../../styles/tokens";
+import { LoadingState } from "../../../components/shared/LoadingState";
 
 type AnalyticsSubTab = "steps" | "ranking" | "activity";
 type StepsPeriod = "day" | "week" | "month" | "custom";
@@ -26,7 +27,7 @@ export function AnalyticsTab() {
     queryFn: fetchAdminDashboard,
   });
 
-  if (usersQuery.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
+  if (usersQuery.isPending) return <LoadingState />;
   if (usersQuery.error) return (
     <View style={styles.errorCard}>
       <Text style={styles.errorText}>{t("common.errorLoading")}</Text>
@@ -242,7 +243,7 @@ function AnalyticsRankingView({ dashboard, isLoading }: {
 }) {
   const { t } = useTranslation();
 
-  if (isLoading) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
+  if (isLoading) return <LoadingState />;
   if (!dashboard) return <Text style={styles.emptyText}>{t("common.noData")}</Text>;
 
   const companies = dashboard.companies ?? [];
@@ -253,7 +254,7 @@ function AnalyticsRankingView({ dashboard, isLoading }: {
       {companies.length === 0 ? (
         <Text style={styles.emptyText}>{t("admin.analytics.noCompanies")}</Text>
       ) : (
-        <View style={{ gap: 4 }}>
+        <View style={{ gap: spacing.x4s }}>
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>#</Text>
             <Text style={[styles.tableHeaderCell, { flex: 2 }]}>{t("common.company")}</Text>
@@ -278,7 +279,7 @@ function AnalyticsActivityView({ dashboard, isLoading }: {
 }) {
   const { t } = useTranslation();
 
-  if (isLoading) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
+  if (isLoading) return <LoadingState />;
   if (!dashboard) return <Text style={styles.emptyText}>{t("common.noData")}</Text>;
 
   const activities = dashboard.recentActivity ?? [];
@@ -289,7 +290,7 @@ function AnalyticsActivityView({ dashboard, isLoading }: {
       {activities.length === 0 ? (
         <Text style={styles.emptyText}>{t("admin.analytics.noActivity")}</Text>
       ) : (
-        <View style={{ gap: 4 }}>
+        <View style={{ gap: spacing.x4s }}>
           {activities.map((a) => (
             <View key={a.id} style={styles.tableRow}>
               <View style={{ flex: 1 }}>
@@ -320,7 +321,7 @@ function BarChartSection({
 
   if (query.isPending) return (
     <View style={styles.analyticsChartCard}>
-      <ActivityIndicator size="small" color={colors.mossGreen} style={{ marginTop: 20 }} />
+      <LoadingState size="small" />
     </View>
   );
 

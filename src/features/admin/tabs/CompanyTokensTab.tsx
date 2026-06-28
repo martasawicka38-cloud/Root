@@ -1,9 +1,11 @@
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import type { CompanyToken } from "../../../lib/types/api";
 import { Badge } from "../components/Badge";
+import { ErrorCard } from "../../../components/shared/ErrorCard";
 import { styles } from "../admin.styles";
 import { colors } from "../../../styles/tokens";
+import { LoadingState } from "../../../components/shared/LoadingState";
 
 interface CompanyTokensTabProps {
   tokensQuery: { data?: CompanyToken[]; isPending: boolean; error: Error | null };
@@ -32,9 +34,9 @@ export function CompanyTokensTab({ tokensQuery, onGenerate, generating }: Compan
       </Pressable>
 
       {tokensQuery.isPending ? (
-        <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 32 }} />
+        <LoadingState />
       ) : tokensQuery.error ? (
-        <View style={styles.errorCard}><Text style={styles.errorText}>{t("common.errorLoading")}</Text></View>
+        <ErrorCard title={t("common.errorLoading")} error={tokensQuery.error} />
       ) : (
         <View style={styles.tokenListFull}>
           <View style={styles.tokenTableHeader}>

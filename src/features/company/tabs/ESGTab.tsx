@@ -1,11 +1,14 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Certificate, CertificateType, ESGReportListItem } from "../../../lib/types/api";
 import { generateESGReport, fetchESGReports, deleteESGReport, updateESGReport, openESGReportHTML, downloadESGReportPDF, downloadESGReportDOCX, generateBulkCertificates, fetchCertificates, deleteCertificate, openCertificateHTML, downloadCertificatePDF } from "../../../lib/api/endpoints";
+import { EmptyState } from "../../../components/shared/EmptyState";
+import { ErrorCard } from "../../../components/shared/ErrorCard";
 import { styles } from "../company.styles";
-import { colors, radius } from "../../../styles/tokens";
+import { colors, radius, spacing } from "../../../styles/tokens";
+import { LoadingState } from "../../../components/shared/LoadingState";
 
 export function ESGTab({ slug, employees }: {
   slug: string;
@@ -24,7 +27,7 @@ export function ESGTab({ slug, employees }: {
 
   return (
     <View>
-      <View style={{ flexDirection: "row", gap: 12, marginBottom: 24 }}>
+      <View style={{ flexDirection: "row", gap: spacing.x2s, marginBottom: spacing.md }}>
         <Pressable style={[styles.filterBtn, esgSubTab === "reports" && styles.filterBtnActive]} onPress={() => setEsgSubTab("reports")}>
           <Text style={[styles.filterBtnText, esgSubTab === "reports" && styles.filterBtnTextActive]}>{t("company.esg.reports")}</Text>
         </Pressable>
@@ -58,13 +61,8 @@ function ESGReportsSubTab({ slug, query, onDelete, onPublish }: {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["company", slug, "esg-reports"] }); setTitle(""); setDescription(""); setPeriodFrom(""); setPeriodTo(""); setShowForm(false); },
   });
 
-  if (query.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
-  if (query.error) return (
-    <View style={styles.errorCard}>
-      <Text style={styles.errorText}>{t("common.errorLoading")}</Text>
-      <Text style={styles.errorDetail}>{query.error.message}</Text>
-    </View>
-  );
+  if (query.isPending) return <LoadingState />;
+  if (query.error) return <ErrorCard title={t("common.errorLoading")} error={query.error} />;
 
   const reports = query.data ?? [];
   const statusLabel = (s: string) => s === "published" ? t("company.esg.status.published") : s === "archived" ? t("company.esg.status.archived") : t("company.esg.status.draft");
@@ -72,7 +70,7 @@ function ESGReportsSubTab({ slug, query, onDelete, onPublish }: {
 
   return (
     <>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.xs }}>
         <Text style={styles.pageTitle}>{t("company.esg.reports")} ({reports.length})</Text>
         <Pressable style={[styles.genBigBtn, showForm && { opacity: 0.7 }]} onPress={() => setShowForm(!showForm)}>
           <Text style={styles.genBigBtnText}>{showForm ? t("common.cancel") : t("company.esg.newReport")}</Text>
@@ -80,17 +78,17 @@ function ESGReportsSubTab({ slug, query, onDelete, onPublish }: {
       </View>
 
       {showForm && (
-        <View style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.creamDark, borderRadius: radius.md, padding: 16, gap: 10, marginBottom: 16 }}>
-          <Text style={{ fontSize: 15, fontWeight: "700", color: colors.slate900, marginBottom: 4 }}>{t("company.esg.generateReport")}</Text>
+        <View style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.creamDark, borderRadius: radius.md, padding: spacing.xs, gap: 10, marginBottom: spacing.xs }}>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: colors.slate900, marginBottom: spacing.x4s }}>{t("company.esg.generateReport")}</Text>
           <TextInput style={styles.inputSmall} placeholder={t("company.esg.reportTitle")} value={title} onChangeText={setTitle} placeholderTextColor={colors.inputPlaceholder} />
           <TextInput style={styles.inputSmall} placeholder={t("company.esg.reportDescription")} value={description} onChangeText={setDescription} placeholderTextColor={colors.inputPlaceholder} />
-          <View style={{ flexDirection: "row", gap: 12 }}>
+          <View style={{ flexDirection: "row", gap: spacing.x2s }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.slate700, marginBottom: 4 }}>{t("admin.analytics.from")}</Text>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.slate700, marginBottom: spacing.x4s }}>{t("admin.analytics.from")}</Text>
               <TextInput style={styles.inputSmall} placeholder="RRRR-MM-DD" value={periodFrom} onChangeText={setPeriodFrom} placeholderTextColor={colors.inputPlaceholder} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.slate700, marginBottom: 4 }}>{t("admin.analytics.to")}</Text>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.slate700, marginBottom: spacing.x4s }}>{t("admin.analytics.to")}</Text>
               <TextInput style={styles.inputSmall} placeholder="RRRR-MM-DD" value={periodTo} onChangeText={setPeriodTo} placeholderTextColor={colors.inputPlaceholder} />
             </View>
           </View>
@@ -101,12 +99,12 @@ function ESGReportsSubTab({ slug, query, onDelete, onPublish }: {
       )}
 
       {reports.length === 0 ? (
-        <Text style={styles.emptyText}>{t("company.esg.noReports")}</Text>
+        <EmptyState message={t("company.esg.noReports")} />
       ) : (
-        <View style={{ gap: 8 }}>
+        <View style={{ gap: spacing.x3s }}>
           {reports.map((r) => (
-            <View key={r.id} style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 16 }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+            <View key={r.id} style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: spacing.xs }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: spacing.x3s }}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 16, fontWeight: "700", color: colors.slate900 }}>{r.title}</Text>
                   {r.description && <Text style={{ fontSize: 13, color: colors.slate500, marginTop: 2 }}>{r.description}</Text>}
@@ -115,10 +113,10 @@ function ESGReportsSubTab({ slug, query, onDelete, onPublish }: {
                   <Text style={[styles.badgeText, { color: statusColor(r.status) }]}>{statusLabel(r.status)}</Text>
                 </View>
               </View>
-              <Text style={{ fontSize: 12, color: colors.slate500, marginBottom: 12 }}>
+              <Text style={{ fontSize: 12, color: colors.slate500, marginBottom: spacing.x2s }}>
                 {t("company.esg.period")} {new Date(r.periodFrom).toLocaleDateString("pl-PL")} – {new Date(r.periodTo).toLocaleDateString("pl-PL")} | {new Date(r.generatedAt).toLocaleDateString("pl-PL")}
               </Text>
-              <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+              <View style={{ flexDirection: "row", gap: spacing.x3s, flexWrap: "wrap" }}>
                 <Pressable style={[styles.actionBtn, { borderColor: colors.mossGreen, backgroundColor: colors.successBg }]} onPress={() => openESGReportHTML(slug, r.id)}>
                   <Text style={[styles.actionBtnText, { color: colors.mossGreen }]}>{t("company.esg.previewHTML")}</Text>
                 </Pressable>
@@ -164,13 +162,8 @@ function CertificatesSubTab({ slug, employees, query, onDelete }: {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["company", slug, "certificates"] }); setCertTitle(""); setCertDescription(""); setCertType("participation"); setSelectedUserIds([]); setShowForm(false); },
   });
 
-  if (query.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
-  if (query.error) return (
-    <View style={styles.errorCard}>
-      <Text style={styles.errorText}>{t("common.errorLoading")}</Text>
-      <Text style={styles.errorDetail}>{query.error.message}</Text>
-    </View>
-  );
+  if (query.isPending) return <LoadingState />;
+  if (query.error) return <ErrorCard title={t("common.errorLoading")} error={query.error} />;
 
   const certs = query.data ?? [];
   const typeLabels: Record<string, string> = { participation: t("company.esg.certTypes.participation"), achievement: t("company.esg.certTypes.achievement"), completion: t("company.esg.certTypes.completion") };
@@ -179,7 +172,7 @@ function CertificatesSubTab({ slug, employees, query, onDelete }: {
 
   return (
     <>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.xs }}>
         <Text style={styles.pageTitle}>{t("company.esg.certificates")} ({certs.length})</Text>
         <Pressable style={[styles.genBigBtn, showForm && { opacity: 0.7 }]} onPress={() => setShowForm(!showForm)}>
           <Text style={styles.genBigBtnText}>{showForm ? t("common.cancel") : t("company.esg.generateCertificates")}</Text>
@@ -187,12 +180,12 @@ function CertificatesSubTab({ slug, employees, query, onDelete }: {
       </View>
 
       {showForm && (
-        <View style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.creamDark, borderRadius: radius.md, padding: 16, gap: 10, marginBottom: 16 }}>
-          <Text style={{ fontSize: 15, fontWeight: "700", color: colors.slate900, marginBottom: 4 }}>{t("company.esg.generateCertsForEmployees")}</Text>
+        <View style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.creamDark, borderRadius: radius.md, padding: spacing.xs, gap: 10, marginBottom: spacing.xs }}>
+          <Text style={{ fontSize: 15, fontWeight: "700", color: colors.slate900, marginBottom: spacing.x4s }}>{t("company.esg.generateCertsForEmployees")}</Text>
           <TextInput style={styles.inputSmall} placeholder={t("company.esg.certTitle")} value={certTitle} onChangeText={setCertTitle} placeholderTextColor={colors.inputPlaceholder} />
           <TextInput style={styles.inputSmall} placeholder={t("company.esg.certDescription")} value={certDescription} onChangeText={setCertDescription} placeholderTextColor={colors.inputPlaceholder} />
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.slate700 }}>{t("company.esg.certType")}</Text>
-          <View style={{ flexDirection: "row", gap: 8 }}>
+          <View style={{ flexDirection: "row", gap: spacing.x3s }}>
             {(["participation", "achievement", "completion"] as const).map((ct) => (
               <Pressable key={ct} style={[styles.actionBtn, certType === ct && { backgroundColor: typeColors[ct], borderColor: typeColors[ct] }]} onPress={() => setCertType(ct)}>
                 <Text style={[styles.actionBtnText, certType === ct && { color: colors.white }]}>{typeLabels[ct]}</Text>
@@ -200,7 +193,7 @@ function CertificatesSubTab({ slug, employees, query, onDelete }: {
             ))}
           </View>
           <Text style={{ fontSize: 13, fontWeight: "600", color: colors.slate700 }}>{t("company.esg.selectEmployees")}</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: spacing.x3s }}>
             <Pressable style={[styles.filterBtn, selectedUserIds.length === employees.length && styles.filterBtnActive]} onPress={() => setSelectedUserIds(selectedUserIds.length === employees.length ? [] : employees.map((e) => e.id))}>
               <Text style={[styles.filterBtnText, selectedUserIds.length === employees.length && styles.filterBtnTextActive]}>{selectedUserIds.length === employees.length ? t("company.esg.deselectAll") : t("company.esg.selectAll")}</Text>
             </Pressable>
@@ -217,12 +210,12 @@ function CertificatesSubTab({ slug, employees, query, onDelete }: {
       )}
 
       {certs.length === 0 ? (
-        <Text style={styles.emptyText}>{t("company.esg.noCertificates")}</Text>
+        <EmptyState message={t("company.esg.noCertificates")} />
       ) : (
-        <View style={{ gap: 8 }}>
+        <View style={{ gap: spacing.x3s }}>
           {certs.map((c) => (
-            <View key={c.id} style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: 16 }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+            <View key={c.id} style={{ backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200, borderRadius: radius.md, padding: spacing.xs }}>
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: spacing.x3s }}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontSize: 16, fontWeight: "700", color: colors.slate900 }}>{c.title}</Text>
                   <Text style={{ fontSize: 13, color: colors.slate500, marginTop: 2 }}>{t("company.esg.for")} {c.user?.name ?? t("common.unknown")} ({c.user?.email ?? ""})</Text>
@@ -232,8 +225,8 @@ function CertificatesSubTab({ slug, employees, query, onDelete }: {
                   <Text style={[styles.badgeText, { color: typeColors[c.type] }]}>{typeLabels[c.type]}</Text>
                 </View>
               </View>
-              <Text style={{ fontSize: 12, color: colors.slate500, marginBottom: 12 }}>{t("company.esg.issuedAt")} {new Date(c.issuedAt).toLocaleDateString("pl-PL")}</Text>
-              <View style={{ flexDirection: "row", gap: 8 }}>
+              <Text style={{ fontSize: 12, color: colors.slate500, marginBottom: spacing.x2s }}>{t("company.esg.issuedAt")} {new Date(c.issuedAt).toLocaleDateString("pl-PL")}</Text>
+              <View style={{ flexDirection: "row", gap: spacing.x3s }}>
                 <Pressable style={[styles.actionBtn, { borderColor: colors.mossGreen, backgroundColor: colors.successBg }]} onPress={() => openCertificateHTML(slug, c.id)}>
                   <Text style={[styles.actionBtnText, { color: colors.mossGreen }]}>{t("company.esg.previewHTML")}</Text>
                 </Pressable>

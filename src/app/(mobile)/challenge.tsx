@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { TrophyIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
 import { fetchChallenge } from "../../lib/api/endpoints";
-import { colors, radius } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 
 export default function ChallengeScreen() {
   const { t } = useTranslation();
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     backgroundColor: colors.warningBg,
     borderRadius: radius.lg,
-    padding: 16,
+    padding: spacing.xs,
     alignItems: "center",
     gap: 10,
     borderWidth: 1,
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     borderColor: colors.slate200,
     borderRadius: radius.md,
     padding: 14,
-    gap: 8,
+    gap: spacing.x3s,
   },
   cardLabel: {
     fontSize: 12,

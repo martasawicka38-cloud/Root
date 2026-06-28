@@ -4,8 +4,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { Company, EcoActivity } from "../../../lib/types/api";
 import { createRewardActivity, deleteRewardActivity, fetchCompanyActivities } from "../../../lib/api/endpoints";
+import { EmptyState } from "../../../components/shared/EmptyState";
+import { StatusBadge } from "../../../components/shared/StatusBadge";
 import { styles } from "../admin.styles";
-import { colors } from "../../../styles/tokens";
+import { colors, spacing } from "../../../styles/tokens";
 
 export function ActivitiesTab({ companiesQuery }: { companiesQuery: { data?: Company[]; isPending: boolean; error: Error | null } }) {
   const { t } = useTranslation();
@@ -97,7 +99,7 @@ export function ActivitiesTab({ companiesQuery }: { companiesQuery: { data?: Com
 
       {selectedCompany && (
         <>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.xs }}>
             <Text style={styles.pageTitle}>{t("admin.activities.companyActivities")} ({activities.length})</Text>
             <Pressable style={[styles.genBigBtn, showForm && { opacity: 0.7 }]} onPress={() => showForm ? resetForm() : setShowForm(true)}>
               <Text style={styles.genBigBtnText}>{showForm ? t("common.cancel") : t("admin.activities.addActivity")}</Text>
@@ -155,9 +157,9 @@ export function ActivitiesTab({ companiesQuery }: { companiesQuery: { data?: Com
           {activitiesPending ? (
             <ActivityIndicator />
           ) : activities.length === 0 ? (
-            <Text style={styles.emptyText}>{t("admin.activities.noActivities")}</Text>
+            <EmptyState message={t("admin.activities.noActivities")} />
           ) : (
-            <View style={{ gap: 4 }}>
+            <View style={{ gap: spacing.x4s }}>
               <View style={styles.tableHeader}>
                 <Text style={[styles.tableHeaderCell, { flex: 2 }]}>{t("common.name")}</Text>
                 <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Typ</Text>
@@ -172,11 +174,7 @@ export function ActivitiesTab({ companiesQuery }: { companiesQuery: { data?: Com
                     {a.description && <Text style={{ fontSize: 12, color: colors.slate500 }}>{a.description}</Text>}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <View style={[styles.badge, { backgroundColor: a.activityType === "one_time" ? colors.warningBg : colors.successBg }]}>
-                      <Text style={[styles.badgeText, { color: a.activityType === "one_time" ? colors.warning : colors.success }]}>
-                        {a.activityType === "one_time" ? t("admin.activities.oneTime") : t("admin.activities.cyclical")}
-                      </Text>
-                    </View>
+                    <StatusBadge type={a.activityType === "one_time" ? "one_time" : "cyclical"} />
                   </View>
                   <Text style={[styles.tableCell, { flex: 1 }]}>{a.basePoints} {t("common.points")}</Text>
                   <Text style={[styles.tableCell, { flex: 1, fontSize: 12 }]}>

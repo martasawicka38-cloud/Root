@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { LeafIcon, SettingsIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
 import { fetchMe } from "../../lib/api/endpoints";
-import { colors, radius } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
 
 export default function SettingsScreen() {

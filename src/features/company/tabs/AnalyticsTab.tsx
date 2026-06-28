@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCompanyEmployeeSteps } from "../../../lib/api/endpoints";
 import { IconSteps, IconTrophy, IconActivity } from "../../admin/components/Icons";
 import { CompanyBarChart } from "../components/CompanyBarChart";
+import { EmptyState } from "../../../components/shared/EmptyState";
+import { ErrorCard } from "../../../components/shared/ErrorCard";
 import { styles } from "../company.styles";
-import { colors } from "../../../styles/tokens";
+import { colors, spacing } from "../../../styles/tokens";
+import { LoadingState } from "../../../components/shared/LoadingState";
 
 type CompanyAnalyticsSubTab = "steps" | "ranking" | "activity";
 type StepsPeriod = "day" | "week" | "month" | "custom";
@@ -32,13 +35,8 @@ export function AnalyticsTab({ query, slug }: {
   const [subTab, setSubTab] = useState<CompanyAnalyticsSubTab>("steps");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
 
-  if (query.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
-  if (query.error) return (
-    <View style={styles.errorCard}>
-      <Text style={styles.errorText}>{t("common.errorLoading")}</Text>
-      <Text style={styles.errorDetail}>{query.error.message}</Text>
-    </View>
-  );
+  if (query.isPending) return <LoadingState />;
+  if (query.error) return <ErrorCard title={t("common.errorLoading")} error={query.error} />;
 
   const d = query.data;
   if (!d) return null;
@@ -135,8 +133,8 @@ function CompanyStepsView({ employees, selectedEmployeeId, selectedEmployee, onS
   return (
     <>
       <Text style={styles.sectionTitle}>{t("company.analytics.selectEmployee")}</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: 20 }}>
-        <View style={{ flexDirection: "row", gap: 8 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: spacing.sm }}>
+        <View style={{ flexDirection: "row", gap: spacing.x3s }}>
           {employees.map((emp) => (
             <Pressable key={emp.id} style={[styles.filterBtn, selectedEmployeeId === emp.id && styles.filterBtnActive]} onPress={() => onSelectEmployee(emp.id)}>
               <Text style={[styles.filterBtnText, selectedEmployeeId === emp.id && styles.filterBtnTextActive]}>{emp.name}</Text>
@@ -193,9 +191,9 @@ function CompanyRankingView({ employees }: { employees: { id: string; name: stri
     <>
       <Text style={styles.sectionTitle}>{t("company.analytics.employeeRanking")}</Text>
       {employees.length === 0 ? (
-        <Text style={styles.emptyText}>{t("company.analytics.noEmployees")}</Text>
+        <EmptyState message={t("company.analytics.noEmployees")} />
       ) : (
-        <View style={{ gap: 4 }}>
+        <View style={{ gap: spacing.x4s }}>
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>#</Text>
             <Text style={[styles.tableHeaderCell, { flex: 2 }]}>{t("company.tabs.employees")}</Text>
@@ -221,9 +219,9 @@ function CompanyActivityView({ activities }: { activities: { id: string; userNam
     <>
       <Text style={styles.sectionTitle}>{t("company.analytics.recentActivity")} ({activities.length})</Text>
       {activities.length === 0 ? (
-        <Text style={styles.emptyText}>{t("company.analytics.noActivity")}</Text>
+        <EmptyState message={t("company.analytics.noActivity")} />
       ) : (
-        <View style={{ gap: 4 }}>
+        <View style={{ gap: spacing.x4s }}>
           {activities.map((a) => (
             <View key={a.id} style={styles.tableRow}>
               <View style={{ flex: 1 }}>

@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { CheckIcon, DropIcon, RunningIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
-import { colors, radius } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
 
 export default function OnboardingScreen() {
@@ -116,14 +116,14 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   dots: {
     flexDirection: "row",
-    gap: 8,
+    gap: spacing.x3s,
     justifyContent: "center",
-    marginTop: 12,
+    marginTop: spacing.x2s,
   },
   dot: {
     width: 8,
     height: 8,
-    borderRadius: 999,
+    borderRadius: radius.full,
     backgroundColor: colors.slate300,
   },
   dotActive: {
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   iconWrap: {
-    marginTop: 24,
+    marginTop: spacing.md,
     width: 96,
     height: 96,
     borderRadius: radius.full,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   title: {
-    marginTop: 16,
+    marginTop: spacing.xs,
     fontSize: 24,
     fontWeight: "700",
     color: colors.deepForest,
@@ -157,13 +157,13 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   consents: {
-    marginTop: 16,
+    marginTop: spacing.xs,
     gap: 10,
   },
   consentRow: {
     flexDirection: "row",
     alignItems: "flex-start",
-    gap: 12,
+    gap: spacing.x2s,
   },
   checkbox: {
     width: 22,
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   button: {
-    marginTop: 16,
+    marginTop: spacing.xs,
     backgroundColor: colors.mossGreen,
     borderRadius: radius.md,
     paddingVertical: 14,
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   },
   skip: {
     marginTop: "auto",
-    marginBottom: 32,
+    marginBottom: spacing.lg,
     textAlign: "center",
     color: colors.slate500,
     fontWeight: "600",

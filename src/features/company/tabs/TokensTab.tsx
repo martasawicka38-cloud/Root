@@ -1,8 +1,11 @@
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { useTranslation } from "react-i18next";
 import type { CompanyToken } from "../../../lib/types/api";
+import { EmptyState } from "../../../components/shared/EmptyState";
+import { ErrorCard } from "../../../components/shared/ErrorCard";
 import { styles } from "../company.styles";
-import { colors } from "../../../styles/tokens";
+import { colors, spacing } from "../../../styles/tokens";
+import { LoadingState } from "../../../components/shared/LoadingState";
 
 export function TokensTab({ query, onGenerate, generating }: {
   query: { data?: CompanyToken[]; isPending: boolean; error: Error | null };
@@ -11,19 +14,14 @@ export function TokensTab({ query, onGenerate, generating }: {
 }) {
   const { t } = useTranslation();
 
-  if (query.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
-  if (query.error) return (
-    <View style={styles.errorCard}>
-      <Text style={styles.errorText}>{t("common.errorLoading")}</Text>
-      <Text style={styles.errorDetail}>{query.error.message}</Text>
-    </View>
-  );
+  if (query.isPending) return <LoadingState />;
+  if (query.error) return <ErrorCard title={t("common.errorLoading")} error={query.error} />;
 
   const tokens = query.data ?? [];
 
   return (
     <>
-      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.xs }}>
         <Text style={styles.pageTitle}>{t("company.tokens.title")} ({tokens.length})</Text>
         <Pressable style={[styles.genBigBtn, generating && { opacity: 0.5 }]} onPress={onGenerate} disabled={generating}>
           <Text style={styles.genBigBtnText}>{generating ? t("common.generating") : t("company.tokens.generate")}</Text>
@@ -31,7 +29,7 @@ export function TokensTab({ query, onGenerate, generating }: {
       </View>
 
       {tokens.length === 0 ? (
-        <Text style={styles.emptyText}>{t("company.tokens.noTokens")}</Text>
+        <EmptyState message={t("company.tokens.noTokens")} />
       ) : (
         <View style={styles.tokenListFull}>
           <View style={styles.tokenTableHeader}>

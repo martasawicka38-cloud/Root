@@ -13,7 +13,7 @@ import {
 } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
 import { fetchMe } from "../../lib/api/endpoints";
-import { colors } from "../../styles/tokens";
+import { colors, radius, spacing } from "../../styles/tokens";
 
 const menuItems = [
   { href: "/(mobile)/edit-profile", icon: EditIcon, labelKey: "profile.editProfile" },
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
   avatarSection: {
     alignItems: "center",
     marginTop: 16,
-    gap: 8,
+    gap: spacing.x3s,
   },
   avatarWrapper: {
     position: "relative",
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
   avatar: {
     width: 88,
     height: 88,
-    borderRadius: 9999,
+    borderRadius: radius.full,
     backgroundColor: colors.greenBright,
     alignItems: "center",
     justifyContent: "center",
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: 28,
     height: 28,
-    borderRadius: 9999,
+    borderRadius: radius.full,
     backgroundColor: colors.olive,
     alignItems: "center",
     justifyContent: "center",
@@ -208,26 +208,26 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: "row",
-    gap: 12,
+    gap: spacing.x2s,
     marginTop: 24,
   },
   card: {
     borderWidth: 1,
     borderColor: colors.creamDark,
-    borderRadius: 12,
+    borderRadius: radius.md,
   },
   cardLight: {
     backgroundColor: colors.creamLight,
   },
   statCardBody: {
     alignItems: "center",
-    gap: 8,
+    gap: spacing.x3s,
     paddingVertical: 12,
   },
   statIconBox: {
     width: 40,
     height: 40,
-    borderRadius: 8,
+    borderRadius: radius.sm,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -247,13 +247,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.xs,
   },
   menuItemWithBorder: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.xs,
     borderBottomWidth: 1,
     borderBottomColor: colors.creamDark,
   },
@@ -264,13 +264,13 @@ const styles = StyleSheet.create({
   menuItemLeft: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: spacing.x2s,
     flex: 1,
   },
   menuIconBox: {
     width: 36,
     height: 36,
-    borderRadius: 8,
+    borderRadius: radius.sm,
     backgroundColor: colors.creamMedium,
     alignItems: "center",
     justifyContent: "center",

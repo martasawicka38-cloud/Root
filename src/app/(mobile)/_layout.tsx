@@ -148,14 +148,14 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: spacing.x2s,
   },
   balancePill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     backgroundColor: colors.successBg,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.x2s,
     paddingVertical: 6,
     borderRadius: radius.full,
   },
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   },
   bellButton: {
     position: "relative",
-    padding: 4,
+    padding: spacing.x4s,
   },
   bellDot: {
     position: "absolute",
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     right: 4,
     width: 6,
     height: 6,
-    borderRadius: 999,
+    borderRadius: radius.full,
     backgroundColor: colors.error,
   },
 });
