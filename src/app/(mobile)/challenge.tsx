@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { TrophyIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
@@ -7,6 +8,7 @@ import { fetchChallenge } from "../../lib/api/endpoints";
 import { colors, radius } from "../../styles/tokens";
 
 export default function ChallengeScreen() {
+  const { t } = useTranslation();
   const { data } = useQuery({
     queryKey: ["challenge"],
     queryFn: fetchChallenge,
@@ -16,7 +18,7 @@ export default function ChallengeScreen() {
 
   return (
     <Screen>
-      <Text style={styles.title}>Wyzwanie</Text>
+      <Text style={styles.title}>{t("challenge.title")}</Text>
 
       <View style={styles.heroCard}>
         <View style={styles.heroIconWrap}>
@@ -26,28 +28,28 @@ export default function ChallengeScreen() {
           {data?.title ?? "10 000 krokow dziennie"}
         </Text>
         <Text style={styles.heroSub}>
-          Zespol {data?.team ?? "ERGO Hestia"}
+          {t("challenge.team")} {data?.team ?? "ERGO Hestia"}
         </Text>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardLabel}>Postep</Text>
+        <Text style={styles.cardLabel}>{t("challenge.progress")}</Text>
         <View style={styles.cardHeader}>
           <Text style={styles.cardValue}>
             {data?.daysDone ?? 5}/{data?.daysTotal ?? 7}
           </Text>
-          <Text style={styles.cardDays}>dni</Text>
+          <Text style={styles.cardDays}>{t("challenge.days")}</Text>
         </View>
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${pct}%` }]} />
         </View>
-        <Text style={styles.progressText}>{pct}% ukonczone</Text>
+        <Text style={styles.progressText}>{pct}% {t("challenge.completed")}</Text>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardLabel}>Nagroda</Text>
+        <Text style={styles.cardLabel}>{t("challenge.reward")}</Text>
         <Text style={styles.rewardValue}>+{data?.reward ?? 200} EC</Text>
-        <Text style={styles.rewardHint}>Bonus po ukonczeniu wyzwania</Text>
+        <Text style={styles.rewardHint}>{t("challenge.bonusHint")}</Text>
       </View>
     </Screen>
   );

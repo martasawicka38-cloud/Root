@@ -1,36 +1,38 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Screen } from "../../features/common/Screen";
 import type { LeaderboardPeriod } from "../../lib/types/api";
 import { IndividualRanking } from "../../features/ranking/IndividualRanking";
 import { CompanyRanking } from "../../features/ranking/CompanyRanking";
 import { colors } from "../../styles/tokens";
 
-const PERIODS: { key: LeaderboardPeriod; label: string }[] = [
-  { key: "daily", label: "Dzien" },
-  { key: "weekly", label: "Tydzien" },
-  { key: "monthly", label: "Miesiac" },
-  { key: "quarterly", label: "Kwartal" },
-  { key: "yearly", label: "Rok" },
-];
-
 type Scope = "individual" | "company";
 
 export default function RankingScreen() {
+  const { t } = useTranslation();
   const [selectedPeriod, setSelectedPeriod] = useState<LeaderboardPeriod>("weekly");
   const [scope, setScope] = useState<Scope>("individual");
 
+  const PERIODS: { key: LeaderboardPeriod; label: string }[] = [
+    { key: "daily", label: t("ranking.periods.day") },
+    { key: "weekly", label: t("ranking.periods.week") },
+    { key: "monthly", label: t("ranking.periods.month") },
+    { key: "quarterly", label: t("ranking.periods.quarter") },
+    { key: "yearly", label: t("ranking.periods.year") },
+  ];
+
   return (
     <Screen>
-      <Text style={styles.title}>Ranking</Text>
-      <Text style={styles.subtitle}>Punkty zdobywasz za aktywnosci ekologiczne. Im wiecej dzialasz, tym wyzej w rankingu.</Text>
+      <Text style={styles.title}>{t("ranking.title")}</Text>
+      <Text style={styles.subtitle}>{t("ranking.subtitle")}</Text>
 
       <View style={styles.scopeTabs}>
         <Pressable onPress={() => setScope("individual")} style={[styles.scopeTab, scope === "individual" ? styles.scopeTabActive : styles.scopeTabInactive]}>
-          <Text style={scope === "individual" ? styles.scopeTabTextActive : styles.scopeTabTextInactive}>Indywidualny</Text>
+          <Text style={scope === "individual" ? styles.scopeTabTextActive : styles.scopeTabTextInactive}>{t("ranking.individual")}</Text>
         </Pressable>
         <Pressable onPress={() => setScope("company")} style={[styles.scopeTab, scope === "company" ? styles.scopeTabActive : styles.scopeTabInactive]}>
-          <Text style={scope === "company" ? styles.scopeTabTextActive : styles.scopeTabTextInactive}>Firmowy</Text>
+          <Text style={scope === "company" ? styles.scopeTabTextActive : styles.scopeTabTextInactive}>{t("ranking.companyScope")}</Text>
         </Pressable>
       </View>
 

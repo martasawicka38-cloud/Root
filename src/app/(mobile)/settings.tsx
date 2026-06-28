@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { LeafIcon, SettingsIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
@@ -9,13 +10,14 @@ import { colors, radius } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
 
 export default function SettingsScreen() {
+  const { t } = useTranslation();
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
   const partner = me?.partner ?? "intel";
   const logout = useAppStore((s) => s.logout);
 
   return (
     <Screen>
-      <Text style={styles.title}>Ustawienia</Text>
+      <Text style={styles.title}>{t("settings.title")}</Text>
 
       <View style={styles.card}>
         <View style={styles.cardRow}>
@@ -37,7 +39,7 @@ export default function SettingsScreen() {
             <SettingsIcon size={20} color={colors.slate600} />
           </View>
           <View style={styles.cardContent}>
-            <Text style={styles.cardLabel}>Wersja</Text>
+            <Text style={styles.cardLabel}>{t("settings.version")}</Text>
             <Text style={styles.cardValue}>1.0.0</Text>
           </View>
         </View>
@@ -50,7 +52,7 @@ export default function SettingsScreen() {
           router.replace("/(auth)/login");
         }}
       >
-        <Text style={styles.logoutText}>Wyloguj sie</Text>
+        <Text style={styles.logoutText}>{t("settings.logout")}</Text>
       </Pressable>
     </Screen>
   );

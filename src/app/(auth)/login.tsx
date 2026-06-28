@@ -1,6 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Pressable,
@@ -38,6 +39,7 @@ function AppleIcon({ size = 20 }: { size?: number }) {
 }
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const login = useAppStore((s) => s.login);
   const [email, setEmail] = useState("");
@@ -64,7 +66,7 @@ export default function LoginScreen() {
         e && typeof e === "object" && "response" in e
           ? (e as { response: { data: { message: string } } }).response.data
               .message
-          : "Blad logowania";
+          : t("auth.loginError");
       setError(msg);
     } finally {
       setLoading(false);
@@ -75,13 +77,13 @@ export default function LoginScreen() {
     <Screen>
       <View style={styles.tabRow}>
         <Pressable style={[styles.tab, styles.tabActive]}>
-          <Text style={[styles.tabText, styles.tabTextActive]}>Zaloguj</Text>
+          <Text style={[styles.tabText, styles.tabTextActive]}>{t("auth.loginTab")}</Text>
         </Pressable>
         <Pressable
           style={styles.tab}
           onPress={() => router.push("/(auth)/register")}
         >
-          <Text style={styles.tabText}>Rejestracja</Text>
+          <Text style={styles.tabText}>{t("auth.register")}</Text>
         </Pressable>
       </View>
 
@@ -91,10 +93,10 @@ export default function LoginScreen() {
         </View>
       )}
 
-      <Text style={styles.label}>Adres e-mail</Text>
+      <Text style={styles.label}>{t("auth.emailLabel")}</Text>
       <TextInput
         style={styles.input}
-        placeholder="jan@intel.com"
+        placeholder={t("auth.emailPlaceholder")}
         value={email}
         onChangeText={setEmail}
         placeholderTextColor={colors.slate400}
@@ -102,17 +104,17 @@ export default function LoginScreen() {
         keyboardType="email-address"
       />
 
-      <Text style={styles.label}>Haslo</Text>
+      <Text style={styles.label}>{t("auth.passwordLabel")}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Haslo"
+        placeholder={t("auth.passwordLabel")}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
         placeholderTextColor={colors.slate400}
       />
 
-      <Text style={styles.forgot}>Nie pamietam hasla</Text>
+      <Text style={styles.forgot}>{t("auth.forgotPasswordLink")}</Text>
 
       <Pressable
         style={[styles.loginButton, loading && styles.buttonDisabled]}
@@ -122,13 +124,13 @@ export default function LoginScreen() {
         {loading ? (
           <ActivityIndicator color={colors.white} size="small" />
         ) : (
-          <Text style={styles.loginButtonText}>Zaloguj sie</Text>
+          <Text style={styles.loginButtonText}>{t("auth.loginButton")}</Text>
         )}
       </Pressable>
 
       <View style={styles.divider}>
         <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>lub kontynuuj przez</Text>
+        <Text style={styles.dividerText}>{t("auth.orContinueWith")}</Text>
         <View style={styles.dividerLine} />
       </View>
 

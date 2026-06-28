@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { AdminUser } from "../../../lib/types/api";
 import { Badge, getRoleBadge } from "../components/Badge";
 import { styles } from "../admin.styles";
@@ -26,6 +27,7 @@ export function UsersTab({
   onAssign, assigning, onRemove,
   onCreateUser, creatingUser, onEditUser, editingUser, onDeleteUser, deletingUser,
 }: UsersTabProps) {
+  const { t } = useTranslation();
   const [assignUserId, setAssignUserId] = useState<string | null>(null);
   const [assignCompanyId, setAssignCompanyId] = useState("");
   const [createUserOpen, setCreateUserOpen] = useState(false);
@@ -41,9 +43,9 @@ export function UsersTab({
   return (
     <>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <Text style={styles.pageTitle}>Zarzadzanie uzytkownikami</Text>
+        <Text style={styles.pageTitle}>{t("admin.users.title")}</Text>
         <Pressable style={[styles.genBigBtn, createUserOpen && { opacity: 0.7 }]} onPress={() => { setCreateUserOpen(!createUserOpen); setNewUserName(""); setNewUserEmail(""); setNewUserPassword(""); }}>
-          <Text style={styles.genBigBtnText}>{createUserOpen ? "Anuluj" : "Dodaj uzytkownika"}</Text>
+          <Text style={styles.genBigBtnText}>{createUserOpen ? t("common.cancel") : t("admin.users.addUser")}</Text>
         </Pressable>
       </View>
 
@@ -52,35 +54,35 @@ export function UsersTab({
           <TextInput style={styles.input} placeholder="Imie i nazwisko" value={newUserName} onChangeText={setNewUserName} placeholderTextColor={colors.inputPlaceholder} />
           <TextInput style={styles.input} placeholder="Email" value={newUserEmail} onChangeText={setNewUserEmail} autoCapitalize="none" placeholderTextColor={colors.inputPlaceholder} />
           <TextInput style={styles.input} placeholder="Haslo" value={newUserPassword} onChangeText={setNewUserPassword} secureTextEntry placeholderTextColor={colors.inputPlaceholder} />
-          <Text style={styles.formLabel}>Rola:</Text>
+          <Text style={styles.formLabel}>{t("common.role")}:</Text>
           <View style={{ flexDirection: "row", gap: 8 }}>
             {(["user", "company"] as const).map((r) => (
               <Pressable key={r} style={[styles.roleTab, newUserRole === r && styles.roleTabActive]} onPress={() => setNewUserRole(r)}>
-                <Text style={[styles.roleTabText, newUserRole === r && styles.roleTabTextActive]}>{r === "user" ? "Uzytkownik" : "Firma"}</Text>
+                <Text style={[styles.roleTabText, newUserRole === r && styles.roleTabTextActive]}>{r === "user" ? t("admin.users.user") : t("admin.users.companyRole")}</Text>
               </Pressable>
             ))}
           </View>
           <Pressable style={[styles.primaryBtn, (!newUserName || !newUserEmail || !newUserPassword || creatingUser) && { opacity: 0.5 }]} onPress={() => onCreateUser({ name: newUserName, email: newUserEmail, password: newUserPassword, role: newUserRole })} disabled={!newUserName || !newUserEmail || !newUserPassword || creatingUser}>
-            <Text style={styles.primaryBtnText}>{creatingUser ? "Tworzenie..." : "Utworz konto"}</Text>
+            <Text style={styles.primaryBtnText}>{creatingUser ? t("common.creating") : t("common.create")}</Text>
           </Pressable>
         </View>
       )}
 
       {unassignedQuery.data && unassignedQuery.data.length > 0 && (
         <>
-          <Text style={styles.sectionTitle}>Bez firmy ({unassignedQuery.data.length})</Text>
+          <Text style={styles.sectionTitle}>{t("admin.users.withoutCompany")} ({unassignedQuery.data.length})</Text>
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Nazwa</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Email</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Rola</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Akcje</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>{t("common.name")}</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>{t("common.email")}</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>{t("common.role")}</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>{t("common.actions")}</Text>
           </View>
           {unassignedQuery.data.map((u) => (
             <View key={u.id} style={styles.tableRow}>
               <Text style={[styles.tableCell, { flex: 2 }]}>{u.name}</Text>
               <Text style={[styles.tableCell, { flex: 2 }]}>{u.email}</Text>
               <View style={{ flex: 1 }}>
-                <Badge {...getRoleBadge(u.role)} />
+                <Badge {...getRoleBadge(u.role, t)} />
               </View>
               <View style={{ flex: 1.5, gap: 4 }}>
                 {assignUserId === u.id ? (
@@ -89,15 +91,15 @@ export function UsersTab({
                       <TextInput style={styles.inputSmall} placeholder="companyId" value={assignCompanyId} onChangeText={setAssignCompanyId} placeholderTextColor={colors.inputPlaceholder} />
                     </View>
                     <Pressable style={[styles.actionBtn, styles.actionBtnSuccess, assigning && { opacity: 0.5 }]} onPress={() => { onAssign(u.id, assignCompanyId); setAssignUserId(null); setAssignCompanyId(""); }} disabled={assigning || !assignCompanyId}>
-                      <Text style={[styles.actionBtnText, { color: colors.success }]}>Przypisz</Text>
+                      <Text style={[styles.actionBtnText, { color: colors.success }]}>{t("admin.users.assign")}</Text>
                     </Pressable>
                     <Pressable style={styles.actionBtn} onPress={() => { setAssignUserId(null); setAssignCompanyId(""); }}>
-                      <Text style={styles.actionBtnText}>Anuluj</Text>
+                      <Text style={styles.actionBtnText}>{t("common.cancel")}</Text>
                     </Pressable>
                   </View>
                 ) : (
                   <Pressable style={[styles.actionBtn, { borderColor: colors.successBorder, backgroundColor: colors.successBg }]} onPress={() => setAssignUserId(u.id)}>
-                    <Text style={[styles.actionBtnText, { color: colors.success }]}>Przypisz do firmy</Text>
+                    <Text style={[styles.actionBtnText, { color: colors.success }]}>{t("admin.users.assignToCompany")}</Text>
                   </Pressable>
                 )}
               </View>
@@ -106,14 +108,14 @@ export function UsersTab({
         </>
       )}
 
-      <Text style={styles.sectionTitle}>Wszyscy uzytkownicy (bez pracownikow)</Text>
+      <Text style={styles.sectionTitle}>{t("admin.users.allUsers")}</Text>
       <View style={styles.tableHeader}>
-        <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Nazwa</Text>
-        <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Email</Text>
-        <Text style={[styles.tableHeaderCell, { flex: 0.8 }]}>Rola</Text>
-        <Text style={[styles.tableHeaderCell, { flex: 0.8 }]}>Firma</Text>
-        <Text style={[styles.tableHeaderCell, { flex: 0.7 }]}>Status</Text>
-        <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>Akcje</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>{t("common.name")}</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>{t("common.email")}</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 0.8 }]}>{t("common.role")}</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 0.8 }]}>{t("common.company")}</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 0.7 }]}>{t("common.status")}</Text>
+        <Text style={[styles.tableHeaderCell, { flex: 1.5 }]}>{t("common.actions")}</Text>
       </View>
 
       {usersQuery.data?.map((u) => (
@@ -127,10 +129,10 @@ export function UsersTab({
               <View style={{ flex: 0.7 }} />
               <View style={{ flex: 1.5, gap: 4, flexDirection: "row" }}>
                 <Pressable style={[styles.actionBtn, styles.actionBtnSuccess, (editingUser || !editName) && { opacity: 0.5 }]} onPress={() => onEditUser(editUserId!, { name: editName, email: editEmail })} disabled={editingUser || !editName}>
-                  <Text style={[styles.actionBtnText, { color: colors.success }]}>Zapisz</Text>
+                  <Text style={[styles.actionBtnText, { color: colors.success }]}>{t("common.save")}</Text>
                 </Pressable>
                 <Pressable style={styles.actionBtn} onPress={() => setEditUserId(null)}>
-                  <Text style={styles.actionBtnText}>Anuluj</Text>
+                  <Text style={styles.actionBtnText}>{t("common.cancel")}</Text>
                 </Pressable>
               </View>
             </>
@@ -138,16 +140,16 @@ export function UsersTab({
             <>
               <Text style={[styles.tableCell, { flex: 1.5 }]}>{u.name}</Text>
               <Text style={[styles.tableCell, { flex: 1.5 }]}>{u.email}</Text>
-              <View style={{ flex: 0.8 }}><Badge {...getRoleBadge(u.role)} /></View>
+              <View style={{ flex: 0.8 }}><Badge {...getRoleBadge(u.role, t)} /></View>
               <Text style={[styles.tableCell, { flex: 0.8 }]}>{u.company?.name ?? "-"}</Text>
               <View style={{ flex: 0.7 }} />
               <View style={{ flex: 1.5, gap: 4, flexDirection: "row" }}>
-                <Text style={{ fontSize: 13, color: colors.error, fontWeight: "600", alignSelf: "center" }}>Usunac?</Text>
+                <Text style={{ fontSize: 13, color: colors.error, fontWeight: "600", alignSelf: "center" }}>{t("common.deleteConfirm")}</Text>
                 <Pressable style={[styles.actionBtn, styles.actionBtnWarn, deletingUser && { opacity: 0.5 }]} onPress={() => onDeleteUser(deleteConfirmId!)} disabled={deletingUser}>
-                  <Text style={[styles.actionBtnText, { color: colors.error }]}>{deletingUser ? "Usuwanie..." : "Tak"}</Text>
+                  <Text style={[styles.actionBtnText, { color: colors.error }]}>{deletingUser ? t("common.deleting") : t("common.yes")}</Text>
                 </Pressable>
                 <Pressable style={styles.actionBtn} onPress={() => setDeleteConfirmId(null)}>
-                  <Text style={styles.actionBtnText}>Nie</Text>
+                  <Text style={styles.actionBtnText}>{t("common.no")}</Text>
                 </Pressable>
               </View>
             </>
@@ -156,22 +158,22 @@ export function UsersTab({
               <Text style={[styles.tableCell, { flex: 1.5 }]}>{u.name}</Text>
               <Text style={[styles.tableCell, { flex: 1.5 }]}>{u.email}</Text>
               <View style={{ flex: 0.8 }}>
-                <Badge {...getRoleBadge(u.role)} />
+                <Badge {...getRoleBadge(u.role, t)} />
               </View>
               <Text style={[styles.tableCell, { flex: 0.8 }]}>{u.company?.name ?? "-"}</Text>
               <View style={{ flex: 0.7 }}>
-                <Badge label={u.isActive ? "Aktywny" : "Nieaktywny"} color={u.isActive ? colors.success : colors.error} bg={u.isActive ? colors.successBg : colors.errorBg} />
+                <Badge label={u.isActive ? t("admin.users.active") : t("admin.users.inactive")} color={u.isActive ? colors.success : colors.error} bg={u.isActive ? colors.successBg : colors.errorBg} />
               </View>
               <View style={{ flex: 1.5, gap: 4, flexDirection: "row" }}>
                 <Pressable style={[styles.actionBtn, { borderColor: colors.creamDark, backgroundColor: colors.inputBg }]} onPress={() => { setEditUserId(u.id); setEditName(u.name); setEditEmail(u.email); }}>
-                  <Text style={[styles.actionBtnText, { color: colors.slate600 }]}>Edytuj</Text>
+                  <Text style={[styles.actionBtnText, { color: colors.slate600 }]}>{t("common.edit")}</Text>
                 </Pressable>
                 <Pressable style={[styles.actionBtn, u.isActive ? styles.actionBtnWarn : styles.actionBtnSuccess, togglingId === u.id && { opacity: 0.5 }]} onPress={() => onToggleActive(u.id)} disabled={togglingId === u.id}>
-                  <Text style={[styles.actionBtnText, { color: u.isActive ? colors.error : colors.success }]}>{u.isActive ? "Dezaktywuj" : "Aktywuj"}</Text>
+                  <Text style={[styles.actionBtnText, { color: u.isActive ? colors.error : colors.success }]}>{u.isActive ? t("admin.users.deactivate") : t("admin.users.activate")}</Text>
                 </Pressable>
                 {u.role !== "superadmin" && (
                   <Pressable style={[styles.actionBtn, { borderColor: colors.errorBorder, backgroundColor: colors.errorBg }]} onPress={() => setDeleteConfirmId(u.id)}>
-                    <Text style={[styles.actionBtnText, { color: colors.error }]}>Usun</Text>
+                    <Text style={[styles.actionBtnText, { color: colors.error }]}>{t("common.delete")}</Text>
                   </Pressable>
                 )}
               </View>

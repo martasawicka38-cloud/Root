@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import {
   adminCreateUser,
@@ -31,16 +32,17 @@ import { AppLogo } from "../../features/common/AppLogo";
 import { styles } from "../../features/admin/admin.styles";
 import { colors } from "../../styles/tokens";
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: "dashboard", label: "Dashboard" },
-  { key: "users", label: "Uzytkownicy" },
-  { key: "companies", label: "Firmy" },
-  { key: "tokens", label: "Tokeny" },
-  { key: "activities", label: "Aktywnosci" },
-  { key: "analytics", label: "Analityka" },
+const TABS: { key: Tab; labelKey: string }[] = [
+  { key: "dashboard", labelKey: "admin.tabs.dashboard" },
+  { key: "users", labelKey: "admin.tabs.users" },
+  { key: "companies", labelKey: "admin.tabs.companies" },
+  { key: "tokens", labelKey: "admin.tabs.tokens" },
+  { key: "activities", labelKey: "admin.tabs.activities" },
+  { key: "analytics", labelKey: "admin.tabs.analytics" },
 ];
 
 export default function AdminScreen() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>("dashboard");
   const [newCompanyName, setNewCompanyName] = useState("");
@@ -67,8 +69,8 @@ export default function AdminScreen() {
   if (Platform.OS !== "web") {
     return (
       <View style={styles.fallbackRoot}>
-        <Text style={styles.fallbackTitle}>Panel admin</Text>
-        <Text style={styles.fallbackText}>Panel administracyjny jest dostepny tylko na platformie web.</Text>
+        <Text style={styles.fallbackTitle}>{t("admin.title")}</Text>
+        <Text style={styles.fallbackText}>{t("admin.webOnly")}</Text>
       </View>
     );
   }
@@ -84,9 +86,9 @@ export default function AdminScreen() {
 
       <View style={styles.navTabs}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {TABS.map((t) => (
-            <Pressable key={t.key} style={[styles.navTab, tab === t.key && styles.navTabActive]} onPress={() => setTab(t.key)}>
-              <Text style={[styles.navTabText, tab === t.key && styles.navTabTextActive]}>{t.label}</Text>
+          {TABS.map((tabItem) => (
+            <Pressable key={tabItem.key} style={[styles.navTab, tab === tabItem.key && styles.navTabActive]} onPress={() => setTab(tabItem.key)}>
+              <Text style={[styles.navTabText, tab === tabItem.key && styles.navTabTextActive]}>{t(tabItem.labelKey)}</Text>
             </Pressable>
           ))}
         </ScrollView>

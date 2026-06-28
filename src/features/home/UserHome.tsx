@@ -1,6 +1,7 @@
 import { Link } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { BikeIcon, CoinIcon, FireIcon, LeafIcon, LightbulbIcon, RecycleIcon, RunningIcon, TrophyIcon } from "../../components/icons";
 import { colors } from "../../styles/tokens";
 import { homeStyles as styles } from "./home.styles";
@@ -8,14 +9,15 @@ import { homeStyles as styles } from "./home.styles";
 const CARD_W = 188;
 
 export function UserHome({ userName }: { userName: string }) {
+  const { t } = useTranslation();
   const stepGoal = 8000;
   const currentSteps = 6200;
   const progress = Math.min(100, Math.round((currentSteps / stepGoal) * 100));
 
   const declarationCards = [
-    { icon: BikeIcon, label: "Rower zamiast auta", points: "+5", bgColor: colors.greenLight },
-    { icon: RecycleIcon, label: "Segregacja odpadow", points: "+3", bgColor: colors.creamDark },
-    { icon: LightbulbIcon, label: "Oszczedzanie energii", points: "+3", bgColor: colors.creamMedium },
+    { icon: BikeIcon, label: t("home.activityCycling"), points: "+5", bgColor: colors.greenLight },
+    { icon: RecycleIcon, label: t("home.activityRecycling"), points: "+3", bgColor: colors.creamDark },
+    { icon: LightbulbIcon, label: t("home.activityEnergySaving"), points: "+3", bgColor: colors.creamMedium },
   ];
 
   const scrollRef = useRef<ScrollView>(null);
@@ -38,18 +40,18 @@ export function UserHome({ userName }: { userName: string }) {
 
   return (
     <>
-      <Text style={styles.greeting}>Dzien dobry, <Text style={styles.greetingName}>{userName.split(" ")[0]}</Text></Text>
+      <Text style={styles.greeting}>{t("home.greeting")} <Text style={styles.greetingName}>{userName.split(" ")[0]}</Text></Text>
 
       <View style={[styles.card, styles.cardLight, { marginBottom: 16 }]}>
         <View style={styles.cardBody}>
           <View style={styles.stepsHeader}>
-            <Text style={styles.labelSmall}>Dzienny cel krokow</Text>
+            <Text style={styles.labelSmall}>{t("home.dailyStepGoal")}</Text>
             <Text style={styles.stepsValue}>{currentSteps.toLocaleString("pl-PL")}<Text style={styles.stepsGoal}> / {stepGoal.toLocaleString("pl-PL")}</Text></Text>
           </View>
           <View style={styles.progressBarBg}><View style={[styles.progressBarFill, { width: `${progress}%` }]} /></View>
           <View style={styles.stepsFooter}>
-            <Text style={styles.labelSmall}>Postep: <Text style={{ fontWeight: "600" }}>{progress}%</Text></Text>
-            <Text style={styles.labelSmall}>{stepGoal - currentSteps} krokow do celu</Text>
+            <Text style={styles.labelSmall}>{t("home.progress")} <Text style={{ fontWeight: "600" }}>{progress}%</Text></Text>
+            <Text style={styles.labelSmall}>{stepGoal - currentSteps} {t("home.stepsToGoal")}</Text>
           </View>
         </View>
       </View>
@@ -60,8 +62,8 @@ export function UserHome({ userName }: { userName: string }) {
             <View style={styles.streakLeft}>
               <View style={styles.streakIconBox}><FireIcon size={24} color={colors.sunset} /></View>
               <View>
-                <Text style={styles.streakDays}>5 dni</Text>
-                <Text style={styles.streakLabel}>passa aktywnosci</Text>
+                <Text style={styles.streakDays}>5 {t("home.streakDays")}</Text>
+                <Text style={styles.streakLabel}>{t("home.streakLabel")}</Text>
               </View>
             </View>
             <View style={styles.streakBadge}><Text style={styles.streakBadgeText}>+20%</Text></View>
@@ -70,13 +72,13 @@ export function UserHome({ userName }: { userName: string }) {
       </View>
 
       <View style={styles.quickActions}>
-        <Link href="/(mobile)/activity" asChild><Pressable style={styles.actionTile}><RunningIcon size={28} color={colors.mossGreen} /><Text style={styles.actionLabel}>Dodaj aktywnosc</Text></Pressable></Link>
-        <Link href="/(mobile)/declarations" asChild><Pressable style={styles.actionTile}><LeafIcon size={28} color={colors.mossGreen} /><Text style={styles.actionLabel}>Zloz eko-deklaracje</Text></Pressable></Link>
-        <Link href="/(mobile)/market" asChild><Pressable style={styles.actionTile}><CoinIcon size={28} color={colors.mossGreen} /><Text style={styles.actionLabel}>Przegladaj rynek nagrod</Text></Pressable></Link>
-        <Link href="/(mobile)/ranking" asChild><Pressable style={styles.actionTile}><TrophyIcon size={28} color={colors.mossGreen} /><Text style={styles.actionLabel}>Sprawdz ranking</Text></Pressable></Link>
+        <Link href="/(mobile)/activity" asChild><Pressable style={styles.actionTile}><RunningIcon size={28} color={colors.mossGreen} /><Text style={styles.actionLabel}>{t("home.addActivity")}</Text></Pressable></Link>
+        <Link href="/(mobile)/declarations" asChild><Pressable style={styles.actionTile}><LeafIcon size={28} color={colors.mossGreen} /><Text style={styles.actionLabel}>{t("home.ecoDeclaration")}</Text></Pressable></Link>
+        <Link href="/(mobile)/market" asChild><Pressable style={styles.actionTile}><CoinIcon size={28} color={colors.mossGreen} /><Text style={styles.actionLabel}>{t("home.browseRewards")}</Text></Pressable></Link>
+        <Link href="/(mobile)/ranking" asChild><Pressable style={styles.actionTile}><TrophyIcon size={28} color={colors.mossGreen} /><Text style={styles.actionLabel}>{t("home.checkRanking")}</Text></Pressable></Link>
       </View>
 
-      <Text style={styles.sectionTitle}>Eko-deklaracje</Text>
+      <Text style={styles.sectionTitle}>{t("home.ecoDeclarations")}</Text>
       <ScrollView ref={scrollRef} horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10, paddingVertical: 8, paddingRight: 12 }} scrollEnabled={false}>
         {allCards.map((card, idx) => {
           const Icon = card.icon;
@@ -99,17 +101,17 @@ export function UserHome({ userName }: { userName: string }) {
         })}
       </ScrollView>
 
-      <Text style={[styles.sectionTitle, { marginTop: 16 }]}>Wyzwanie tygodnia</Text>
+      <Text style={[styles.sectionTitle, { marginTop: 16 }]}>{t("home.weeklyChallenge")}</Text>
       <Link href="/(mobile)/challenge" asChild>
         <View style={styles.challengeCard}>
           <View style={styles.cardBody}>
             <View style={{ gap: 4 }}>
-              <Text style={styles.challengeOrg}>ZESPOL INTEL POLAND</Text>
-              <Text style={styles.challengeTitle}>10 000 krokow dziennie</Text>
+              <Text style={styles.challengeOrg}>{t("home.challengeOrg")}</Text>
+              <Text style={styles.challengeTitle}>{t("home.challengeTitle")}</Text>
             </View>
-            <Text style={styles.labelSmall}>Razem z kolegami z pracy • 6 dni zostalo</Text>
+            <Text style={styles.labelSmall}>{t("home.challengeDesc")}</Text>
             <View style={styles.progressBarBg}><View style={[styles.progressBarFillGreen, { width: "65%" }]} /></View>
-            <Text style={styles.labelSmall}>65% · 147/225 osob</Text>
+            <Text style={styles.labelSmall}>{t("home.challengeProgress")}</Text>
           </View>
         </View>
       </Link>

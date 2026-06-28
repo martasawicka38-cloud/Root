@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import {
   BikeIcon,
@@ -23,6 +24,7 @@ const declarations = [
 ];
 
 export default function DeclarationsScreen() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
   useQuery({ queryKey: ["declarations"], queryFn: fetchDeclarations });
@@ -42,7 +44,7 @@ export default function DeclarationsScreen() {
 
   return (
     <Screen>
-      <Text style={styles.title}>Eko-deklaracje</Text>
+      <Text style={styles.title}>{t("declarations.title")}</Text>
 
       <View style={styles.counterRow}>
         <View
@@ -54,11 +56,11 @@ export default function DeclarationsScreen() {
           <Text
             style={[styles.counterText, !canDeclare && styles.counterTextFull]}
           >
-            {used}/{limit} dzisiaj
+            {used}/{limit} {t("declarations.today")}
           </Text>
         </View>
         {!canDeclare && (
-          <Text style={styles.warning}>Dzisiejszy limit wykorzystany.</Text>
+          <Text style={styles.warning}>{t("declarations.limitReached")}</Text>
         )}
       </View>
 
@@ -84,7 +86,7 @@ export default function DeclarationsScreen() {
                 !canDeclare && styles.cardActionDisabled,
               ]}
             >
-              Potwierdz
+              {t("declarations.confirm")}
             </Text>
           </Pressable>
         );

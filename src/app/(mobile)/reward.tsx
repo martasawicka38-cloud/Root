@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { CoinIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
@@ -12,6 +13,7 @@ import {
 import { colors, radius } from "../../styles/tokens";
 
 export default function RewardScreen() {
+  const { t } = useTranslation();
   const { rewardId } = useLocalSearchParams<{ rewardId?: string }>();
   const queryClient = useQueryClient();
   const { data: rewards = [] } = useQuery({
@@ -38,14 +40,14 @@ export default function RewardScreen() {
   if (!reward) {
     return (
       <Screen>
-        <Text style={styles.emptyText}>Nie znaleziono nagrody.</Text>
+        <Text style={styles.emptyText}>{t("reward.notFound")}</Text>
       </Screen>
     );
   }
 
   return (
     <Screen>
-      <Text style={styles.title}>Szczegoly nagrody</Text>
+      <Text style={styles.title}>{t("reward.details")}</Text>
 
       <View style={styles.card}>
         <View style={styles.imageWrap}>
@@ -66,7 +68,7 @@ export default function RewardScreen() {
         <View style={styles.divider} />
 
         <View style={styles.balanceRow}>
-          <Text style={styles.balanceLabel}>Twoje saldo</Text>
+          <Text style={styles.balanceLabel}>{t("reward.balance")}</Text>
           <Text style={styles.balanceValue}>{balance} EC</Text>
         </View>
 
@@ -75,7 +77,7 @@ export default function RewardScreen() {
             {balance < reward.cost && (
               <View style={styles.missingBadge}>
                 <Text style={styles.missingText}>
-                  Brakuje {reward.cost - balance} EC
+                  {t("reward.missingEC", { amount: reward.cost - balance })}
                 </Text>
               </View>
             )}
@@ -89,16 +91,16 @@ export default function RewardScreen() {
             >
               <CoinIcon size={18} color={colors.white} />
               <Text style={styles.buttonText}>
-                Wymien za {reward.cost} EC
+                {t("reward.redeemFor", { cost: reward.cost })}
               </Text>
             </Pressable>
           </>
         ) : (
           <View style={styles.codeSection}>
-            <Text style={styles.codeLabel}>Kod odbioru</Text>
+            <Text style={styles.codeLabel}>{t("reward.codeLabel")}</Text>
             <Text style={styles.codeValue}>{code}</Text>
             <Text style={styles.codeHint}>
-              Pokaz ten kod przy odbiorze nagrody
+              {t("reward.codeHint")}
             </Text>
           </View>
         )}

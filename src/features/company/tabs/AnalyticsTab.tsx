@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { fetchCompanyEmployeeSteps } from "../../../lib/api/endpoints";
 import { IconSteps, IconTrophy, IconActivity } from "../../admin/components/Icons";
@@ -27,13 +28,14 @@ export function AnalyticsTab({ query, slug }: {
   query: { data?: AnalyticsData; isPending: boolean; error: Error | null };
   slug: string;
 }) {
+  const { t } = useTranslation();
   const [subTab, setSubTab] = useState<CompanyAnalyticsSubTab>("steps");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
 
   if (query.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
   if (query.error) return (
     <View style={styles.errorCard}>
-      <Text style={styles.errorText}>Nie udalo sie zaladowac analityki.</Text>
+      <Text style={styles.errorText}>{t("common.errorLoading")}</Text>
       <Text style={styles.errorDetail}>{query.error.message}</Text>
     </View>
   );
@@ -44,18 +46,18 @@ export function AnalyticsTab({ query, slug }: {
   const selectedEmployee = d.employees.find((e) => e.id === selectedEmployeeId);
 
   const SUB_TABS: { key: CompanyAnalyticsSubTab; label: string; icon: React.ReactNode }[] = [
-    { key: "steps", label: "Liczba krokow", icon: <IconSteps color={subTab === "steps" ? colors.mossGreen : colors.slate500} /> },
-    { key: "ranking", label: "Ranking pracownikow", icon: <IconTrophy color={subTab === "ranking" ? colors.mossGreen : colors.slate500} /> },
-    { key: "activity", label: "Ostatnie aktywnosci", icon: <IconActivity color={subTab === "activity" ? colors.mossGreen : colors.slate500} /> },
+    { key: "steps", label: t("company.analytics.selectEmployee"), icon: <IconSteps color={subTab === "steps" ? colors.mossGreen : colors.slate500} /> },
+    { key: "ranking", label: t("company.analytics.employeeRanking"), icon: <IconTrophy color={subTab === "ranking" ? colors.mossGreen : colors.slate500} /> },
+    { key: "activity", label: t("company.analytics.recentActivity"), icon: <IconActivity color={subTab === "activity" ? colors.mossGreen : colors.slate500} /> },
   ];
 
   return (
     <View style={styles.analyticsLayout}>
       <View style={styles.analyticsSidebar}>
-        {SUB_TABS.map((t) => (
-          <Pressable key={t.key} style={[styles.analyticsSidebarItem, subTab === t.key && styles.analyticsSidebarItemActive]} onPress={() => setSubTab(t.key)}>
-            <View style={styles.analyticsSidebarIcon}>{t.icon}</View>
-            <Text style={[styles.analyticsSidebarLabel, subTab === t.key && styles.analyticsSidebarLabelActive]}>{t.label}</Text>
+        {SUB_TABS.map((st) => (
+          <Pressable key={st.key} style={[styles.analyticsSidebarItem, subTab === st.key && styles.analyticsSidebarItemActive]} onPress={() => setSubTab(st.key)}>
+            <View style={styles.analyticsSidebarIcon}>{st.icon}</View>
+            <Text style={[styles.analyticsSidebarLabel, subTab === st.key && styles.analyticsSidebarLabelActive]}>{st.label}</Text>
           </Pressable>
         ))}
       </View>
@@ -78,6 +80,7 @@ function CompanyStepsView({ employees, selectedEmployeeId, selectedEmployee, onS
   onSelectEmployee: (id: string) => void;
   slug: string;
 }) {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState<StepsPeriod>("day");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
@@ -103,10 +106,10 @@ function CompanyStepsView({ employees, selectedEmployeeId, selectedEmployee, onS
   });
 
   const PERIOD_OPTIONS: { key: StepsPeriod; label: string }[] = [
-    { key: "day", label: "7 dni" },
-    { key: "week", label: "9 tygodni" },
-    { key: "month", label: "12 miesiecy" },
-    { key: "custom", label: "Wlasny zakres" },
+    { key: "day", label: t("admin.analytics.periods.7days") },
+    { key: "week", label: t("admin.analytics.periods.9weeks") },
+    { key: "month", label: t("admin.analytics.periods.12months") },
+    { key: "custom", label: t("admin.analytics.periods.custom") },
   ];
 
   const formatLabel = (label: string) => {
@@ -131,7 +134,7 @@ function CompanyStepsView({ employees, selectedEmployeeId, selectedEmployee, onS
 
   return (
     <>
-      <Text style={styles.sectionTitle}>Wybierz pracownika</Text>
+      <Text style={styles.sectionTitle}>{t("company.analytics.selectEmployee")}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: 20 }}>
         <View style={{ flexDirection: "row", gap: 8 }}>
           {employees.map((emp) => (
@@ -160,23 +163,23 @@ function CompanyStepsView({ employees, selectedEmployeeId, selectedEmployee, onS
           {period === "custom" && (
             <View style={styles.customDateRow}>
               <View style={styles.customDateField}>
-                <Text style={styles.customDateLabel}>Od:</Text>
+                <Text style={styles.customDateLabel}>{t("admin.analytics.from")}</Text>
                 <TextInput style={styles.customDateInput} placeholder="RRRR-MM-DD" value={customFrom} onChangeText={setCustomFrom} placeholderTextColor={colors.inputPlaceholder} />
               </View>
               <View style={styles.customDateField}>
-                <Text style={styles.customDateLabel}>Do:</Text>
+                <Text style={styles.customDateLabel}>{t("admin.analytics.to")}</Text>
                 <TextInput style={styles.customDateInput} placeholder="RRRR-MM-DD" value={customTo} onChangeText={setCustomTo} placeholderTextColor={colors.inputPlaceholder} />
               </View>
             </View>
           )}
 
-          <CompanyBarChart data={data.map((s) => ({ label: formatLabel(s.label), steps: s.steps }))} emptyMsg="Brak danych krokow dla wybranego okresu." />
+          <CompanyBarChart data={data.map((s) => ({ label: formatLabel(s.label), steps: s.steps }))} emptyMsg={t("company.analytics.noData")} />
         </>
       )}
 
       {!selectedEmployeeId && (
         <View style={styles.analyticsPlaceholder}>
-          <Text style={styles.analyticsPlaceholderText}>Wybierz pracownika, aby zobaczyc wykresy krokow.</Text>
+          <Text style={styles.analyticsPlaceholderText}>{t("company.analytics.noEmployee")}</Text>
         </View>
       )}
     </>
@@ -184,16 +187,18 @@ function CompanyStepsView({ employees, selectedEmployeeId, selectedEmployee, onS
 }
 
 function CompanyRankingView({ employees }: { employees: { id: string; name: string; points: number }[] }) {
+  const { t } = useTranslation();
+
   return (
     <>
-      <Text style={styles.sectionTitle}>Ranking pracownikow</Text>
+      <Text style={styles.sectionTitle}>{t("company.analytics.employeeRanking")}</Text>
       {employees.length === 0 ? (
-        <Text style={styles.emptyText}>Brak pracownikow.</Text>
+        <Text style={styles.emptyText}>{t("company.analytics.noEmployees")}</Text>
       ) : (
         <View style={{ gap: 4 }}>
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>#</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Pracownik</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>{t("company.tabs.employees")}</Text>
             <Text style={[styles.tableHeaderCell, { flex: 1, textAlign: "right" }]}>PKT</Text>
           </View>
           {employees.map((emp, i) => (
@@ -210,11 +215,13 @@ function CompanyRankingView({ employees }: { employees: { id: string; name: stri
 }
 
 function CompanyActivityView({ activities }: { activities: { id: string; userName: string; type: string; points: number; createdAt: string }[] }) {
+  const { t } = useTranslation();
+
   return (
     <>
-      <Text style={styles.sectionTitle}>Ostatnie aktywnosci ({activities.length})</Text>
+      <Text style={styles.sectionTitle}>{t("company.analytics.recentActivity")} ({activities.length})</Text>
       {activities.length === 0 ? (
-        <Text style={styles.emptyText}>Brak aktywnosci.</Text>
+        <Text style={styles.emptyText}>{t("company.analytics.noActivity")}</Text>
       ) : (
         <View style={{ gap: 4 }}>
           {activities.map((a) => (

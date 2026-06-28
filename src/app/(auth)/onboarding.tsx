@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { CheckIcon, DropIcon, RunningIcon } from "../../components/icons";
@@ -7,30 +8,31 @@ import { Screen } from "../../features/common/Screen";
 import { colors, radius } from "../../styles/tokens";
 import { useAppStore } from "../../store/useAppStore";
 
-const steps = [
-  {
-    title: "Witaj w Root!",
-    desc: "Kazdy krok, kazda eko-deklaracja i kazda aktywnosc fizyczna przybliza Cie do lepszej wersji siebie i zdrowszej planety.",
-    icon: DropIcon,
-  },
-  {
-    title: "Zgoda na przetwarzanie danych",
-    desc: "Abys mogl w pelni korzystac z Root, potrzebujemy Twojej zgody na przetwarzanie danych osobowych i danych dotyczacych aktywnosci fizycznej.",
-    icon: CheckIcon,
-  },
-  {
-    title: "Twoj pierwszy cel",
-    desc: "Zrob dzis 8 000 krokow - to zaledwie godzina spaceru! Zbierzesz pierwsze Eco-Coins i odblokujesz osiagniecie Pierwszy krok.",
-    icon: RunningIcon,
-  },
-];
-
 export default function OnboardingScreen() {
+  const { t } = useTranslation();
   const step = useAppStore((s) => s.onboardingStep);
   const next = useAppStore((s) => s.nextOnboarding);
   const finish = useAppStore((s) => s.finishOnboarding);
   const [consentOne, setConsentOne] = useState(false);
   const [consentTwo, setConsentTwo] = useState(false);
+
+  const steps = [
+    {
+      title: t("auth.onboarding.welcomeTitle"),
+      desc: t("auth.onboarding.welcomeDesc"),
+      icon: DropIcon,
+    },
+    {
+      title: t("auth.onboarding.consentTitle"),
+      desc: t("auth.onboarding.consentDesc"),
+      icon: CheckIcon,
+    },
+    {
+      title: t("auth.onboarding.goalTitle"),
+      desc: t("auth.onboarding.goalDesc"),
+      icon: RunningIcon,
+    },
+  ];
 
   const item = steps[step] ?? steps[0];
   const isLast = step >= steps.length - 1;
@@ -62,8 +64,7 @@ export default function OnboardingScreen() {
               {consentOne && <CheckIcon size={12} color={colors.white} />}
             </View>
             <Text style={styles.consentText}>
-              Zgadzam sie na przetwarzanie moich danych osobowych zgodnie z
-              polityka prywatnosci.
+              {t("auth.onboarding.consentPersonal")}
             </Text>
           </Pressable>
           <Pressable
@@ -74,8 +75,7 @@ export default function OnboardingScreen() {
               {consentTwo && <CheckIcon size={12} color={colors.white} />}
             </View>
             <Text style={styles.consentText}>
-              Wyrazam zgode na przetwarzanie danych dotyczacych mojej aktywnosci
-              fizycznej.
+              {t("auth.onboarding.consentActivity")}
             </Text>
           </Pressable>
         </View>
@@ -97,7 +97,7 @@ export default function OnboardingScreen() {
         }}
       >
         <Text style={styles.buttonText}>
-          {isLast ? "Rozpocznij przygode!" : "Dalej"}
+          {isLast ? t("auth.onboarding.startAdventure") : t("auth.onboarding.next")}
         </Text>
       </Pressable>
 
@@ -107,7 +107,7 @@ export default function OnboardingScreen() {
           router.replace("/(mobile)/home");
         }}
       >
-        <Text style={styles.skip}>Pomin</Text>
+        <Text style={styles.skip}>{t("auth.onboarding.skip")}</Text>
       </Pressable>
     </Screen>
   );

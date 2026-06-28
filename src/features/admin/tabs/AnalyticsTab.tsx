@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import type { AdminDashboard, AnalyticsUser, UserStepsPayload } from "../../../lib/types/api";
 import { fetchAnalyticsUsers, fetchAdminDashboard, fetchUserSteps } from "../../../lib/api/endpoints";
 import { IconSteps, IconTrophy, IconActivity } from "../components/Icons";
@@ -11,6 +12,7 @@ type AnalyticsSubTab = "steps" | "ranking" | "activity";
 type StepsPeriod = "day" | "week" | "month" | "custom";
 
 export function AnalyticsTab() {
+  const { t } = useTranslation();
   const [subTab, setSubTab] = useState<AnalyticsSubTab>("steps");
   const [selectedUserId, setSelectedUserId] = useState<string>("");
 
@@ -27,7 +29,7 @@ export function AnalyticsTab() {
   if (usersQuery.isPending) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
   if (usersQuery.error) return (
     <View style={styles.errorCard}>
-      <Text style={styles.errorText}>Nie udalo sie zaladowac uzytkownikow.</Text>
+      <Text style={styles.errorText}>{t("common.errorLoading")}</Text>
       <Text style={styles.errorDetail}>{usersQuery.error.message}</Text>
     </View>
   );
@@ -37,9 +39,9 @@ export function AnalyticsTab() {
 
   if (users.length === 0) return (
     <View>
-      <Text style={styles.pageTitle}>Analityka</Text>
+      <Text style={styles.pageTitle}>{t("admin.analytics.title")}</Text>
       <View style={styles.analyticsPlaceholder}>
-        <Text style={styles.analyticsPlaceholderText}>Brak uzytkownikow w systemie.</Text>
+        <Text style={styles.analyticsPlaceholderText}>{t("admin.analytics.noUsers")}</Text>
       </View>
     </View>
   );
@@ -51,23 +53,23 @@ export function AnalyticsTab() {
   const selectedUser = users.find((u) => u.id === selectedUserId) ?? users[0];
 
   const SUB_TABS: { key: AnalyticsSubTab; label: string; icon: React.ReactNode }[] = [
-    { key: "steps", label: "Liczba krokow", icon: <IconSteps color={subTab === "steps" ? colors.mossGreen : colors.slate500} /> },
-    { key: "ranking", label: "Ranking pracownikow", icon: <IconTrophy color={subTab === "ranking" ? colors.mossGreen : colors.slate500} /> },
-    { key: "activity", label: "Ostatnie aktywnosci", icon: <IconActivity color={subTab === "activity" ? colors.mossGreen : colors.slate500} /> },
+    { key: "steps", label: t("admin.analytics.steps"), icon: <IconSteps color={subTab === "steps" ? colors.mossGreen : colors.slate500} /> },
+    { key: "ranking", label: t("admin.analytics.employeeRanking"), icon: <IconTrophy color={subTab === "ranking" ? colors.mossGreen : colors.slate500} /> },
+    { key: "activity", label: t("admin.analytics.recentActivity"), icon: <IconActivity color={subTab === "activity" ? colors.mossGreen : colors.slate500} /> },
   ];
 
   return (
     <View style={styles.analyticsLayout}>
       <View style={styles.analyticsSidebar}>
-        {SUB_TABS.map((t) => (
+        {SUB_TABS.map((item) => (
           <Pressable
-            key={t.key}
-            style={[styles.analyticsSidebarItem, subTab === t.key && styles.analyticsSidebarItemActive]}
-            onPress={() => setSubTab(t.key)}
+            key={item.key}
+            style={[styles.analyticsSidebarItem, subTab === item.key && styles.analyticsSidebarItemActive]}
+            onPress={() => setSubTab(item.key)}
           >
-            <View style={styles.analyticsSidebarIcon}>{t.icon}</View>
-            <Text style={[styles.analyticsSidebarLabel, subTab === t.key && styles.analyticsSidebarLabelActive]}>
-              {t.label}
+            <View style={styles.analyticsSidebarIcon}>{item.icon}</View>
+            <Text style={[styles.analyticsSidebarLabel, subTab === item.key && styles.analyticsSidebarLabelActive]}>
+              {item.label}
             </Text>
           </Pressable>
         ))}
@@ -105,6 +107,7 @@ function AnalyticsStepsView({
   selectedUser: AnalyticsUser;
   onSelectUser: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const [period, setPeriod] = useState<StepsPeriod>("day");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
@@ -130,10 +133,10 @@ function AnalyticsStepsView({
   });
 
   const PERIOD_OPTIONS: { key: StepsPeriod; label: string }[] = [
-    { key: "day", label: "7 dni" },
-    { key: "week", label: "9 tygodni" },
-    { key: "month", label: "12 miesiecy" },
-    { key: "custom", label: "Wlasny zakres" },
+    { key: "day", label: t("admin.analytics.periods.7days") },
+    { key: "week", label: t("admin.analytics.periods.9weeks") },
+    { key: "month", label: t("admin.analytics.periods.12months") },
+    { key: "custom", label: t("admin.analytics.periods.custom") },
   ];
 
   const formatLabel = (label: string) => {
@@ -157,7 +160,7 @@ function AnalyticsStepsView({
   return (
     <>
       <View style={styles.analyticsSelector}>
-        <Text style={styles.analyticsSelectorLabel}>Wybierz uzytkownika:</Text>
+        <Text style={styles.analyticsSelectorLabel}>{t("admin.analytics.selectUser")}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }}>
           <View style={styles.analyticsUserList}>
             {users.map((u) => (
@@ -202,7 +205,7 @@ function AnalyticsStepsView({
       {period === "custom" && (
         <View style={styles.customDateRow}>
           <View style={styles.customDateField}>
-            <Text style={styles.customDateLabel}>Od:</Text>
+            <Text style={styles.customDateLabel}>{t("admin.analytics.from")}</Text>
             <TextInput
               style={styles.customDateInput}
               placeholder="RRRR-MM-DD"
@@ -212,7 +215,7 @@ function AnalyticsStepsView({
             />
           </View>
           <View style={styles.customDateField}>
-            <Text style={styles.customDateLabel}>Do:</Text>
+            <Text style={styles.customDateLabel}>{t("admin.analytics.to")}</Text>
             <TextInput
               style={styles.customDateInput}
               placeholder="RRRR-MM-DD"
@@ -227,7 +230,7 @@ function AnalyticsStepsView({
       <BarChartSection
         query={stepsQuery}
         formatLabel={formatLabel}
-        emptyMsg="Brak danych krokow dla wybranego okresu."
+        emptyMsg={t("common.noData")}
       />
     </>
   );
@@ -237,22 +240,24 @@ function AnalyticsRankingView({ dashboard, isLoading }: {
   dashboard?: AdminDashboard;
   isLoading: boolean;
 }) {
+  const { t } = useTranslation();
+
   if (isLoading) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
-  if (!dashboard) return <Text style={styles.emptyText}>Brak danych.</Text>;
+  if (!dashboard) return <Text style={styles.emptyText}>{t("common.noData")}</Text>;
 
   const companies = dashboard.companies ?? [];
 
   return (
     <>
-      <Text style={styles.sectionTitle}>Ranking firm</Text>
+      <Text style={styles.sectionTitle}>{t("admin.analytics.companyRanking")}</Text>
       {companies.length === 0 ? (
-        <Text style={styles.emptyText}>Brak firm w systemie.</Text>
+        <Text style={styles.emptyText}>{t("admin.analytics.noCompanies")}</Text>
       ) : (
         <View style={{ gap: 4 }}>
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderCell, { flex: 0.5 }]}>#</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Firma</Text>
-            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Pracownicy</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 2 }]}>{t("common.company")}</Text>
+            <Text style={[styles.tableHeaderCell, { flex: 1 }]}>{t("admin.analytics.employees")}</Text>
           </View>
           {companies.map((c, i) => (
             <View key={c.id} style={styles.tableRow}>
@@ -271,16 +276,18 @@ function AnalyticsActivityView({ dashboard, isLoading }: {
   dashboard?: AdminDashboard;
   isLoading: boolean;
 }) {
+  const { t } = useTranslation();
+
   if (isLoading) return <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 48 }} />;
-  if (!dashboard) return <Text style={styles.emptyText}>Brak danych.</Text>;
+  if (!dashboard) return <Text style={styles.emptyText}>{t("common.noData")}</Text>;
 
   const activities = dashboard.recentActivity ?? [];
 
   return (
     <>
-      <Text style={styles.sectionTitle}>Ostatnie aktywnosci ({activities.length})</Text>
+      <Text style={styles.sectionTitle}>{t("admin.analytics.recentActivity")} ({activities.length})</Text>
       {activities.length === 0 ? (
-        <Text style={styles.emptyText}>Brak aktywnosci.</Text>
+        <Text style={styles.emptyText}>{t("admin.analytics.noActivity")}</Text>
       ) : (
         <View style={{ gap: 4 }}>
           {activities.map((a) => (
@@ -309,6 +316,8 @@ function BarChartSection({
   formatLabel: (label: string) => string;
   emptyMsg: string;
 }) {
+  const { t } = useTranslation();
+
   if (query.isPending) return (
     <View style={styles.analyticsChartCard}>
       <ActivityIndicator size="small" color={colors.mossGreen} style={{ marginTop: 20 }} />
@@ -318,7 +327,7 @@ function BarChartSection({
   if (query.error) return (
     <View style={styles.analyticsChartCard}>
       <View style={[styles.errorCard, { marginTop: 12 }]}>
-        <Text style={styles.errorText}>Blad ladowania danych.</Text>
+        <Text style={styles.errorText}>{t("common.errorLoading")}</Text>
         <Text style={styles.errorDetail}>{query.error.message}</Text>
       </View>
     </View>
@@ -342,11 +351,11 @@ function BarChartSection({
         <View style={styles.analyticsChartStats}>
           <View style={styles.analyticsChartStat}>
             <Text style={styles.analyticsChartStatValue}>{total.toLocaleString("pl-PL")}</Text>
-            <Text style={styles.analyticsChartStatLabel}>Suma</Text>
+            <Text style={styles.analyticsChartStatLabel}>{t("admin.analytics.sum")}</Text>
           </View>
           <View style={styles.analyticsChartStat}>
             <Text style={styles.analyticsChartStatValue}>{avg.toLocaleString("pl-PL")}</Text>
-            <Text style={styles.analyticsChartStatLabel}>Srednia</Text>
+            <Text style={styles.analyticsChartStatLabel}>{t("admin.analytics.average")}</Text>
           </View>
         </View>
       </View>

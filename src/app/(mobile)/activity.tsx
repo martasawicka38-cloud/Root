@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
+import { useTranslation } from "react-i18next";
 
 import { BikeIcon, RunningIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
@@ -76,18 +77,10 @@ function GymIcon({ size = 20 }: { size?: number }) {
   );
 }
 
-const typeMeta: Record<string, { label: string; icon: typeof RunningIcon }> = {
-  walking: { label: "Spacer", icon: RunningIcon },
-  running: { label: "Bieganie", icon: RunningIcon },
-  cycling: { label: "Rower", icon: BikeIcon },
-  swimming: { label: "Plywanie", icon: SwimIcon },
-  yoga: { label: "Joga", icon: YogaIcon },
-  gym: { label: "Silownia", icon: GymIcon },
-};
-
 const types = ["walking", "running", "cycling", "swimming", "yoga", "gym"] as const;
 
 export default function ActivityScreen() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [type, setType] = useState<(typeof types)[number]>("walking");
   const [minutes, setMinutes] = useState("30");
@@ -112,6 +105,15 @@ export default function ActivityScreen() {
     },
   });
 
+  const typeMeta = useMemo<Record<string, { label: string; icon: typeof RunningIcon }>>(() => ({
+    walking: { label: t("activity.types.walking"), icon: RunningIcon },
+    running: { label: t("activity.types.running"), icon: RunningIcon },
+    cycling: { label: t("activity.types.cycling"), icon: BikeIcon },
+    swimming: { label: t("activity.types.swimming"), icon: SwimIcon },
+    yoga: { label: t("activity.types.yoga"), icon: YogaIcon },
+    gym: { label: t("activity.types.gym"), icon: GymIcon },
+  }), [t]);
+
   const estimate = useMemo(() => {
     const map = {
       walking: 120,
@@ -128,9 +130,9 @@ export default function ActivityScreen() {
 
   return (
     <Screen>
-      <Text style={styles.title}>Dodaj aktywnosc</Text>
+      <Text style={styles.title}>{t("activity.title")}</Text>
 
-      <Text style={styles.sectionLabel}>Wybierz typ aktywnosci</Text>
+      <Text style={styles.sectionLabel}>{t("activity.selectType")}</Text>
       <View style={styles.typeGrid}>
         {types.map((t) => {
           const meta = typeMeta[t];
@@ -150,7 +152,7 @@ export default function ActivityScreen() {
         })}
       </View>
 
-      <Text style={styles.sectionLabel}>Czas trwania (minuty)</Text>
+      <Text style={styles.sectionLabel}>{t("activity.duration")}</Text>
       <TextInput
         value={minutes}
         onChangeText={setMinutes}
@@ -160,12 +162,12 @@ export default function ActivityScreen() {
       />
 
       <View style={styles.estimateCard}>
-        <Text style={styles.estimateLabel}>Szacowane</Text>
+        <Text style={styles.estimateLabel}>{t("activity.estimated")}</Text>
         <View style={styles.estimateRow}>
           <Text style={styles.estimateValue}>
             {estimate.steps.toLocaleString("pl-PL")}
           </Text>
-          <Text style={styles.estimateUnit}>krokow</Text>
+          <Text style={styles.estimateUnit}>{t("activity.stepsUnit")}</Text>
         </View>
         <View style={styles.estimateRow}>
           <Text style={styles.estimatePoints}>+{estimate.points} EC</Text>
@@ -179,12 +181,12 @@ export default function ActivityScreen() {
           if (m > 0) createMutation.mutate({ type, minutes: m });
         }}
       >
-        <Text style={styles.buttonText}>Dodaj aktywnosc</Text>
+        <Text style={styles.buttonText}>{t("activity.title")}</Text>
       </Pressable>
 
-      <Text style={styles.sectionLabel}>Twoje aktywnosci</Text>
+      <Text style={styles.sectionLabel}>{t("activity.log")}</Text>
       {log.length === 0 && (
-        <Text style={styles.emptyText}>Brak aktywnosci</Text>
+        <Text style={styles.emptyText}>{t("activity.empty")}</Text>
       )}
       {log.map((item) => (
         <View key={item.id} style={styles.logItem}>
@@ -197,7 +199,7 @@ export default function ActivityScreen() {
             </Text>
           </View>
           <Pressable onPress={() => deleteMutation.mutate(item.id)}>
-            <Text style={styles.logDelete}>Usun</Text>
+            <Text style={styles.logDelete}>{t("common.delete")}</Text>
           </Pressable>
         </View>
       ))}

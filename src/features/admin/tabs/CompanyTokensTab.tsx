@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { CompanyToken } from "../../../lib/types/api";
 import { Badge } from "../components/Badge";
 import { styles } from "../admin.styles";
@@ -11,11 +12,13 @@ interface CompanyTokensTabProps {
 }
 
 export function CompanyTokensTab({ tokensQuery, onGenerate, generating }: CompanyTokensTabProps) {
+  const { t } = useTranslation();
+
   return (
     <>
-      <Text style={styles.pageTitle}>Tokeny rejestracyjne dla firm</Text>
+      <Text style={styles.pageTitle}>{t("admin.tokens.title")}</Text>
       <Text style={styles.hintText}>
-        Tokeny umozliwiaja firmom rejestracje konta firmowego. Kazdy token jest jednorazowy.
+        {t("admin.tokens.description")}
       </Text>
 
       <Pressable
@@ -24,28 +27,28 @@ export function CompanyTokensTab({ tokensQuery, onGenerate, generating }: Compan
         disabled={generating}
       >
         <Text style={styles.genBigBtnText}>
-          {generating ? "Generowanie..." : "Generuj nowy token dla firmy"}
+          {generating ? t("common.generating") : t("admin.tokens.generate")}
         </Text>
       </Pressable>
 
       {tokensQuery.isPending ? (
         <ActivityIndicator size="large" color={colors.mossGreen} style={{ marginTop: 32 }} />
       ) : tokensQuery.error ? (
-        <View style={styles.errorCard}><Text style={styles.errorText}>Blad ladowania tokenow.</Text></View>
+        <View style={styles.errorCard}><Text style={styles.errorText}>{t("common.errorLoading")}</Text></View>
       ) : (
         <View style={styles.tokenListFull}>
           <View style={styles.tokenTableHeader}>
-            <Text style={[styles.tokenHeaderCell, { flex: 3 }]}>Token</Text>
-            <Text style={[styles.tokenHeaderCell, { flex: 0.7 }]}>Status</Text>
-            <Text style={[styles.tokenHeaderCell, { flex: 1 }]}>Data utworzenia</Text>
+            <Text style={[styles.tokenHeaderCell, { flex: 3 }]}>{t("admin.tokens.token")}</Text>
+            <Text style={[styles.tokenHeaderCell, { flex: 0.7 }]}>{t("common.status")}</Text>
+            <Text style={[styles.tokenHeaderCell, { flex: 1 }]}>{t("admin.tokens.createdAt")}</Text>
           </View>
-          {tokensQuery.data?.map((t) => (
-            <View key={t.id} style={styles.tokenTableRow}>
-              <Text style={[styles.tokenCell, { flex: 3, fontFamily: "monospace", fontSize: 13 }]}>{t.token}</Text>
+          {tokensQuery.data?.map((tk) => (
+            <View key={tk.id} style={styles.tokenTableRow}>
+              <Text style={[styles.tokenCell, { flex: 3, fontFamily: "monospace", fontSize: 13 }]}>{tk.token}</Text>
               <View style={{ flex: 0.7 }}>
-                <Badge label={t.used ? "Uzyty" : "Dostepny"} color={t.used ? colors.error : colors.success} bg={t.used ? colors.errorBg : colors.successBg} />
+                <Badge label={tk.used ? t("admin.companies.used") : t("admin.companies.available")} color={tk.used ? colors.error : colors.success} bg={tk.used ? colors.errorBg : colors.successBg} />
               </View>
-              <Text style={[styles.tokenCell, { flex: 1 }]}>{new Date(t.createdAt).toLocaleDateString("pl-PL")}</Text>
+              <Text style={[styles.tokenCell, { flex: 1 }]}>{new Date(tk.createdAt).toLocaleDateString("pl-PL")}</Text>
             </View>
           ))}
         </View>

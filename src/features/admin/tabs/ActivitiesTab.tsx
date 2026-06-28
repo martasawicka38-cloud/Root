@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { ActivityIndicator, Pressable, Text, TextInput, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import type { Company, EcoActivity } from "../../../lib/types/api";
 import { createRewardActivity, deleteRewardActivity, fetchCompanyActivities } from "../../../lib/api/endpoints";
 import { styles } from "../admin.styles";
 import { colors } from "../../../styles/tokens";
 
 export function ActivitiesTab({ companiesQuery }: { companiesQuery: { data?: Company[]; isPending: boolean; error: Error | null } }) {
+  const { t } = useTranslation();
   const [selectedCompany, setSelectedCompany] = useState<string>("");
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
@@ -65,12 +67,19 @@ export function ActivitiesTab({ companiesQuery }: { companiesQuery: { data?: Com
     });
   };
 
+  const categoryLabels: Record<string, string> = {
+    MOBILITY: t("admin.activities.categories.mobility"),
+    CIRCULARITY: t("admin.activities.categories.circularity"),
+    LOCAL_CONSUMPTION: t("admin.activities.categories.localConsumption"),
+    NATURE_ACTIVITY: t("admin.activities.categories.natureActivity"),
+  };
+
   return (
     <>
-      <Text style={styles.sectionTitle}>Zarzadzanie aktywnosciami</Text>
+      <Text style={styles.sectionTitle}>{t("admin.activities.title")}</Text>
 
       <View style={styles.filterRow}>
-        <Text style={styles.filterLabel}>Firma:</Text>
+        <Text style={styles.filterLabel}>{t("admin.activities.company")}</Text>
         <View style={styles.filterButtons}>
           {companiesQuery.data?.map((c) => (
             <Pressable
@@ -89,20 +98,20 @@ export function ActivitiesTab({ companiesQuery }: { companiesQuery: { data?: Com
       {selectedCompany && (
         <>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-            <Text style={styles.pageTitle}>Aktywnosci firmy ({activities.length})</Text>
+            <Text style={styles.pageTitle}>{t("admin.activities.companyActivities")} ({activities.length})</Text>
             <Pressable style={[styles.genBigBtn, showForm && { opacity: 0.7 }]} onPress={() => showForm ? resetForm() : setShowForm(true)}>
-              <Text style={styles.genBigBtnText}>{showForm ? "Anuluj" : "Dodaj aktywnosc"}</Text>
+              <Text style={styles.genBigBtnText}>{showForm ? t("common.cancel") : t("admin.activities.addActivity")}</Text>
             </Pressable>
           </View>
 
           {showForm && (
             <View style={styles.formCard}>
-              <TextInput style={styles.input} placeholder="Nazwa aktywnosci" value={name} onChangeText={setName} placeholderTextColor={colors.inputPlaceholder} />
-              <TextInput style={styles.input} placeholder="Opis (opcjonalny)" value={description} onChangeText={setDescription} placeholderTextColor={colors.inputPlaceholder} />
-              <TextInput style={styles.input} placeholder="Ikona (np. leaf, bike, run)" value={icon} onChangeText={setIcon} placeholderTextColor={colors.inputPlaceholder} />
-              <TextInput style={styles.input} placeholder="Punkty bazowe" value={basePoints} onChangeText={setBasePoints} keyboardType="numeric" placeholderTextColor={colors.inputPlaceholder} />
+              <TextInput style={styles.input} placeholder={t("admin.activities.activityName")} value={name} onChangeText={setName} placeholderTextColor={colors.inputPlaceholder} />
+              <TextInput style={styles.input} placeholder={t("admin.activities.description")} value={description} onChangeText={setDescription} placeholderTextColor={colors.inputPlaceholder} />
+              <TextInput style={styles.input} placeholder={t("admin.activities.icon")} value={icon} onChangeText={setIcon} placeholderTextColor={colors.inputPlaceholder} />
+              <TextInput style={styles.input} placeholder={t("admin.activities.basePoints")} value={basePoints} onChangeText={setBasePoints} keyboardType="numeric" placeholderTextColor={colors.inputPlaceholder} />
 
-              <Text style={styles.formLabel}>Kategoria:</Text>
+              <Text style={styles.formLabel}>{t("admin.activities.category")}</Text>
               <View style={styles.filterButtons}>
                 {["MOBILITY", "CIRCULARITY", "LOCAL_CONSUMPTION", "NATURE_ACTIVITY"].map((c) => (
                   <Pressable
@@ -111,34 +120,34 @@ export function ActivitiesTab({ companiesQuery }: { companiesQuery: { data?: Com
                     onPress={() => setCategory(c)}
                   >
                     <Text style={[styles.filterBtnText, category === c && styles.filterBtnTextActive]}>
-                      {{ MOBILITY: "Mobilnosc", CIRCULARITY: "Cykularnosc", LOCAL_CONSUMPTION: "Lokalne", NATURE_ACTIVITY: "Natura" }[c]}
+                      {categoryLabels[c]}
                     </Text>
                   </Pressable>
                 ))}
               </View>
 
-              <Text style={styles.formLabel}>Typ aktywnosci:</Text>
+              <Text style={styles.formLabel}>{t("admin.activities.activityType")}</Text>
               <View style={styles.filterButtons}>
                 <Pressable
                   style={[styles.filterBtn, activityType === "one_time" && styles.filterBtnActive]}
                   onPress={() => setActivityType("one_time")}
                 >
-                  <Text style={[styles.filterBtnText, activityType === "one_time" && styles.filterBtnTextActive]}>Jednorazowa</Text>
+                  <Text style={[styles.filterBtnText, activityType === "one_time" && styles.filterBtnTextActive]}>{t("admin.activities.oneTime")}</Text>
                 </Pressable>
                 <Pressable
                   style={[styles.filterBtn, activityType === "cyclical" && styles.filterBtnActive]}
                   onPress={() => setActivityType("cyclical")}
                 >
-                  <Text style={[styles.filterBtnText, activityType === "cyclical" && styles.filterBtnTextActive]}>Cykliczna (raz dziennie)</Text>
+                  <Text style={[styles.filterBtnText, activityType === "cyclical" && styles.filterBtnTextActive]}>{t("admin.activities.cyclical")}</Text>
                 </Pressable>
               </View>
 
               {activityType === "cyclical" && (
-                <TextInput style={styles.input} placeholder="Data zakonczenia (RRRR-MM-DD)" value={expiresAt} onChangeText={setExpiresAt} placeholderTextColor={colors.inputPlaceholder} />
+                <TextInput style={styles.input} placeholder={t("admin.activities.expiresAt")} value={expiresAt} onChangeText={setExpiresAt} placeholderTextColor={colors.inputPlaceholder} />
               )}
 
               <Pressable style={[styles.primaryBtn, (!name || !basePoints || createMutation.isPending) && { opacity: 0.5 }]} onPress={handleSubmit} disabled={!name || !basePoints || createMutation.isPending}>
-                <Text style={styles.primaryBtnText}>{createMutation.isPending ? "Tworzenie..." : "Utworz aktywnosc"}</Text>
+                <Text style={styles.primaryBtnText}>{createMutation.isPending ? t("common.creating") : t("admin.activities.createActivity")}</Text>
               </Pressable>
             </View>
           )}
@@ -146,15 +155,15 @@ export function ActivitiesTab({ companiesQuery }: { companiesQuery: { data?: Com
           {activitiesPending ? (
             <ActivityIndicator />
           ) : activities.length === 0 ? (
-            <Text style={styles.emptyText}>Brak aktywnosci dla tej firmy.</Text>
+            <Text style={styles.emptyText}>{t("admin.activities.noActivities")}</Text>
           ) : (
             <View style={{ gap: 4 }}>
               <View style={styles.tableHeader}>
-                <Text style={[styles.tableHeaderCell, { flex: 2 }]}>Nazwa</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 2 }]}>{t("common.name")}</Text>
                 <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Typ</Text>
-                <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Punkty</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 1 }]}>{t("common.points")}</Text>
                 <Text style={[styles.tableHeaderCell, { flex: 1 }]}>Wygasa</Text>
-                <Text style={[styles.tableHeaderCell, { flex: 0.7 }]}>Akcje</Text>
+                <Text style={[styles.tableHeaderCell, { flex: 0.7 }]}>{t("common.actions")}</Text>
               </View>
               {activities.map((a) => (
                 <View key={a.id} style={styles.tableRow}>
@@ -165,11 +174,11 @@ export function ActivitiesTab({ companiesQuery }: { companiesQuery: { data?: Com
                   <View style={{ flex: 1 }}>
                     <View style={[styles.badge, { backgroundColor: a.activityType === "one_time" ? colors.warningBg : colors.successBg }]}>
                       <Text style={[styles.badgeText, { color: a.activityType === "one_time" ? colors.warning : colors.success }]}>
-                        {a.activityType === "one_time" ? "Jednorazowa" : "Cykliczna"}
+                        {a.activityType === "one_time" ? t("admin.activities.oneTime") : t("admin.activities.cyclical")}
                       </Text>
                     </View>
                   </View>
-                  <Text style={[styles.tableCell, { flex: 1 }]}>{a.basePoints} pkt</Text>
+                  <Text style={[styles.tableCell, { flex: 1 }]}>{a.basePoints} {t("common.points")}</Text>
                   <Text style={[styles.tableCell, { flex: 1, fontSize: 12 }]}>
                     {a.expiresAt ? new Date(a.expiresAt).toLocaleDateString("pl-PL") : "-"}
                   </Text>
@@ -179,7 +188,7 @@ export function ActivitiesTab({ companiesQuery }: { companiesQuery: { data?: Com
                       onPress={() => deleteMutation.mutate(a.id)}
                       disabled={deleteMutation.isPending}
                     >
-                      <Text style={styles.dangerBtnText}>Usun</Text>
+                      <Text style={styles.dangerBtnText}>{t("common.delete")}</Text>
                     </Pressable>
                   </View>
                 </View>

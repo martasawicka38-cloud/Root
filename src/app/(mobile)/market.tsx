@@ -2,6 +2,7 @@ import { Link } from "expo-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { CoinIcon } from "../../components/icons";
 import { EcoIcon } from "../../components/EcoIcon";
@@ -13,6 +14,7 @@ import { colors } from "../../styles/tokens";
 type Tab = "rewards" | "activities";
 
 export default function MarketScreen() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("rewards");
   const filter = useAppStore((s) => s.marketFilter);
   const setFilter = useAppStore((s) => s.setMarketFilter);
@@ -53,14 +55,14 @@ export default function MarketScreen() {
 
   return (
     <Screen>
-      <Text style={styles.title}>Nagrody i aktywnosci</Text>
+      <Text style={styles.title}>{t("market.rewards")} i {t("market.companyActivities").toLowerCase()}</Text>
 
       {/* Balance */}
       <View style={styles.balanceRow}>
         <View style={styles.coinBox}>
           <CoinIcon size={18} color={colors.mossGreen} />
         </View>
-        <Text style={styles.balanceText}>Saldo: {balance} EC</Text>
+        <Text style={styles.balanceText}>{t("market.balance")}: {balance} {t("common.ec")}</Text>
       </View>
 
       {/* Tabs */}
@@ -70,7 +72,7 @@ export default function MarketScreen() {
           onPress={() => setTab("rewards")}
         >
           <Text style={[styles.tabText, tab === "rewards" && styles.tabTextActive]}>
-            Nagrody
+            {t("market.rewards")}
           </Text>
         </Pressable>
         <Pressable
@@ -78,7 +80,7 @@ export default function MarketScreen() {
           onPress={() => setTab("activities")}
         >
           <Text style={[styles.tabText, tab === "activities" && styles.tabTextActive]}>
-            Aktywnosci ({companyActivities.length})
+            {t("market.companyActivities")} ({companyActivities.length})
           </Text>
         </Pressable>
       </View>
@@ -99,7 +101,7 @@ export default function MarketScreen() {
                 <Text
                   style={filter === f ? styles.filterTextActive : styles.filterTextInactive}
                 >
-                  {{ all: "Wszystko", food: "Jedzenie", wellness: "Wellness", sport: "Sport", eco: "Eko" }[f]}
+                  {t(`market.filters.${f}`)}
                 </Text>
               </Pressable>
             ))}
@@ -135,8 +137,8 @@ export default function MarketScreen() {
             <ActivityIndicator style={{ padding: 40 }} />
           ) : companyActivities.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Brak aktywnosci od twojej firmy</Text>
-              <Text style={styles.emptySubtext}>Twoja firma moze dodawac specjalne aktywnosci dla pracownikow</Text>
+              <Text style={styles.emptyText}>{t("market.noCompanyActivities")}</Text>
+              <Text style={styles.emptySubtext}>{t("market.noCompanyActivitiesDesc")}</Text>
             </View>
           ) : (
             <View style={styles.activitiesList}>
@@ -160,12 +162,12 @@ export default function MarketScreen() {
                           </Text>
                           {isOneTime && (
                             <View style={styles.badgeOneTime}>
-                              <Text style={styles.badgeOneTimeText}>Jednorazowa</Text>
+                              <Text style={styles.badgeOneTimeText}>{t("market.oneTime")}</Text>
                             </View>
                           )}
                           {act.activityType === "cyclical" && (
                             <View style={styles.badgeCyclical}>
-                              <Text style={styles.badgeCyclicalText}>Cykliczna</Text>
+                              <Text style={styles.badgeCyclicalText}>{t("market.cyclical")}</Text>
                             </View>
                           )}
                         </View>
@@ -180,7 +182,7 @@ export default function MarketScreen() {
                           </Text>
                           {act.expiresAt && (
                             <Text style={[styles.activityExpiry, (done || oneTimeDone) && styles.textMuted]}>
-                              Do {new Date(act.expiresAt).toLocaleDateString("pl-PL")}
+                              {t("market.expiresPrefix")} {new Date(act.expiresAt).toLocaleDateString("pl-PL")}
                             </Text>
                           )}
                         </View>

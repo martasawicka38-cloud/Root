@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, TextInput } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { Screen } from "../../features/common/Screen";
 import { fetchMe, patchProfile } from "../../lib/api/endpoints";
 import { colors, radius } from "../../styles/tokens";
 
 export default function EditProfileScreen() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
   const [name, setName] = useState(me?.name ?? "");
@@ -22,23 +24,23 @@ export default function EditProfileScreen() {
 
   return (
     <Screen>
-      <Text style={styles.title}>Edytuj profil</Text>
+      <Text style={styles.title}>{t("editProfile.title")}</Text>
 
-      <Text style={styles.label}>{isCompany ? "Nazwa firmy" : "Imie i nazwisko"}</Text>
+      <Text style={styles.label}>{isCompany ? t("editProfile.companyName") : t("editProfile.name")}</Text>
       <TextInput
         value={name}
         onChangeText={setName}
         style={styles.input}
-        placeholder={isCompany ? "Nazwa firmy" : "Imie i nazwisko"}
+        placeholder={isCompany ? t("editProfile.companyName") : t("editProfile.name")}
       />
 
-      <Text style={styles.label}>Dzienny cel krokow</Text>
+      <Text style={styles.label}>{t("editProfile.dailyStepGoal")}</Text>
       <TextInput
         value={goal}
         onChangeText={setGoal}
         style={styles.input}
         keyboardType="number-pad"
-        placeholder="Cel krokow"
+        placeholder={t("editProfile.dailyStepGoal")}
       />
 
       <Pressable
@@ -51,7 +53,7 @@ export default function EditProfileScreen() {
           })
         }
       >
-        <Text style={styles.buttonText}>Zapisz zmiany</Text>
+        <Text style={styles.buttonText}>{t("editProfile.save")}</Text>
       </Pressable>
     </Screen>
   );

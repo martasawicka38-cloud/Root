@@ -1,6 +1,7 @@
 import { Link, Stack, usePathname } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { AppLogo } from "../../features/common/AppLogo";
 import {
@@ -16,20 +17,21 @@ import { fetchNotifications, fetchWallet, fetchMe } from "../../lib/api/endpoint
 import { colors, radius, spacing } from "../../styles/tokens";
 
 const allTabs = [
-  { href: "/(mobile)/home", label: "Dom", icon: HomeIcon },
-  { href: "/(mobile)/market", label: "Rynek", icon: MarketIcon },
-  { href: "/(mobile)/eko", label: "Eko", icon: SproutIcon },
-  { href: "/(mobile)/ranking", label: "Ranking", icon: RankingIcon },
-  { href: "/(mobile)/profile", label: "Profil", icon: ProfileIcon },
+  { href: "/(mobile)/home", labelKey: "nav.home", icon: HomeIcon },
+  { href: "/(mobile)/market", labelKey: "nav.market", icon: MarketIcon },
+  { href: "/(mobile)/eko", labelKey: "nav.eco", icon: SproutIcon },
+  { href: "/(mobile)/ranking", labelKey: "nav.ranking", icon: RankingIcon },
+  { href: "/(mobile)/profile", labelKey: "nav.profile", icon: ProfileIcon },
 ] as const;
 
 const companyTabs = [
-  { href: "/(mobile)/home", label: "Dom", icon: HomeIcon },
-  { href: "/(mobile)/ranking", label: "Ranking", icon: RankingIcon },
-  { href: "/(mobile)/profile", label: "Profil", icon: ProfileIcon },
+  { href: "/(mobile)/home", labelKey: "nav.home", icon: HomeIcon },
+  { href: "/(mobile)/ranking", labelKey: "nav.ranking", icon: RankingIcon },
+  { href: "/(mobile)/profile", labelKey: "nav.profile", icon: ProfileIcon },
 ] as const;
 
 export default function MobileLayout() {
+  const { t } = useTranslation();
   const pathname = usePathname();
 
   const { data: me } = useQuery({
@@ -89,7 +91,7 @@ export default function MobileLayout() {
                 <Text
                   style={[styles.tabText, isActive && styles.tabTextActive]}
                 >
-                  {tab.label}
+                  {t(tab.labelKey)}
                 </Text>
               </Pressable>
             </Link>

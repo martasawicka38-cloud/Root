@@ -1,6 +1,7 @@
 import { Link } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import {
   EditIcon,
@@ -15,24 +16,25 @@ import { fetchMe } from "../../lib/api/endpoints";
 import { colors } from "../../styles/tokens";
 
 const menuItems = [
-  { href: "/(mobile)/edit-profile", icon: EditIcon, label: "Edytuj profil" },
+  { href: "/(mobile)/edit-profile", icon: EditIcon, labelKey: "profile.editProfile" },
   {
     href: "/(mobile)/history",
     icon: HistoryIcon,
-    label: "Historia transakcji",
+    labelKey: "profile.transactionHistory",
   },
   {
     href: "/(mobile)/achievements",
     icon: MedalIcon,
-    label: "Osiagniecia",
+    labelKey: "profile.achievements",
   },
-  { href: "/(mobile)/settings", icon: SettingsIcon, label: "Ustawienia" },
+  { href: "/(mobile)/settings", icon: SettingsIcon, labelKey: "profile.settings" },
 ] as const;
 
 function CompanyProfile({ name, email }: { name: string; email: string }) {
+  const { t } = useTranslation();
   return (
     <>
-      <Text style={styles.title}>Profil firmy</Text>
+      <Text style={styles.title}>{t("profile.companyProfile")}</Text>
 
       <View style={styles.avatarSection}>
         <View style={styles.avatarWrapper}>
@@ -54,7 +56,7 @@ function CompanyProfile({ name, email }: { name: string; email: string }) {
                 <View style={styles.menuIconBox}>
                   <EditIcon size={18} color={colors.slate700} />
                 </View>
-                <Text style={styles.menuLabel}>Edytuj profil</Text>
+                <Text style={styles.menuLabel}>{t("profile.editProfile")}</Text>
               </View>
               <Text style={styles.menuArrow}>›</Text>
             </Pressable>
@@ -66,6 +68,7 @@ function CompanyProfile({ name, email }: { name: string; email: string }) {
 }
 
 export default function ProfileScreen() {
+  const { t } = useTranslation();
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: fetchMe });
   const name = me?.name ?? "";
   const email = me?.email ?? "";
@@ -80,7 +83,7 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
-      <Text style={styles.title}>Profil</Text>
+      <Text style={styles.title}>{t("profile.title")}</Text>
 
       {/* Avatar Section */}
       <View style={styles.avatarSection}>
@@ -106,7 +109,7 @@ export default function ProfileScreen() {
               <FireIcon size={20} color={colors.sunset} />
             </View>
             <Text style={styles.statValue}>5</Text>
-            <Text style={styles.statLabel}>Passa (dni)</Text>
+            <Text style={styles.statLabel}>{t("profile.streak")} ({t("home.streakDays")})</Text>
           </View>
         </View>
 
@@ -116,7 +119,7 @@ export default function ProfileScreen() {
               <MedalIcon size={20} color={colors.mossGreen} />
             </View>
             <Text style={styles.statValue}>12</Text>
-            <Text style={styles.statLabel}>Osiagniecia</Text>
+            <Text style={styles.statLabel}>{t("profile.achievements")}</Text>
           </View>
         </View>
 
@@ -126,7 +129,7 @@ export default function ProfileScreen() {
               <LeafIcon size={20} color={colors.mossGreen} />
             </View>
             <Text style={styles.statValue}>24</Text>
-            <Text style={styles.statLabel}>Deklaracje</Text>
+            <Text style={styles.statLabel}>{t("profile.declarations")}</Text>
           </View>
         </View>
       </View>
@@ -134,7 +137,7 @@ export default function ProfileScreen() {
       {/* Menu */}
       <View style={[styles.card, styles.cardLight, { marginTop: 24 }]}>
         <View style={styles.menuContainer}>
-          {menuItems.map(({ href, icon: Icon, label }, idx) => (
+          {menuItems.map(({ href, icon: Icon, labelKey }, idx) => (
             <Link key={href} href={href} asChild>
               <Pressable
                 style={idx < menuItems.length - 1 ? styles.menuItemWithBorder : styles.menuItem}
@@ -143,7 +146,7 @@ export default function ProfileScreen() {
                   <View style={styles.menuIconBox}>
                     <Icon size={18} color={colors.slate700} />
                   </View>
-                  <Text style={styles.menuLabel}>{label}</Text>
+                  <Text style={styles.menuLabel}>{t(labelKey)}</Text>
                 </View>
                 <Text style={styles.menuArrow}>›</Text>
               </Pressable>

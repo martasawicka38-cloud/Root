@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 import { HistoryIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
@@ -8,6 +9,7 @@ import { useAppStore } from "../../store/useAppStore";
 import { fetchHistory } from "../../lib/api/endpoints";
 
 export default function HistoryScreen() {
+  const { t } = useTranslation();
   const filter = useAppStore((s) => s.historyFilter);
   const setFilter = useAppStore((s) => s.setHistoryFilter);
   const { data: items = [] } = useQuery({
@@ -19,7 +21,7 @@ export default function HistoryScreen() {
 
   return (
     <Screen>
-      <Text style={styles.title}>Historia transakcji</Text>
+      <Text style={styles.title}>{t("history.title")}</Text>
 
       <View style={styles.filterRow}>
         {(["all", "earned", "spent"] as const).map((f) => (
@@ -28,7 +30,7 @@ export default function HistoryScreen() {
             style={[styles.filterChip, filter === f && styles.filterChipActive]}
             onPress={() => setFilter(f)}
           >
-            {f === "all" ? "Wszystko" : f === "earned" ? "Zdobyte" : "Wydane"}
+            {t(`history.filters.${f}`)}
           </Text>
         ))}
       </View>
@@ -36,7 +38,7 @@ export default function HistoryScreen() {
       {visible.length === 0 && (
         <View style={styles.emptyState}>
           <HistoryIcon size={48} color={colors.slate200} />
-          <Text style={styles.emptyText}>Brak transakcji</Text>
+          <Text style={styles.emptyText}>{t("history.empty")}</Text>
         </View>
       )}
 

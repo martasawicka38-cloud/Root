@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState, useMemo } from "react";
 import { Link, router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   Pressable,
@@ -19,31 +20,32 @@ import { useAppStore } from "../../store/useAppStore";
 
 type RoleOption = "user" | "employer" | "company";
 
-const ROLE_CONFIG: Record<
+const useRoleConfig = (t: (key: string) => string): Record<
   RoleOption,
   { label: string; desc: string; color: string; bgColor: string }
-> = {
+> => ({
   user: {
-    label: "Uzytkownik",
-    desc: "Zakladam konto osobiste",
+    label: t("auth.user"),
+    desc: t("auth.userDesc"),
     color: colors.deepForest,
     bgColor: colors.successBg,
   },
   employer: {
-    label: "Pracownik",
-    desc: "Dolaczam do firmy z kodem",
+    label: t("auth.employer"),
+    desc: t("auth.employerDesc"),
     color: colors.info,
     bgColor: colors.infoBg,
   },
   company: {
-    label: "Firma",
-    desc: "Rejestruje konto firmowe",
+    label: t("auth.company"),
+    desc: t("auth.companyDesc"),
     color: colors.roleCompany,
     bgColor: colors.roleCompanyBg,
   },
-};
+});
 
 export default function RegisterScreen() {
+  const { t } = useTranslation();
   const login = useAppStore((s) => s.login);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -59,6 +61,8 @@ export default function RegisterScreen() {
   const [selectedCompany, setSelectedCompany] = useState<{ id: string; name: string; slug: string } | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const blurTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const ROLE_CONFIG = useRoleConfig(t);
 
   const { data: companies, isPending: companiesPending } = useQuery({
     queryKey: ["public-companies"],
@@ -109,7 +113,7 @@ export default function RegisterScreen() {
         e && typeof e === "object" && "response" in e
           ? (e as { response: { data: { message: string } } }).response.data
               .message
-          : "Blad rejestracji";
+          : t("auth.registerError");
       setError(msg);
     } finally {
       setLoading(false);
@@ -141,9 +145,9 @@ export default function RegisterScreen() {
 
   return (
     <Screen>
-      <Text style={styles.title}>Zaloz konto</Text>
+      <Text style={styles.title}>{t("auth.registerTitle")}</Text>
 
-      <Text style={styles.label}>Wybierz typ konta</Text>
+      <Text style={styles.label}>{t("auth.selectAccountType")}</Text>
       <View style={styles.roleRow}>
         {(Object.entries(ROLE_CONFIG) as [RoleOption, typeof ROLE_CONFIG["user"]][]).map(
           ([key, cfg]) => (
@@ -189,10 +193,10 @@ export default function RegisterScreen() {
 
       {role !== "company" && (
         <>
-          <Text style={styles.label}>Imie i nazwisko</Text>
+          <Text style={styles.label}>{t("auth.fullName")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Jan Kowalski"
+            placeholder={t("auth.fullNamePlaceholder")}
             value={name}
             onChangeText={setName}
             placeholderTextColor={colors.slate400}
@@ -200,10 +204,10 @@ export default function RegisterScreen() {
         </>
       )}
 
-      <Text style={styles.label}>Adres e-mail</Text>
+      <Text style={styles.label}>{t("auth.emailLabel")}</Text>
       <TextInput
         style={styles.input}
-        placeholder="jan@intel.com"
+        placeholder={t("auth.emailPlaceholder")}
         value={email}
         onChangeText={setEmail}
         placeholderTextColor={colors.slate400}
@@ -211,10 +215,10 @@ export default function RegisterScreen() {
         keyboardType="email-address"
       />
 
-      <Text style={styles.label}>Haslo</Text>
+      <Text style={styles.label}>{t("auth.passwordLabel")}</Text>
       <TextInput
         style={styles.input}
-        placeholder="Haslo (min. 6 znakow)"
+        placeholder={t("auth.passwordPlaceholder")}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
@@ -223,7 +227,7 @@ export default function RegisterScreen() {
 
       {role === "employer" && (
         <>
-          <Text style={styles.label}>Wybierz firme</Text>
+          <Text style={styles.label}>{t("auth.selectCompany")}</Text>
 
           {selectedCompany ? (
             <View style={styles.selectedCompanyRow}>
@@ -231,14 +235,14 @@ export default function RegisterScreen() {
                 <Text style={styles.selectedCompanyName}>{selectedCompany.name}</Text>
               </View>
               <Pressable onPress={clearCompanySelection} style={styles.clearBtn}>
-                <Text style={styles.clearBtnText}>Zmień</Text>
+                <Text style={styles.clearBtnText}>{t("auth.change")}</Text>
               </Pressable>
             </View>
           ) : (
             <View style={styles.dropdownWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Wpisz nazwe firmy..."
+                placeholder={t("auth.typeCompanyName")}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 onFocus={handleFocus}
@@ -268,9 +272,9 @@ export default function RegisterScreen() {
                           </Pressable>
                         ))
                       ) : searchQuery.length > 0 ? (
-                        <Text style={styles.emptyText}>Brak wyników</Text>
+                        <Text style={styles.emptyText}>{t("auth.noResults")}</Text>
                       ) : (
-                        <Text style={styles.emptyText}>Wpisz nazwe firmy...</Text>
+                        <Text style={styles.emptyText}>{t("auth.typeCompanyName")}</Text>
                       )}
                     </ScrollView>
                   )}
@@ -281,17 +285,17 @@ export default function RegisterScreen() {
 
           {selectedCompany && (
             <>
-              <Text style={styles.label}>Kod dostepu do firmy</Text>
+              <Text style={styles.label}>{t("auth.accessCode")}</Text>
               <TextInput
                 style={styles.input}
-                placeholder="Wpisz kod otrzymany od pracodawcy"
+                placeholder={t("auth.accessCodePlaceholder")}
                 value={companyToken}
                 onChangeText={setCompanyToken}
                 placeholderTextColor={colors.slate400}
                 autoCapitalize="characters"
               />
               <Text style={styles.hint}>
-                Kod otrzymasz od administratora firmy {selectedCompany.name}
+                {t("auth.accessCodeHint")} {selectedCompany.name}
               </Text>
             </>
           )}
@@ -300,36 +304,36 @@ export default function RegisterScreen() {
 
       {role === "company" && (
         <>
-          <Text style={styles.label}>Kod autoryzacyjny (od superadmina)</Text>
+          <Text style={styles.label}>{t("auth.companyAuthCode")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Kod rejestracyjny dla firm"
+            placeholder={t("auth.companyAuthCodePlaceholder")}
             value={companyToken}
             onChangeText={setCompanyToken}
             placeholderTextColor={colors.slate400}
             autoCapitalize="characters"
           />
 
-          <Text style={styles.label}>Nazwa firmy</Text>
+          <Text style={styles.label}>{t("auth.companyName")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="Np. Moja Firma Sp. z o.o."
+            placeholder={t("auth.companyNamePlaceholder")}
             value={companyName}
             onChangeText={setCompanyName}
             placeholderTextColor={colors.slate400}
           />
 
-          <Text style={styles.label}>Identyfikator firmy (slug)</Text>
+          <Text style={styles.label}>{t("auth.companySlugLabel")}</Text>
           <TextInput
             style={styles.input}
-            placeholder="moja-firma (bez spacji)"
+            placeholder={t("auth.companySlugPlaceholder")}
             value={companySlug}
             onChangeText={setCompanySlug}
             placeholderTextColor={colors.slate400}
             autoCapitalize="none"
           />
           <Text style={styles.hint}>
-            Kod rejestracyjny otrzymasz od administratora platformy
+            {t("auth.companySlugHint")}
           </Text>
         </>
       )}
@@ -347,12 +351,12 @@ export default function RegisterScreen() {
         {loading ? (
           <ActivityIndicator color={colors.white} size="small" />
         ) : (
-          <Text style={styles.buttonText}>Zaloz konto</Text>
+          <Text style={styles.buttonText}>{t("auth.registerButton")}</Text>
         )}
       </Pressable>
 
       <Link href="/(auth)/login" style={styles.link}>
-        Masz juz konto? Zaloguj sie
+        {t("auth.hasAccountLink")}
       </Link>
     </Screen>
   );

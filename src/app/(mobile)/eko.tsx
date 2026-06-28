@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Screen } from "../../features/common/Screen";
 import {
   fetchEcoActivities,
@@ -19,30 +20,14 @@ import { EcoIcon } from "../../components/EcoIcon";
 import type { EcoActivity, SubmitActivityResponse } from "../../lib/types/api";
 import { colors } from "../../styles/tokens";
 
-const CATEGORY_META: Record<
+const CATEGORY_META_BASE: Record<
   string,
-  { label: string; bgColor: string; textColor: string }
+  { bgColor: string; textColor: string }
 > = {
-  MOBILITY: {
-    label: "Mobilność",
-    bgColor: colors.greenLight,
-    textColor: colors.brownDark,
-  },
-  CIRCULARITY: {
-    label: "Cyrkularność",
-    bgColor: colors.creamDark,
-    textColor: colors.brownDark,
-  },
-  LOCAL_CONSUMPTION: {
-    label: "Lokalne",
-    bgColor: colors.creamMedium,
-    textColor: colors.brownDark,
-  },
-  NATURE_ACTIVITY: {
-    label: "Natura",
-    bgColor: colors.greenBright,
-    textColor: colors.brownDark,
-  },
+  MOBILITY: { bgColor: colors.greenLight, textColor: colors.brownDark },
+  CIRCULARITY: { bgColor: colors.creamDark, textColor: colors.brownDark },
+  LOCAL_CONSUMPTION: { bgColor: colors.creamMedium, textColor: colors.brownDark },
+  NATURE_ACTIVITY: { bgColor: colors.greenBright, textColor: colors.brownDark },
 };
 
 const STAGE_IMAGES: Record<number, any> = {
@@ -60,7 +45,15 @@ function StageImage({ level }: { level: number }) {
 }
 
 export default function EkoScreen() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
+
+  const CATEGORY_LABELS: Record<string, string> = {
+    MOBILITY: t("eco.categories.mobility"),
+    CIRCULARITY: t("eco.categories.circularity"),
+    LOCAL_CONSUMPTION: t("eco.categories.localConsumption"),
+    NATURE_ACTIVITY: t("eco.categories.natureActivity"),
+  };
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<SubmitActivityResponse | null>(
     null
@@ -95,7 +88,7 @@ export default function EkoScreen() {
         queryClient.invalidateQueries({ queryKey: ["eco-activities"] });
         queryClient.invalidateQueries({ queryKey: ["root-status"] });
       } else {
-        setSubmitError(data.message ?? "Nie udało się dodać aktywności.");
+        setSubmitError(data.message ?? t("eco.submitError"));
       }
     },
     onError: (err: Error) => {
@@ -146,9 +139,9 @@ export default function EkoScreen() {
   if (rootError || activitiesError) {
     return (
       <Screen>
-        <Text style={styles.title}>Eko-rozwój</Text>
+        <Text style={styles.title}>{t("eco.title")}</Text>
         <Text style={styles.errorText}>
-          Nie udało się załadować danych:{" "}
+          {t("common.errorLoading")}{" "}
           {rootError?.message || activitiesError?.message}
         </Text>
       </Screen>
@@ -157,7 +150,7 @@ export default function EkoScreen() {
 
   return (
     <Screen>
-      <Text style={styles.title}>Eko-rozwój</Text>
+      <Text style={styles.title}>{t("eco.title")}</Text>
 
       {/* Root Evolution Card */}
       <View style={[styles.card, styles.cardLight, { marginBottom: 16 }]}>
@@ -196,7 +189,7 @@ export default function EkoScreen() {
               {transformMutation.isPending ? (
                 <ActivityIndicator color={colors.brownDark} />
               ) : (
-                <Text style={styles.btnPrimaryText}>Ewoluuj!</Text>
+                <Text style={styles.btnPrimaryText}>{t("eco.evolve")}</Text>
               )}
             </Pressable>
           )}
@@ -213,20 +206,20 @@ export default function EkoScreen() {
       {lastResult && (
         <View style={[styles.resultBanner]}>
           <Text style={styles.resultText}>
-            +{lastResult.points.exp} EXP · +{lastResult.points.leaderboard} pkt
-            rankingowych
+            +{lastResult.points.exp} EXP · +{lastResult.points.leaderboard} {t("common.points")}
+            {" "}{t("eco.rankingPoints")}
           </Text>
           <View style={styles.badgesRow}>
             {lastResult.caps.firstTimeBonus && (
               <View style={[styles.badge, { backgroundColor: colors.greenLight }]}>
-                <Text style={styles.badgeText}>First-time x2</Text>
+                <Text style={styles.badgeText}>{t("eco.firstTimeBonus")}</Text>
               </View>
             )}
             {lastResult.caps.synergyBonus && (
               <View
                 style={[styles.badge, { backgroundColor: colors.greenBright }]}
               >
-                <Text style={styles.badgeText}>Synergia +20%</Text>
+                <Text style={styles.badgeText}>{t("eco.synergyBonus")}</Text>
               </View>
             )}
             {lastResult.caps.diminishingMultiplier < 1 &&
@@ -241,36 +234,36 @@ export default function EkoScreen() {
               )}
             {lastResult.caps.diminishingMultiplier === 0 && (
               <View style={[styles.badge, { backgroundColor: colors.warning }]}>
-                <Text style={styles.badgeText}>Brak pkt rankingowych</Text>
+                <Text style={styles.badgeText}>{t("eco.noRankingPoints")}</Text>
               </View>
             )}
           </View>
           <Text style={styles.remainingText}>
-            Pozostało: {lastResult.caps.categoryRemaining}/
-            {lastResult.caps.globalRemaining} pkt (kategoria/dzień)
+            {t("eco.remaining")} {lastResult.caps.categoryRemaining}/
+            {lastResult.caps.globalRemaining} {t("common.points")} ({t("eco.perCategory")})
           </Text>
         </View>
       )}
 
       {/* Eco Activities by Category */}
-      <Text style={styles.sectionTitle}>Aktywności</Text>
+      <Text style={styles.sectionTitle}>{t("eco.activities")}</Text>
 
       {!activities ? (
         <ActivityIndicator style={{ padding: 20 }} />
       ) : (
         Object.entries(grouped).map(([cat, acts]) => {
-          const meta = CATEGORY_META[cat] ?? {
-            label: cat,
+          const meta = CATEGORY_META_BASE[cat] ?? {
             bgColor: colors.creamDark,
             textColor: colors.brownDark,
           };
+          const label = CATEGORY_LABELS[cat] ?? cat;
           return (
             <View key={cat} style={styles.categoryBlock}>
               <View
                 style={[styles.categoryHeader, { backgroundColor: meta.bgColor }]}
               >
                 <Text style={[styles.categoryHeaderText, { color: meta.textColor }]}>
-                  {meta.label}
+                  {label}
                 </Text>
               </View>
               {acts.map((act) => {

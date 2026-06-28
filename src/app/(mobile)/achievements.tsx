@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { TrophyIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
@@ -14,6 +15,7 @@ const list = [
 ];
 
 export default function AchievementsScreen() {
+  const { t } = useTranslation();
   const { data: unlockedRows = [] } = useQuery({
     queryKey: ["achievements"],
     queryFn: fetchAchievements,
@@ -22,9 +24,9 @@ export default function AchievementsScreen() {
 
   return (
     <Screen>
-      <Text style={styles.title}>Osiagniecia</Text>
+      <Text style={styles.title}>{t("achievements.title")}</Text>
       <Text style={styles.meta}>
-        Zdobyte: {unlocked.length}/{list.length}
+        {t("achievements.collected")}: {unlocked.length}/{list.length}
       </Text>
 
       {list.map((item) => {
@@ -63,7 +65,7 @@ export default function AchievementsScreen() {
                   ]}
                 />
                 <Text style={styles.statusText}>
-                  {isUnlocked ? "Odblokowane" : "Zablokowane"}
+                  {isUnlocked ? t("achievements.unlocked") : t("achievements.locked")}
                 </Text>
               </View>
             </View>

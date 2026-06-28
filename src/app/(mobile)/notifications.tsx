@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 import { BellIcon } from "../../components/icons";
 import { Screen } from "../../features/common/Screen";
@@ -10,6 +11,7 @@ import {
 import { colors, radius } from "../../styles/tokens";
 
 export default function NotificationsScreen() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { data: notifications = [] } = useQuery({
     queryKey: ["notifications"],
@@ -26,21 +28,21 @@ export default function NotificationsScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Text style={styles.title}>Powiadomienia</Text>
+        <Text style={styles.title}>{t("notifications.title")}</Text>
         <View style={styles.unreadBadge}>
-          <Text style={styles.unreadText}>{unread} nieprzeczytanych</Text>
+          <Text style={styles.unreadText}>{unread} {t("notifications.unread")}</Text>
         </View>
       </View>
 
       <Pressable style={styles.clearButton} onPress={() => clear.mutate()}>
         <BellIcon size={16} color={colors.white} />
-        <Text style={styles.clearText}>Oznacz wszystkie jako przeczytane</Text>
+        <Text style={styles.clearText}>{t("notifications.markAllRead")}</Text>
       </Pressable>
 
       {notifications.length === 0 && (
         <View style={styles.emptyState}>
           <BellIcon size={48} color={colors.slate200} />
-          <Text style={styles.emptyText}>Brak powiadomien</Text>
+          <Text style={styles.emptyText}>{t("notifications.empty")}</Text>
         </View>
       )}
 
